@@ -1,0 +1,10 @@
+# macOS & Editor-Dateien
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+*.swo
+.env
+.env.*
+*.pem
+*.key
