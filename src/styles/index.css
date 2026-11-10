@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+/**
+ * Modul: Globale Design-Tokens (Dark & Light Mode), Ambient-Canvas & Apple HIG Regeln
+ * Zweck: Steuert das Farbschema (Dunkel & Hell), Typografie, Easing-Kurven und Barrierefreiheit
+ * Sicherheitsrelevanz: Verhindert ungewollte Viewport-Skalierung (WCAG-konform durch 16px Inputs)
+ */
+
+@theme {
+  --color-gold: #DCCC4B;
+  --color-gold-dark: #b8a828;
+  --color-gold-light: #f0e68c;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root {
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Dark Mode Defaults (Vorbild: Anlagenlogbuch) */
+  --bg-canvas: #0a0a0c;
+  --bg-header: rgba(13, 13, 16, 0.86);
+  --bg-card: rgba(20, 20, 23, 0.82);
+  --bg-well: rgba(11, 11, 14, 0.88);
+  --bg-input: #1c1c20;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-input: rgba(255, 255, 255, 0.12);
+  --text-primary: #ffffff;
+  --text-secondary: #9a9999;
+  --text-accent: #DCCC4B;
+  --card-shadow: 0 14px 34px -12px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  --dock-shadow: 0 -10px 32px rgba(0, 0, 0, 0.75);
+}
+
+html.light {
+  /* Light Mode (Hoher Kontrast für Baustelle / Tageslicht) */
+  --bg-canvas: #f5f4ef;
+  --bg-header: rgba(245, 244, 239, 0.88);
+  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-well: #edece6;
+  --bg-input: #f7f6f2;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-input: rgba(0, 0, 0, 0.14);
+  --text-primary: #141417;
+  --text-secondary: #5c5b57;
+  --text-accent: #8f8012;
+  --card-shadow: 0 10px 28px -10px rgba(0, 0, 0, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+  --dock-shadow: 0 -8px 28px rgba(0, 0, 0, 0.1);
+}
+
+html {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+  overflow-x: hidden;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+}
+
+/* Oberflächen-Klassen adaptiv für Dark & Light Mode */
+.logbook-header {
+  background: var(--bg-header);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.logbook-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--card-shadow);
+}
+
+.logbook-well {
+  background: var(--bg-well);
+  border: 1px solid var(--border-subtle);
+}
+
+.logbook-input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  color: var(--text-primary);
+}
+
+.logbook-dock {
+  background: var(--bg-header);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: var(--dock-shadow);
+}
+
+.text-theme-primary {
+  color: var(--text-primary);
+}
+
+.text-theme-secondary {
+  color: var(--text-secondary);
+}
+
+.text-theme-accent {
+  color: var(--text-accent);
+}
+
+.gold-divider {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, rgba(220, 204, 75, 0.15) 0%, rgba(220, 204, 75, 0.7) 35%, rgba(220, 204, 75, 0.15) 100%);
+  box-shadow: 0 1px 10px rgba(220, 204, 75, 0.3);
+}
+
+.gold-glow {
+  box-shadow: 0 4px 18px -2px rgba(220, 204, 75, 0.35);
+}
+
+/* Verhindert den automatischen Zoom von iOS Safari bei Fokus auf Eingabefelder */
+input, textarea, select {
+  font-size: 16px;
+}
+
+button, a, [role="button"] {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-bottom {
+  padding-bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
+}
+
+.apple-spring {
+  transition: transform 160ms var(--ease-out-strong), opacity 160ms var(--ease-out-strong);
+}
+
+.pill-slider {
+  transition: transform 220ms var(--ease-spring);
+  will-change: transform;
+}
+
+.view-enter {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 180ms var(--ease-out-strong), transform 180ms var(--ease-out-strong);
+}
+
+@starting-style {
+  .view-enter {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.collapse-grid {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 200ms var(--ease-out-strong), opacity 160ms var(--ease-out-strong);
+}
+
+.collapse-grid.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.collapse-inner {
+  overflow: hidden;
+}
+
+/* Apple HIG: System-Signal Transparenz reduzieren */
+@media (prefers-reduced-transparency: reduce) {
+  .logbook-header,
+  .logbook-card,
+  .logbook-dock {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--bg-canvas) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apple-spring,
+  .pill-slider,
+  .view-enter,
+  .collapse-grid {
+    transition: opacity 120ms ease !important;
+    transform: none !important;
+  }
+}

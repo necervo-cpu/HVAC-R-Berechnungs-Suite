@@ -1,0 +1,26 @@
+{
+  "name": "hvac-r-berechnungs-suite",
+  "version": "1.0.0",
+  "description": "Praxisnahe HVAC-R Berechnungs-Suite für Hydronik, Volumenstrom, Rohrdimensionierung sowie Heiz- und Kühllast",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build && rm -rf _uploade && mkdir -p _uploade && cp -R dist/* _uploade/ && touch _uploade/.nojekyll",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^1.71.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.7"
+  }
+}

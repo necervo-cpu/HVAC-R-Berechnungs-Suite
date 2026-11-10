@@ -1,0 +1,31 @@
+# Abhängigkeiten & Paketmanager
+node_modules/
+.pnp
+.pnp.js
+
+# Lokale Builds & temporäre Upload-Staging-Ordner
+dist/
+_uploade/
+
+# Umgebungsvariablen & Geheimnisse (Zero-Credential-Exposure)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# macOS & Editor-Dateien
+.DS_Store
+.AppleDouble
+.LSOverride
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
