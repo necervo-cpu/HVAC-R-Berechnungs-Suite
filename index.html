@@ -1,19 +1,33 @@
 <!doctype html>
-<html lang="de" class="dark">
+<html lang="de">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" id="meta-theme-color" content="#1a1a1a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme-color" id="meta-theme-color" content="#0a0a0c" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <title>HVAC-R Rechner</title>
-    <script type="module" crossorigin src="./assets/index-BJK-3EJj.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-Cf-Om5iz.css">
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("muther-theme");
+          var r = document.documentElement;
+          if (t === "hell") r.setAttribute("data-theme", "light");
+          else if (t === "dunkel") r.setAttribute("data-theme", "dark");
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <title>HVAC-R Berechnungs-Suite</title>
+    <script type="module" crossorigin src="./assets/index-xBbTkWlC.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DX5HxB5V.css">
   </head>
-  <body class="antialiased selection:bg-[#DCCC4B]/30 selection:text-[#DCCC4B] min-h-dvh">
+  <body class="intro">
     <div id="root"></div>
   </body>
 </html>
