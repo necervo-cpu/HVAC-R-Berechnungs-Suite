@@ -1,12 +1,13 @@
 /**
  * Modul: Offline Service Worker für iOS Standalone PWA
  * Zweck: Garantiert unterbrechungsfreie Funktion im Heizungskeller und Technikräumen ohne Mobilfunkempfang
+ * Strategie: Network-First für Navigation/HTML (damit Updates sofort ankommen) mit Cache-Fallback; Cache-First für statische Assets
  * Sicherheitsrelevanz: Rein lokaler Cache ohne externe Telemetrie
  */
 
-const CACHE_NAME = 'hvac-r-suite-v1';
+const CACHE_NAME = 'hvac-r-suite-v3';
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
@@ -27,21 +28,38 @@ self.addEventListener('fetch', (event) => {
   // Nur eigene Anfragen cachen
   if (url.origin !== self.location.origin) return;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
+  const isNavigation = event.request.mode === 'navigate' ||
+    event.request.destination === 'document' ||
+    url.pathname.endsWith('/') ||
+    url.pathname.endsWith('index.html');
+
+  if (isNavigation) {
+    // Network-First für HTML: Frische Version laden, bei Offline-Zustand aus dem Cache bedienen
+    event.respondWith(
+      fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
           }
           return networkResponse;
         })
-        .catch(() => cached);
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))
+    );
+    return;
+  }
 
-      return cached || fetchPromise;
+  // Cache-First für versionierte statische Assets (JS, CSS, Icons)
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+        }
+        return networkResponse;
+      });
     })
   );
 });
