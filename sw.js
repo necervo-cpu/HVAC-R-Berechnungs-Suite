@@ -5,7 +5,7 @@
  * Sicherheitsrelevanz: Rein lokaler Cache ohne externe Telemetrie
  */
 
-const CACHE_NAME = 'hvac-r-suite-v3';
+const CACHE_NAME = 'hvac-r-suite-v4';
 
 self.addEventListener('install', () => {
   self.skipWaiting();
