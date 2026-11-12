@@ -1,0 +1,22 @@
+# Staging-Ordner für geprüfte Commits (wird nicht als Ordner gepusht)
+_uploades/
+
+# Umgebungsvariablen & Geheimnisse
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# macOS & Editor-Dateien
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+*~
+
+# Abhängigkeiten & Build-Artefakte
+node_modules/
+dist/
+build/
+.vite/

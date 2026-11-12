@@ -1,0 +1,811 @@
+/**
+ * Modul: Apple Liquid Glass Design-System & 3 HVAC-R Stilrichtungen (liquid-glass.css)
+ * Zweck: Zentrale Design-, Farb-, Typografie- und Motion-Tokens für alle 3 Design-Vorlagen
+ *   ("kupfer", "cryo", "nordic") im 3-Stufen-Darstellungsmodus (Auto / Hell / Dunkel).
+ * Verantwortlichkeit: Stellt transluzente Glas-Schichten, konzentrische Radien, iOS-PWA-Safe-Areas,
+ *   Anti-Truncation-Regeln und physikalische Motion-Tokens bereit.
+ * Sicherheits- & A11y-Relevanz: DSGVO-konform ohne externe Font-CDNs; vollständige Fallbacks für
+ *   prefers-reduced-motion, prefers-reduced-transparency und prefers-contrast.
+ */
+
+/* ==========================================================================
+   1. BASIS-TOKENS & RICHTUNG 1: KUPFER & KÄLTE (Standard)
+   ========================================================================== */
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* Richtung 1: Kupfer & Kälte (Hell) */
+  --brand-accent: #0071e3;
+  --brand-accent-hover: #0077ed;
+  --brand-accent-text: #0051a8;
+  --brand-warm: #c86d3b;
+  --brand-warm-soft: rgba(200, 109, 59, 0.12);
+  --tile: rgba(0, 113, 227, 0.1);
+
+  --status-ok: #1b8a4b;
+  --status-ok-bg: rgba(27, 138, 75, 0.12);
+  --status-warn: #b86e00;
+  --status-warn-bg: rgba(184, 110, 0, 0.12);
+  --status-bad: #c9342d;
+  --status-bad-bg: rgba(201, 52, 45, 0.12);
+
+  --bg: #f4f6f9;
+  --ios-bg:
+    radial-gradient(circle at 12% 8%, rgba(0, 113, 227, 0.09), transparent 46%),
+    radial-gradient(circle at 88% 82%, rgba(200, 109, 59, 0.07), transparent 48%),
+    #f4f6f9;
+  --glass: rgba(255, 255, 255, 0.74);
+  --glass-hero: rgba(255, 255, 255, 0.86);
+  --input-bg: rgba(255, 255, 255, 0.58);
+  --pill-track: rgba(15, 23, 42, 0.06);
+  --pill-thumb: rgba(255, 255, 255, 0.94);
+
+  --edge: rgba(255, 255, 255, 0.88);
+  --edge-low: rgba(15, 23, 42, 0.06);
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --ios-shadow:
+    0 12px 32px -8px rgba(15, 23, 42, 0.08),
+    0 2px 6px -1px rgba(15, 23, 42, 0.04);
+
+  --ink: #16181d;
+  --muted: #525866;
+
+  /* Typografie (Richtung 1: SF Pro System-Klarheit) */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+  --font-mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --num-weight: 600;
+  --display-tracking: -0.02em;
+
+  /* Konzentrische Radien-Hierarchie */
+  --radius-hero: 28px;
+  --radius-card: 24px;
+  --radius-well: 14px;
+  --radius-control: 11px;
+
+  /* Physikalische Motion-Tokens */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 150ms;
+  --dur-normal: 250ms;
+  --scale-tiny: 0.99;
+  --scale-medium: 0.97;
+  --scale-small: 0.95;
+}
+
+/* Richtung 1: Kupfer & Kälte (Dunkel) */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --brand-accent: #389bff;
+  --brand-accent-hover: #52a8ff;
+  --brand-accent-text: #74b9ff;
+  --brand-warm: #e08a58;
+  --brand-warm-soft: rgba(224, 138, 88, 0.16);
+  --tile: rgba(56, 155, 255, 0.16);
+
+  --status-ok: #34d37d;
+  --status-ok-bg: rgba(52, 211, 125, 0.15);
+  --status-warn: #f5a623;
+  --status-warn-bg: rgba(245, 166, 35, 0.15);
+  --status-bad: #ff6961;
+  --status-bad-bg: rgba(255, 105, 97, 0.16);
+
+  --bg: #0d0f12;
+  --ios-bg:
+    radial-gradient(circle at 14% 8%, rgba(56, 155, 255, 0.14), transparent 46%),
+    radial-gradient(circle at 86% 84%, rgba(224, 138, 88, 0.10), transparent 50%),
+    #0d0f12;
+  --glass: rgba(24, 27, 34, 0.70);
+  --glass-hero: rgba(16, 18, 23, 0.84);
+  --input-bg: rgba(15, 17, 22, 0.68);
+  --pill-track: rgba(255, 255, 255, 0.08);
+  --pill-thumb: rgba(46, 51, 64, 0.92);
+
+  --edge: rgba(255, 255, 255, 0.14);
+  --edge-low: rgba(0, 0, 0, 0.45);
+  --border-subtle: rgba(255, 255, 255, 0.10);
+  --ios-shadow:
+    0 16px 36px -8px rgba(0, 0, 0, 0.50),
+    0 4px 10px -2px rgba(0, 0, 0, 0.32);
+
+  --ink: #f4f6f9;
+  --muted: #9aa2b1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+    --brand-accent: #389bff;
+    --brand-accent-hover: #52a8ff;
+    --brand-accent-text: #74b9ff;
+    --brand-warm: #e08a58;
+    --brand-warm-soft: rgba(224, 138, 88, 0.16);
+    --tile: rgba(56, 155, 255, 0.16);
+    --status-ok: #34d37d;
+    --status-ok-bg: rgba(52, 211, 125, 0.15);
+    --status-warn: #f5a623;
+    --status-warn-bg: rgba(245, 166, 35, 0.15);
+    --status-bad: #ff6961;
+    --status-bad-bg: rgba(255, 105, 97, 0.16);
+    --bg: #0d0f12;
+    --ios-bg:
+      radial-gradient(circle at 14% 8%, rgba(56, 155, 255, 0.14), transparent 46%),
+      radial-gradient(circle at 86% 84%, rgba(224, 138, 88, 0.10), transparent 50%),
+      #0d0f12;
+    --glass: rgba(24, 27, 34, 0.70);
+    --glass-hero: rgba(16, 18, 23, 0.84);
+    --input-bg: rgba(15, 17, 22, 0.68);
+    --pill-track: rgba(255, 255, 255, 0.08);
+    --pill-thumb: rgba(46, 51, 64, 0.92);
+    --edge: rgba(255, 255, 255, 0.14);
+    --edge-low: rgba(0, 0, 0, 0.45);
+    --border-subtle: rgba(255, 255, 255, 0.10);
+    --ios-shadow:
+      0 16px 36px -8px rgba(0, 0, 0, 0.50),
+      0 4px 10px -2px rgba(0, 0, 0, 0.32);
+    --ink: #f4f6f9;
+    --muted: #9aa2b1;
+  }
+}
+
+/* ==========================================================================
+   2. GLOBALES MOBILE-NATIVE & IOS SAFARI FUNDAMENT
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+  background: var(--bg);
+  height: 100%;
+}
+
+/* Fixierte iOS-Hintergrundschicht verhindert weiße Ränder beim Gummi-Scroll */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--ios-bg);
+  pointer-events: none;
+  transition: background 240ms var(--ease-out);
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  min-height: 100dvh;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Touch-Optimierung: keine Text-Markierung auf Steuerelementen, keine 300ms-Verzögerung */
+button,
+[role="button"],
+.tab-btn,
+.chip-btn {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  font-family: inherit;
+}
+
+/* Verhindert iOS Safari Auto-Zoom auf Inputs */
+input,
+select,
+textarea {
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--ink);
+}
+
+/* ==========================================================================
+   5. LAYOUT-SHELL & KOMPAKTER HEADER (Minimalismus: Content First)
+   ========================================================================== */
+.app-shell {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 10px 6px 14px;
+  border-radius: 22px;
+  background: var(--glass-hero);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    inset 0 1px 1px 0 var(--edge),
+    inset 0 -1px 0 0 var(--edge-low),
+    var(--ios-shadow);
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.brand-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--brand-accent);
+  box-shadow: 0 0 10px var(--brand-accent);
+  flex-shrink: 0;
+  transition: background var(--dur-normal) var(--ease-out), box-shadow var(--dur-normal) var(--ease-out);
+}
+
+.brand-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   6. SEGMENTED CONTROLS MIT GLEITENDER PILL (.t-tabs-pill)
+   ========================================================================== */
+.segmented {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: 3px;
+  border-radius: 14px;
+  background: var(--pill-track);
+  border: 1px solid var(--border-subtle);
+}
+
+.segmented--compact {
+  border-radius: 12px;
+  padding: 2px;
+}
+
+.t-tabs-pill {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  bottom: 3px;
+  border-radius: var(--radius-control);
+  background: var(--pill-thumb);
+  box-shadow:
+    inset 0 1px 0 0 var(--edge),
+    0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: transform var(--dur-normal) var(--ease-spring), width var(--dur-normal) var(--ease-spring);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.segmented--compact .t-tabs-pill {
+  top: 2px;
+  left: 2px;
+  bottom: 2px;
+  border-radius: 9px;
+}
+
+.tab-btn {
+  position: relative;
+  z-index: 1;
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-spring);
+}
+
+.segmented--compact .tab-btn {
+  min-height: 34px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.tab-btn[aria-selected="true"] {
+  color: var(--ink);
+}
+
+/* Theme Cycle Button */
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--input-bg);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.t-icon-swap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  transition:
+    opacity var(--dur-normal) var(--ease-spring),
+    transform var(--dur-normal) var(--ease-spring);
+}
+
+.t-icon-swap.is-swapping {
+  opacity: 0;
+  transform: scale(0.75) rotate(-25deg);
+}
+
+/* ==========================================================================
+   7. LIQUID GLASS KARTEN, WELLS & ANTI-TRUNCATION
+   ========================================================================== */
+.liquid-glass-card {
+  background: var(--glass);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border-subtle);
+  padding: 16px;
+  box-shadow:
+    inset 0 1px 1px 0 var(--edge),
+    inset 0 -1px 0 0 var(--edge-low),
+    var(--ios-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition:
+    background var(--dur-normal) var(--ease-out),
+    border-color var(--dur-normal) var(--ease-out),
+    border-radius var(--dur-normal) var(--ease-out);
+}
+
+.liquid-glass-card > *,
+.well > *,
+.result-hero > * {
+  min-width: 0;
+}
+
+/* Design-Richtungs-Switcher Karte (kompakt) */
+.design-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.design-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 0 2px;
+}
+
+.design-meta strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.swatch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+}
+
+/* Live Ergebnis Hero */
+.result-hero {
+  background: var(--tile);
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: inset 0 1px 0 0 var(--edge);
+}
+
+.result-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.result-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.status-badge[data-state="ok"] {
+  background: var(--status-ok-bg);
+  color: var(--status-ok);
+}
+
+.status-badge[data-state="warn"] {
+  background: var(--status-warn-bg);
+  color: var(--status-warn);
+}
+
+.status-badge[data-state="bad"] {
+  background: var(--status-bad-bg);
+  color: var(--status-bad);
+}
+
+.result-value-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.result-main {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 34px;
+  font-weight: var(--num-weight);
+  letter-spacing: var(--display-tracking);
+  line-height: 1.1;
+  color: var(--ink);
+  transition: transform 180ms var(--ease-spring);
+}
+
+.result-main.is-popping {
+  transform: scale(1.03);
+}
+
+.result-unit {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+.result-sub {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* 1-Tap Chips (Kältemittel / Presets) */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip-btn {
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--input-bg);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1 1 auto;
+  text-align: center;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-spring);
+}
+
+.chip-btn[aria-pressed="true"] {
+  background: var(--brand-accent);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px -2px rgba(0, 113, 227, 0.28);
+}
+
+:root[data-design="cryo"][data-theme="dark"] .chip-btn[aria-pressed="true"] {
+  color: #05070a;
+}
+
+/* Eingabefelder & Stepper (Well) */
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.well {
+  background: var(--input-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-well);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+.well-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.well-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.well-hint {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--brand-accent-text);
+}
+
+.stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-btn {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 11px;
+  border: 1px solid var(--border-subtle);
+  background: var(--glass);
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.num-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  font-weight: var(--num-weight);
+  color: var(--ink);
+  outline: none;
+}
+
+.num-unit {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   8. PANEL-WECHSEL & ACCORDION (.t-acc-panel)
+   ========================================================================== */
+.calc-panel[hidden] {
+  display: none;
+}
+
+.calc-panel.is-entering {
+  animation: panel-enter 220ms var(--ease-out) both;
+}
+
+@keyframes panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.acc-trigger {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: var(--radius-well);
+  border: 1px solid var(--border-subtle);
+  background: var(--input-bg);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.acc-chevron {
+  transition: transform var(--dur-normal) var(--ease-spring);
+  flex-shrink: 0;
+}
+
+.acc-trigger[aria-expanded="true"] .acc-chevron {
+  transform: rotate(180deg);
+}
+
+.t-acc-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--dur-normal) var(--ease-spring);
+}
+
+.t-acc-panel[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+.t-acc-panel-inner {
+  overflow: hidden;
+}
+
+.acc-content {
+  padding: 12px 4px 2px;
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.acc-tip {
+  margin: 4px 0 0;
+}
+
+.token-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.token-item {
+  background: var(--input-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.token-item code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink);
+}
+
+/* ==========================================================================
+   9. TAKTILE PRESS-SCALE & DESKTOP-HOVER-GATING
+   ========================================================================== */
+.press-card {
+  transition: transform var(--dur-fast) var(--ease-spring);
+}
+.press-card:active {
+  transform: scale(var(--scale-tiny));
+}
+
+.press-btn {
+  transition: transform var(--dur-fast) var(--ease-spring);
+}
+.press-btn:active {
+  transform: scale(var(--scale-medium));
+}
+
+.press-icon {
+  transition: transform var(--dur-fast) var(--ease-spring);
+}
+.press-icon:active {
+  transform: scale(var(--scale-small));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .chip-btn:hover:not([aria-pressed="true"]),
+  .step-btn:hover,
+  .theme-btn:hover,
+  .acc-trigger:hover {
+    border-color: var(--brand-accent);
+  }
+}
+
+/* ==========================================================================
+   10. BARRIEREFREIHEIT: REDUZIERTE TRANSPARENZ & REDUZIERTE BEWEGUNG
+   ========================================================================== */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .top-bar,
+  .liquid-glass-card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--bg);
+    border-width: 1.5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

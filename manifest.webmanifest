@@ -1,0 +1,19 @@
+{
+  "name": "HVAC·R Rechner",
+  "short_name": "HVAC·R",
+  "description": "Mobile Rechner für Kälte-, Klima- und Lüftungstechnik im Apple Liquid Glass Design.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0f12",
+  "theme_color": "#0071e3",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
