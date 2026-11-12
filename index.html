@@ -2,30 +2,62 @@
 <html lang="de">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; manifest-src 'self';"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; manifest-src 'self';"
     />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" id="meta-theme-color" content="#1a1a1a" />
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="HVAC-R" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#1a1a1a" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
     <title>HVAC-R Berechnungs-Suite</title>
-    <style>html,body{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;background-color:#0d0d0f;width:100%;height:100%;margin:0;padding:0;position:fixed;inset:0;overflow:hidden}#root{flex-direction:column;width:100%;height:100%;display:flex;position:absolute;inset:0;overflow:hidden}</style>
-    <script type="module" crossorigin src="./assets/index-MbIy3dOv.js"></script>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("muther-theme");
+          var r = document.documentElement;
+          if (t === "hell") r.setAttribute("data-theme", "light");
+          else if (t === "dunkel") r.setAttribute("data-theme", "dark");
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-CwpiJCye.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/rolldown-runtime-WkwZ5CU-.js">
     <link rel="modulepreload" crossorigin href="./assets/vendor-react-DCmU0M9N.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-CNeAt0TE.css">
+    <link rel="stylesheet" crossorigin href="./assets/index-CckAZ1DA.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      /* iOS PWA Viewport / Chin-Gap Reflow wie in den funktionierenden Service-Apps */
+      (function () {
+        var isIos =
+          /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        if (isIos) {
+          var fixViewport = function () {
+            requestAnimationFrame(function () {
+              var root = document.documentElement;
+              var prev = root.style.transform;
+              root.style.transform = "translateZ(0)";
+              void root.offsetHeight;
+              root.style.transform = prev;
+              window.scrollTo(0, 0);
+            });
+          };
+          if (document.readyState === "loading") {
+            window.addEventListener("DOMContentLoaded", fixViewport);
+          } else {
+            fixViewport();
+          }
+          window.addEventListener("load", fixViewport);
+          window.addEventListener("pageshow", fixViewport);
+        }
+      })();
+    </script>
   </body>
 </html>
