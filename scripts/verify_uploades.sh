@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Modul: Sicherheits- & Qualitätsprüfung für _uploades/ (verify_uploades.sh)
+# Modul: Sicherheits- & Qualitätsprüfung für _Upload/ (verify_uploades.sh)
 # Zweck: Prüft vor jedem Commit und Push, dass ausschließlich geprüfte Dateien
-#   aus _uploades/ ohne Geheimnisse, Syntaxfehler oder iOS-Anti-Patterns vorliegen.
+#   aus _Upload/ ohne Geheimnisse, Syntaxfehler oder iOS-Anti-Patterns vorliegen.
 
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-UPLOAD_DIR="$ROOT_DIR/_uploades"
+UPLOAD_DIR="$ROOT_DIR/_Upload"
 
 if [[ ! -d "$UPLOAD_DIR" ]]; then
-  echo "❌ Fehler: Ordner '_uploades/' fehlt. Bitte zuerst '_uploades/' befüllen." >&2
+  echo "❌ Fehler: Ordner '_Upload/' fehlt. Bitte zuerst '_Upload/' befüllen." >&2
   exit 1
 fi
 
@@ -20,11 +20,11 @@ while IFS= read -r -d '' file; do
 done < <(find "$UPLOAD_DIR" -type f -print0)
 
 if [[ ${#UPLOAD_FILES[@]} -eq 0 ]]; then
-  echo "❌ Fehler: '_uploades/' ist leer. Nichts zum Prüfen vorhanden." >&2
+  echo "❌ Fehler: '_Upload/' ist leer. Nichts zum Prüfen vorhanden." >&2
   exit 1
 fi
 
-echo "🔍 Prüfe ${#UPLOAD_FILES[@]} Datei(en) in '_uploades/'..."
+echo "🔍 Prüfe ${#UPLOAD_FILES[@]} Datei(en) in '_Upload/'..."
 
 for rel in "${UPLOAD_FILES[@]}"; do
   target="$UPLOAD_DIR/$rel"
@@ -33,7 +33,7 @@ for rel in "${UPLOAD_FILES[@]}"; do
   case "$rel" in
     *.env|*.env.*|*.pem|*.key|*.DS_Store|*/.DS_Store)
       if [[ "$rel" != ".env.example" ]]; then
-        echo "🚨 Blocker: Verbotene Datei in '_uploades/': $rel" >&2
+        echo "🚨 Blocker: Verbotene Datei in '_Upload/': $rel" >&2
         exit 1
       fi
       ;;
@@ -69,12 +69,12 @@ if git -C "$ROOT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   if [[ ${#STAGED_FILES[@]} -gt 0 ]]; then
     for staged in "${STAGED_FILES[@]}"; do
       if [[ ! -f "$UPLOAD_DIR/$staged" ]]; then
-        echo "🚨 Blocker: Gestagete Datei '$staged' liegt NICHT in '_uploades/'!" >&2
-        echo "   Nur Dateien aus '_uploades/' dürfen committet werden." >&2
+        echo "🚨 Blocker: Gestagete Datei '$staged' liegt NICHT in '_Upload/'!" >&2
+        echo "   Nur Dateien aus '_Upload/' dürfen committet werden." >&2
         exit 1
       fi
     done
   fi
 fi
 
-echo "✅ Alle ${#UPLOAD_FILES[@]} Datei(en) in '_uploades/' erfolgreich geprüft."
+echo "✅ Alle ${#UPLOAD_FILES[@]} Datei(en) in '_Upload/' erfolgreich geprüft."

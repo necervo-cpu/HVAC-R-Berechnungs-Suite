@@ -1,5 +1,5 @@
 # Staging-Ordner für geprüfte Commits (wird nicht als Ordner gepusht)
-_uploades/
+_Upload/
 
 # Umgebungsvariablen & Geheimnisse
 .env
