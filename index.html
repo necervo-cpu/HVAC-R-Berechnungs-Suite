@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#EEF2F9" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#05070B" />
+  <title>HVAC-R Pro – iPhone Vollbild-Prototyp (390×844)</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* Apple Liquid Glass & Cupertino HIG Tokens */
+    .theme-light {
+      --ios-bg: radial-gradient(circle at 12% 10%, rgba(0, 122, 255, 0.22), transparent 46%),
+                radial-gradient(circle at 88% 18%, rgba(48, 176, 199, 0.20), transparent 44%),
+                radial-gradient(circle at 75% 88%, rgba(52, 199, 89, 0.14), transparent 46%),
+                linear-gradient(160deg, #EEF2F9 0%, #E5EBF5 50%, #F2F2F7 100%);
+      --glass-surface: rgba(255, 255, 255, 0.68);
+      --glass-strong: rgba(255, 255, 255, 0.80);
+      --glass-well: rgba(120, 120, 128, 0.14);
+      --glass-border: rgba(255, 255, 255, 0.72);
+      --glass-edge: rgba(255, 255, 255, 0.92);
+      --glass-shadow: 0 12px 32px rgba(15, 23, 42, 0.10), 0 2px 6px rgba(15, 23, 42, 0.05);
+      --app-ink: #111827;
+      --app-muted: #5C5C66;
+      --app-accent: #007AFF;
+      --app-accent-glow: rgba(0, 122, 255, 0.30);
+      --app-green: #34C759;
+      --app-red: #FF3B30;
+      --app-cyan: #30B0C7;
+      --app-orange: #FF9500;
+    }
+
+    .theme-dark {
+      --ios-bg: radial-gradient(circle at 15% 12%, rgba(10, 132, 255, 0.28), transparent 48%),
+                radial-gradient(circle at 86% 20%, rgba(64, 200, 224, 0.20), transparent 46%),
+                radial-gradient(circle at 70% 88%, rgba(48, 209, 88, 0.14), transparent 46%),
+                linear-gradient(160deg, #05070B 0%, #0A0E17 55%, #000000 100%);
+      --glass-surface: rgba(28, 28, 32, 0.66);
+      --glass-strong: rgba(36, 36, 40, 0.80);
+      --glass-well: rgba(255, 255, 255, 0.11);
+      --glass-border: rgba(255, 255, 255, 0.16);
+      --glass-edge: rgba(255, 255, 255, 0.24);
+      --glass-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+      --app-ink: #F9FAFB;
+      --app-muted: #A1A1AA;
+      --app-accent: #0A84FF;
+      --app-accent-glow: rgba(10, 132, 255, 0.36);
+      --app-green: #30D158;
+      --app-red: #FF453A;
+      --app-cyan: #40C8E0;
+      --app-orange: #FF9F0A;
+    }
+
+    .app-shell {
+      background: var(--ios-bg);
+      color: var(--app-ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+      transition: color 0.22s ease;
+    }
+
+    .glass-bar {
+      background: var(--glass-strong);
+      backdrop-filter: blur(24px) saturate(190%);
+      -webkit-backdrop-filter: blur(24px) saturate(190%);
+      box-shadow: inset 0 1px 0 0 var(--glass-edge);
+    }
+
+    .glass-card {
+      background: var(--glass-surface);
+      backdrop-filter: blur(20px) saturate(190%);
+      -webkit-backdrop-filter: blur(20px) saturate(190%);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06), inset 0 1px 1px 0 var(--glass-edge);
+      border-radius: 22px;
+      transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease;
+    }
+
+    .glass-hero {
+      background: linear-gradient(135deg, var(--app-accent) 0%, color-mix(in srgb, var(--app-accent) 78%, #0040DD) 100%);
+      box-shadow: 0 12px 28px var(--app-accent-glow), inset 0 1px 1px 0 rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 24px;
+    }
+
+    .glass-well {
+      background: var(--glass-well);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 14px;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+      .glass-bar, .glass-card, .glass-well {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+      .theme-light { --glass-surface: #FFFFFF; --glass-strong: #FFFFFF; }
+      .theme-dark { --glass-surface: #1C1C1E; --glass-strong: #1C1C1E; }
+    }
+
+    .tabular-nums {
+      font-family: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .press-btn { transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease, color 0.2s ease; }
+    .press-btn:active { transform: scale(0.94); }
+    .press-card { transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, border-color 0.2s ease; }
+    .press-card:hover { transform: translateY(-2px); }
+    .press-card:active { transform: scale(0.975); }
+
+    @keyframes viewEnter {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-view {
+      animation: viewEnter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes tilePop {
+      from { opacity: 0; transform: translateY(12px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .tile-stagger {
+      animation: tilePop 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes valuePulse {
+      0% { transform: scale(0.97); opacity: 0.75; }
+      60% { transform: scale(1.02); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-value {
+      animation: valuePulse 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .gear-icon {
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .gear-active .gear-icon {
+      transform: rotate(90deg);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (prefers-contrast: more) {
+      .theme-light { --glass-border: rgba(0, 0, 0, 0.35); --app-muted: #3A3A3C; }
+      .theme-dark { --glass-border: rgba(255, 255, 255, 0.45); --app-muted: #D1D1D6; }
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased h-screen overflow-hidden flex items-center justify-center p-3">
+  <!-- Proportionales iPhone-Seitenverhältnis (390:844 / 9:19,5), passt sich jeder Fensterhöhe an -->
+  <div class="rounded-[48px] p-[10px] bg-[#1C1C1E] shadow-2xl border border-white/15 flex flex-col" style="height: min(844px, calc(100dvh - 24px)); max-width: calc(100vw - 24px); aspect-ratio: 390 / 844;">
+    <div id="app" class="app-shell theme-light flex-1 rounded-[38px] overflow-hidden flex flex-col">
+      <!-- iPhone Status-Bar + Dynamic Island -->
+      <div class="glass-bar px-7 pt-3 pb-1.5 flex items-center justify-between text-xs font-semibold shrink-0">
+        <span class="tabular-nums">09:41</span>
+        <div class="w-24 h-5 rounded-full bg-black"></div>
+        <span class="tabular-nums">5G · 100%</span>
+      </div>
+
+      <!-- Kompakte App-Kopfzeile -->
+      <header class="glass-bar px-4 py-2.5 flex items-center justify-between border-b shrink-0" style="border-color: var(--glass-border);">
+        <div class="flex items-center gap-2 min-w-0">
+          <button id="backBtn" onclick="navigate('home')" class="hidden glass-well press-btn w-[44px] h-[44px] rounded-[13px] flex items-center justify-center shrink-0 transition-colors" style="color: var(--app-accent);" aria-label="Zurück zur Startseite">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+          </button>
+          <div class="min-w-0">
+            <h1 id="headerTitle" class="text-base font-semibold truncate">HVAC-R Pro</h1>
+            <p id="headerSub" class="text-xs truncate" style="color: var(--app-muted);">App-Übersicht</p>
+          </div>
+        </div>
+        <button id="settingsBtn" onclick="navigate('settings')" class="glass-well press-btn w-[44px] h-[44px] rounded-[13px] flex items-center justify-center shrink-0 transition-colors" style="color: var(--app-ink);" aria-label="Einstellungen öffnen">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 gear-icon">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </header>
+
+      <!-- Hauptbereich (füllt gesamten restlichen iPhone-Bildschirm) -->
+      <main class="flex-1 overflow-y-auto p-4 flex flex-col">
+        <!-- ANSICHT 1: STARTSEITE (APP-HUB) -->
+        <section id="viewHome" class="flex-1 flex flex-col gap-3">
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Aktive App: Fühlerwerte PTC & NTC -->
+            <button onclick="navigate('sensor')" class="glass-card press-card p-4 text-left flex flex-col justify-between min-h-[156px] cursor-pointer" style="border-color: var(--app-accent);">
+              <span class="w-11 h-11 rounded-[14px] flex items-center justify-center text-xl font-bold text-white shadow-sm" style="background-color: var(--app-accent);">Ω</span>
+              <div>
+                <div class="text-base font-semibold">Fühlerwerte</div>
+                <div class="text-xs mt-1" style="color: var(--app-muted);">PTC &amp; NTC Rechner</div>
+              </div>
+            </button>
+
+            <!-- Geplante App 2 -->
+            <div class="glass-card p-4 text-left flex flex-col justify-between min-h-[156px] opacity-70">
+              <span class="w-11 h-11 rounded-[14px] flex items-center justify-center text-xl font-bold text-white" style="background-color: var(--app-cyan);">V̇</span>
+              <div>
+                <div class="text-base font-semibold">Hydronik &amp; DN</div>
+                <div class="text-xs mt-1" style="color: var(--app-muted);">Leistung &amp; Rohrnetz</div>
+              </div>
+            </div>
+
+            <!-- Geplante App 3 -->
+            <div class="glass-card p-4 text-left flex flex-col justify-between min-h-[156px] opacity-70">
+              <span class="w-11 h-11 rounded-[14px] flex items-center justify-center text-xl font-bold text-white" style="background-color: var(--app-orange);">P</span>
+              <div>
+                <div class="text-base font-semibold">Pumpen-Gesetze</div>
+                <div class="text-xs mt-1" style="color: var(--app-muted);">Drehzahl &amp; Energie</div>
+              </div>
+            </div>
+
+            <!-- Geplante App 4 -->
+            <div class="glass-card p-4 text-left flex flex-col justify-between min-h-[156px] opacity-70">
+              <span class="w-11 h-11 rounded-[14px] flex items-center justify-center text-xl font-bold text-white" style="background-color: var(--app-red);">Q̇</span>
+              <div>
+                <div class="text-base font-semibold">Heiz- &amp; Kühllast</div>
+                <div class="text-xs mt-1" style="color: var(--app-muted);">Raumlast DIN 12831</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ANSICHT 2: FÜHLERWERTE RECHNER (PTC & NTC) -->
+        <section id="viewSensor" class="hidden flex-1 flex flex-col gap-3.5">
+          <!-- Typ (PTC/NTC) & Richtung (°C -> Ω / Ω -> °C) -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="glass-well p-1 grid grid-cols-2 gap-1">
+              <button id="famPTC" onclick="setFamily('PTC')" class="press-btn py-2 rounded-[10px] text-xs font-semibold transition-all">PTC (8)</button>
+              <button id="famNTC" onclick="setFamily('NTC')" class="press-btn py-2 rounded-[10px] text-xs font-semibold transition-all">NTC (9)</button>
+            </div>
+            <div class="glass-well p-1 grid grid-cols-2 gap-1">
+              <button id="dirT2R" onclick="setDirection('T2R')" class="press-btn py-2 rounded-[10px] text-xs font-semibold transition-all">°C → Ω</button>
+              <button id="dirR2T" onclick="setDirection('R2T')" class="press-btn py-2 rounded-[10px] text-xs font-semibold transition-all">Ω → °C</button>
+            </div>
+          </div>
+
+          <!-- Fühler-Auswahl: Kompaktes Dropdown -->
+          <div class="glass-card p-3">
+            <div class="flex items-center justify-between gap-2.5">
+              <label for="sensorSelect" class="text-xs font-semibold pl-1 shrink-0" style="color: var(--app-muted);">Fühlertyp</label>
+              <select id="sensorSelect" onchange="selectSensor(this.value)" class="glass-well px-3 py-2 text-sm font-semibold outline-none w-full min-h-[44px]" style="color: var(--app-ink); font-size: 16px;"></select>
+            </div>
+          </div>
+
+          <!-- Hero Live-Ergebnis-Karte -->
+          <div class="glass-hero p-5 text-white">
+            <div class="flex items-center justify-between gap-2">
+              <span id="heroLabel" class="text-xs font-medium opacity-95">Soll-Widerstand</span>
+              <span id="heroBadge" class="px-2.5 py-0.5 rounded-[9px] text-xs font-semibold bg-white/20">● Kennlinie OK ✓</span>
+            </div>
+            <div id="heroValue" class="tabular-nums text-4xl font-bold tracking-tight mt-2">1097.3 Ω</div>
+            <div id="heroMeta" class="text-xs opacity-90 mt-2 tabular-nums truncate">PT1000 · IEC 60751 · bei 25.0 °C</div>
+          </div>
+
+          <!-- Eingabe mit Stepper (44px Touch-Ziel) -->
+          <div class="glass-card p-3 flex items-center justify-between gap-2">
+            <div class="min-w-0 pl-1.5">
+              <div id="inputTitle" class="text-sm font-semibold">Temperatur</div>
+              <div id="inputUnit" class="text-xs" style="color: var(--app-muted);">Einheit: °C</div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="stepValue(-1)" class="glass-well press-btn w-[44px] h-[44px] rounded-[12px] text-lg font-bold flex items-center justify-center" style="color: var(--app-ink);" aria-label="Wert verringern">−</button>
+              <input id="mainInput" type="number" step="0.5" value="25" oninput="onInputChange()" class="glass-well tabular-nums w-24 h-[44px] rounded-[12px] text-center font-semibold outline-none px-2" style="color: var(--app-ink); font-size: 16px;" />
+              <button onclick="stepValue(1)" class="glass-well press-btn w-[44px] h-[44px] rounded-[12px] text-lg font-bold flex items-center justify-center" style="color: var(--app-ink);" aria-label="Wert erhöhen">+</button>
+            </div>
+          </div>
+
+          <!-- 1-Tap Presets -->
+          <div class="space-y-1.5">
+            <div class="text-xs font-semibold pl-1" style="color: var(--app-muted);">Schnellwerte</div>
+            <div id="presetRow" class="flex items-center gap-1.5 overflow-x-auto pb-1"></div>
+          </div>
+        </section>
+
+        <!-- ANSICHT 3: EINSTELLUNGEN -->
+        <section id="viewSettings" class="hidden flex-1 flex flex-col gap-3.5">
+          <div class="space-y-1.5">
+            <div class="text-xs font-semibold uppercase tracking-wide pl-1" style="color: var(--app-muted);">Erscheinungsbild</div>
+            <div class="glass-card p-3.5 space-y-3">
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <div class="text-sm font-semibold">Darstellungsmodus</div>
+                  <div class="text-xs" style="color: var(--app-muted);">Auto, Hell oder Dunkel wählen</div>
+                </div>
+              </div>
+              <div class="glass-well p-1 grid grid-cols-3 gap-1" role="group" aria-label="Farbschema wählen">
+                <button id="btnAuto" onclick="setTheme('auto')" class="press-btn py-2 rounded-[10px] text-xs font-semibold transition-all">
+                  ◐ Auto
+                </button>
+                <button id="btnLight" onclick="setTheme('light')" class="press-btn py-2 rounded-[10px] text-xs font-semibold transition-all">
+                  ☀️ Hell
+                </button>
+                <button id="btnDark" onclick="setTheme('dark')" class="press-btn py-2 rounded-[10px] text-xs font-semibold transition-all">
+                  🌙 Dunkel
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="text-xs font-semibold uppercase tracking-wide pl-1" style="color: var(--app-muted);">System &amp; Berechnung</div>
+            <div class="glass-card divide-y" style="border-color: var(--glass-border);">
+              <div class="p-3.5 flex items-center justify-between">
+                <span class="text-sm font-medium">Fühler-Datenbank</span>
+                <span class="text-xs font-semibold tabular-nums" style="color: var(--app-muted);">17 Kennlinien</span>
+              </div>
+              <div class="p-3.5 flex items-center justify-between" style="border-color: var(--glass-border);">
+                <span class="text-sm font-medium">Normen</span>
+                <span class="text-xs font-semibold" style="color: var(--app-muted);">IEC 60751 · DIN 43760</span>
+              </div>
+              <div class="p-3.5 flex items-center justify-between" style="border-color: var(--glass-border);">
+                <span class="text-sm font-medium">Version</span>
+                <span class="text-xs font-semibold tabular-nums" style="color: var(--app-muted);">Prototyp 1.0</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Native iOS Tab Bar + Home Indicator ganz unten am iPhone-Bildschirm -->
+      <footer class="shrink-0">
+        <nav class="glass-bar px-4 py-1.5 border-t grid grid-cols-2 gap-2" style="border-color: var(--glass-border);">
+          <button id="tabHome" onclick="navigate('home')" class="press-btn min-h-[48px] rounded-[12px] text-xs font-semibold flex flex-col items-center justify-center gap-0.5" style="color: var(--app-accent);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+            </svg>
+            <span>Startseite</span>
+          </button>
+          <button id="tabSensor" onclick="navigate('sensor')" class="press-btn min-h-[48px] rounded-[12px] text-xs font-semibold flex flex-col items-center justify-center gap-0.5" style="color: var(--app-muted);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+              <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/>
+              <path d="M12 15v-3"/>
+            </svg>
+            <span>PTC / NTC</span>
+          </button>
+        </nav>
+        <div class="glass-bar pb-2.5 pt-1 flex justify-center">
+          <div class="w-32 h-1.5 rounded-full opacity-35" style="background-color: var(--app-ink);"></div>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const SENSORS = {
+      PTC: [
+        { id: 'PT1000', name: 'PT1000', desc: 'IEC 60751 (R₀ = 1000 Ω)', r0: 1000, type: 'pt' },
+        { id: 'PT100', name: 'PT100', desc: 'IEC 60751 (R₀ = 100 Ω)', r0: 100, type: 'pt' },
+        { id: 'PT500', name: 'PT500', desc: 'IEC 60751 (R₀ = 500 Ω)', r0: 500, type: 'pt' },
+        { id: 'NI1000', name: 'Ni1000 (DIN)', desc: 'DIN 43760 · TK6180', r0: 1000, type: 'ni' },
+        { id: 'LGNI1000', name: 'Ni1000 (LG)', desc: 'Siemens / Landis · TK5000', r0: 1000, type: 'lgni' },
+        { id: 'NI100', name: 'Ni100', desc: 'DIN 43760 (R₀ = 100 Ω)', r0: 100, type: 'ni' },
+        { id: 'KTY81_210', name: 'KTY81-210', desc: 'Silizium-PTC (R₂₅ = 2000 Ω)', r25: 2000, type: 'kty' },
+        { id: 'KTY81_110', name: 'KTY81-110', desc: 'Silizium-PTC (R₂₅ = 1000 Ω)', r25: 1000, type: 'kty' }
+      ],
+      NTC: [
+        { id: 'NTC10K', name: 'NTC 10k (3977)', desc: 'B3977 · Carel / Danfoss', r25: 10000, beta: 3977, type: 'ntc' },
+        { id: 'NTC10K3435', name: 'NTC 10k (3435)', desc: 'B3435 · Kälte / Klima', r25: 10000, beta: 3435, type: 'ntc' },
+        { id: 'NTC10K_PRECON', name: 'NTC 10k Precon', desc: 'B3892 · Type II (US)', r25: 10000, beta: 3892, type: 'ntc' },
+        { id: 'NTC20K', name: 'NTC 20k', desc: 'B4262 · Honeywell / Trend', r25: 20000, beta: 4262, type: 'ntc' },
+        { id: 'NTC5K', name: 'NTC 5k', desc: 'B3977 · Standard', r25: 5000, beta: 3977, type: 'ntc' },
+        { id: 'NTC2K2', name: 'NTC 2.2k', desc: 'B3977 · Johnson A99', r25: 2252, beta: 3977, type: 'ntc' },
+        { id: 'NTC2K', name: 'NTC 2k', desc: 'B3520 · Sauter / JCI', r25: 2000, beta: 3520, type: 'ntc' },
+        { id: 'NTC50K', name: 'NTC 50k', desc: 'B3950 · Wärmepumpe', r25: 50000, beta: 3950, type: 'ntc' },
+        { id: 'NTC100K', name: 'NTC 100k', desc: 'B4092 · Hochtemperatur', r25: 100000, beta: 4092, type: 'ntc' }
+      ]
+    };
+
+    const state = {
+      theme: 'light',
+      view: 'home',
+      family: 'PTC',
+      sensorId: 'PT1000',
+      direction: 'T2R',
+      inputValue: 25
+    };
+
+    function tempToResistance(sensor, t) {
+      if (sensor.type === 'pt') {
+        const A = 3.9083e-3, B = -5.775e-7, C = -4.183e-12;
+        if (t >= 0) return sensor.r0 * (1 + A * t + B * t * t);
+        return sensor.r0 * (1 + A * t + B * t * t + C * (t - 100) * Math.pow(t, 3));
+      }
+      if (sensor.type === 'ni') {
+        const A = 5.485e-3, B = 6.65e-6, C = 2.805e-11;
+        return sensor.r0 * (1 + A * t + B * t * t + C * Math.pow(t, 4));
+      }
+      if (sensor.type === 'lgni') {
+        return sensor.r0 * (1 + 4.37e-3 * t + 6.3e-6 * t * t);
+      }
+      if (sensor.type === 'kty') {
+        const dt = t - 25;
+        return sensor.r25 * (1 + 0.007874 * dt + 0.00001874 * dt * dt);
+      }
+      const tk = t + 273.15;
+      return sensor.r25 * Math.exp(sensor.beta * (1 / tk - 1 / 298.15));
+    }
+
+    function resistanceToTemp(sensor, r) {
+      if (r <= 0 || Number.isNaN(r)) return null;
+      if (sensor.type === 'ntc') {
+        const invT = (1 / 298.15) + (1 / sensor.beta) * Math.log(r / sensor.r25);
+        return (1 / invT) - 273.15;
+      }
+      let lo = -60, hi = 250;
+      if (r < tempToResistance(sensor, lo) || r > tempToResistance(sensor, hi)) return null;
+      for (let i = 0; i < 40; i++) {
+        const mid = (lo + hi) / 2;
+        if (tempToResistance(sensor, mid) < r) lo = mid;
+        else hi = mid;
+      }
+      return (lo + hi) / 2;
+    }
+
+    function haptic() {
+      if (navigator.vibrate) navigator.vibrate(12);
+    }
+
+    function resolveTheme(mode) {
+      if (mode === 'auto') {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      return mode;
+    }
+
+    function setTheme(mode) {
+      state.theme = mode;
+      const effective = resolveTheme(mode);
+      const app = document.getElementById('app');
+      app.classList.toggle('theme-light', effective === 'light');
+      app.classList.toggle('theme-dark', effective === 'dark');
+
+      const activeBg = effective === 'light' ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.18)';
+      ['auto', 'light', 'dark'].forEach(m => {
+        const btn = document.getElementById('btn' + m.charAt(0).toUpperCase() + m.slice(1));
+        if (!btn) return;
+        const isActive = mode === m;
+        btn.style.backgroundColor = isActive ? activeBg : 'transparent';
+        btn.style.color = isActive ? 'var(--app-ink)' : 'var(--app-muted)';
+        btn.style.boxShadow = isActive ? '0 1px 4px rgba(0,0,0,0.12)' : 'none';
+      });
+      if (state.view === 'sensor') renderSensorView();
+    }
+
+    function navigate(view) {
+      state.view = view;
+      const views = {
+        home: document.getElementById('viewHome'),
+        sensor: document.getElementById('viewSensor'),
+        settings: document.getElementById('viewSettings')
+      };
+      Object.entries(views).forEach(([key, el]) => {
+        const active = key === view;
+        el.classList.toggle('hidden', !active);
+        if (active) {
+          el.classList.remove('animate-view');
+          void el.offsetWidth;
+          el.classList.add('animate-view');
+        }
+      });
+
+      document.getElementById('backBtn').classList.toggle('hidden', view === 'home');
+
+      const titles = {
+        home: ['HVAC-R Pro', 'App-Übersicht'],
+        sensor: ['Fühlerwerte (PTC & NTC)', '17 Kennlinien · °C ↔ Ω'],
+        settings: ['Einstellungen', 'Darstellung & System']
+      };
+      document.getElementById('headerTitle').textContent = titles[view][0];
+      document.getElementById('headerSub').textContent = titles[view][1];
+
+      document.getElementById('tabHome').style.color = view === 'home' ? 'var(--app-accent)' : 'var(--app-muted)';
+      document.getElementById('tabSensor').style.color = view === 'sensor' ? 'var(--app-accent)' : 'var(--app-muted)';
+      const settingsBtn = document.getElementById('settingsBtn');
+      settingsBtn.style.color = view === 'settings' ? 'var(--app-accent)' : 'var(--app-ink)';
+      settingsBtn.classList.toggle('gear-active', view === 'settings');
+
+      if (view === 'sensor') renderSensorView();
+    }
+
+    function setFamily(fam) {
+      state.family = fam;
+      state.sensorId = SENSORS[fam][0].id;
+      if (state.direction === 'R2T') {
+        state.inputValue = Math.round(tempToResistance(getCurrentSensor(), 25));
+        document.getElementById('mainInput').value = state.inputValue;
+      }
+      renderSensorView();
+    }
+
+    function setDirection(dir) {
+      if (state.direction === dir) return;
+      state.direction = dir;
+      const sensor = getCurrentSensor();
+      if (dir === 'R2T') {
+        state.inputValue = Math.round(tempToResistance(sensor, 25) * 10) / 10;
+      } else {
+        state.inputValue = 25;
+      }
+      document.getElementById('mainInput').value = state.inputValue;
+      renderSensorView();
+    }
+
+    function selectSensor(id) {
+      state.sensorId = id;
+      if (state.direction === 'R2T') {
+        state.inputValue = Math.round(tempToResistance(getCurrentSensor(), 25) * 10) / 10;
+        document.getElementById('mainInput').value = state.inputValue;
+      }
+      renderSensorView();
+    }
+
+    function stepValue(delta) {
+      haptic();
+      const step = state.direction === 'T2R' ? 1 : 50;
+      state.inputValue = Math.round((state.inputValue + delta * step) * 10) / 10;
+      document.getElementById('mainInput').value = state.inputValue;
+      updateCalculation();
+    }
+
+    function applyPreset(val) {
+      haptic();
+      state.inputValue = val;
+      document.getElementById('mainInput').value = val;
+      updateCalculation();
+    }
+
+    function onInputChange() {
+      const parsed = parseFloat(document.getElementById('mainInput').value);
+      state.inputValue = Number.isNaN(parsed) ? 0 : parsed;
+      updateCalculation();
+    }
+
+    function getCurrentSensor() {
+      return SENSORS[state.family].find(s => s.id === state.sensorId) || SENSORS[state.family][0];
+    }
+
+    function renderSensorView() {
+      const effective = resolveTheme(state.theme);
+      const activeBg = effective === 'light' ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.18)';
+      const activeStyle = `background-color: ${activeBg}; color: var(--app-ink); box-shadow: 0 1px 4px rgba(0,0,0,0.12);`;
+      const inactiveStyle = 'background-color: transparent; color: var(--app-muted);';
+      document.getElementById('famPTC').style.cssText = state.family === 'PTC' ? activeStyle : inactiveStyle;
+      document.getElementById('famNTC').style.cssText = state.family === 'NTC' ? activeStyle : inactiveStyle;
+      document.getElementById('dirT2R').style.cssText = state.direction === 'T2R' ? activeStyle : inactiveStyle;
+      document.getElementById('dirR2T').style.cssText = state.direction === 'R2T' ? activeStyle : inactiveStyle;
+
+      const selectEl = document.getElementById('sensorSelect');
+      selectEl.innerHTML = SENSORS[state.family].map(s =>
+        `<option value="${s.id}" ${s.id === state.sensorId ? 'selected' : ''}>${s.name} — ${s.desc}</option>`
+      ).join('');
+
+      const presets = state.direction === 'T2R'
+        ? [{ l: '-10 °C', v: -10 }, { l: '0 °C', v: 0 }, { l: '20 °C', v: 20 }, { l: '25 °C', v: 25 }, { l: '60 °C', v: 60 }]
+        : [{ l: '500 Ω', v: 500 }, { l: '1 kΩ', v: 1000 }, { l: '2 kΩ', v: 2000 }, { l: '10 kΩ', v: 10000 }, { l: '20 kΩ', v: 20000 }];
+
+      document.getElementById('presetRow').innerHTML = presets.map(p =>
+        `<button onclick="applyPreset(${p.v})" class="glass-card press-btn px-3 py-2 rounded-[10px] text-xs font-semibold shrink-0 tabular-nums" style="color: var(--app-accent);">${p.l}</button>`
+      ).join('');
+
+      document.getElementById('inputTitle').textContent = state.direction === 'T2R' ? 'Temperatur' : 'Gemessener Widerstand';
+      document.getElementById('inputUnit').textContent = state.direction === 'T2R' ? 'Einheit: °C' : 'Einheit: Ω (Ohm)';
+
+      updateCalculation();
+    }
+
+    function updateCalculation() {
+      const sensor = getCurrentSensor();
+      const val = state.inputValue;
+      const heroLabel = document.getElementById('heroLabel');
+      const heroValue = document.getElementById('heroValue');
+      const heroMeta = document.getElementById('heroMeta');
+      const heroBadge = document.getElementById('heroBadge');
+      heroValue.classList.remove('animate-value');
+      void heroValue.offsetWidth;
+      heroValue.classList.add('animate-value');
+
+      if (state.direction === 'T2R') {
+        heroLabel.textContent = 'Soll-Widerstand';
+        if (val < -50 || val > 200) {
+          heroValue.textContent = 'Außerbereich';
+          heroBadge.textContent = '● Bereich -50…200 °C';
+          heroMeta.textContent = `${sensor.name} · ${sensor.desc}`;
+          return;
+        }
+        const r = tempToResistance(sensor, val);
+        const formatted = r >= 10000 ? `${(r / 1000).toFixed(2)} kΩ` : `${r.toFixed(1)} Ω`;
+        heroValue.textContent = formatted;
+        heroBadge.textContent = '● Kennlinie OK ✓';
+        heroMeta.textContent = `${sensor.name} · ${sensor.desc} · bei ${val.toFixed(1)} °C`;
+      } else {
+        heroLabel.textContent = 'Berechnete Temperatur';
+        const t = resistanceToTemp(sensor, val);
+        if (t === null || !Number.isFinite(t)) {
+          heroValue.textContent = '— °C';
+          heroBadge.textContent = '● Widerstand unplausibel';
+          heroMeta.textContent = `${sensor.name} · ${sensor.desc}`;
+          return;
+        }
+        heroValue.textContent = `${t.toFixed(1)} °C`;
+        heroBadge.textContent = '● Messung plausibel ✓';
+        heroMeta.textContent = `${sensor.name} · ${sensor.desc} · bei ${val} Ω`;
+      }
+    }
+
+    setTheme('light');
+  </script>
+</body>
+</html>
