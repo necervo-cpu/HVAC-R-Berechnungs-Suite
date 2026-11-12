@@ -159,6 +159,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html {
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
@@ -285,7 +289,9 @@ textarea {
   position: relative;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 1fr;
+  grid-auto-columns: minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
   padding: 3px;
   border-radius: 14px;
   background: var(--pill-track);
@@ -322,8 +328,9 @@ textarea {
 .tab-btn {
   position: relative;
   z-index: 1;
+  min-width: 0;
   min-height: 38px;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border: 0;
   background: transparent;
   color: var(--muted);
@@ -339,7 +346,7 @@ textarea {
 
 .segmented--compact .tab-btn {
   min-height: 34px;
-  padding: 4px 8px;
+  padding: 4px 4px;
   font-size: 12px;
 }
 
@@ -408,40 +415,272 @@ textarea {
   min-width: 0;
 }
 
-/* Design-Richtungs-Switcher Karte (kompakt) */
-.design-strip {
+/* Zurück-Button in der Top-Bar */
+.view-stack {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-.design-meta {
+.select-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.glass-select-face {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: var(--radius-well);
+  border: 1px solid var(--border-subtle);
+  background: var(--input-bg);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  font-size: 12px;
+  gap: 10px;
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.glass-select-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select-chevron {
+  flex-shrink: 0;
   color: var(--muted);
-  padding: 0 2px;
 }
 
-.design-meta strong {
-  color: var(--ink);
-  font-weight: 600;
+.glass-select-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-.swatch-row {
+.select-wrap:focus-within .glass-select-face {
+  border-color: var(--brand-accent);
+}
+
+.back-btn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  min-height: 36px;
+  padding: 0 10px 0 6px;
+  border-radius: 11px;
+  border: 1px solid var(--border-subtle);
+  background: var(--input-bg);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.back-btn[hidden] {
+  display: none;
+}
+
+/* Startseite: Suche & Kategorie-Filter */
+.search-well {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-well);
+  background: var(--input-bg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+.search-icon {
+  color: var(--muted);
   flex-shrink: 0;
 }
 
-.swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+.search-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 16px;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+}
+
+/* Startseite: Modul-Karten Grid */
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 359px) {
+  .hub-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hub-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 122px;
+  padding: 14px;
+  border-radius: 20px;
   border: 1px solid var(--border-subtle);
+  background: var(--glass);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  box-shadow:
+    inset 0 1px 1px 0 var(--edge),
+    inset 0 -1px 0 0 var(--edge-low),
+    var(--ios-shadow);
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink);
+  animation: tile-enter 240ms var(--ease-out) both;
+  animation-delay: calc(var(--stagger, 0) * 35ms);
+}
+
+.hub-tile > * {
+  min-width: 0;
+}
+
+.hub-tile[data-planned="true"] {
+  opacity: 0.78;
+}
+
+@keyframes tile-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.hub-tile-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hub-tile-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tile);
+  color: var(--brand-accent-text);
+  flex-shrink: 0;
+}
+
+.hub-tile[data-tone="warm"] .hub-tile-icon {
+  background: var(--brand-warm-soft);
+  color: var(--brand-warm);
+}
+
+.hub-tile-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: var(--pill-track);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.hub-tile-badge[data-live="true"] {
+  background: var(--status-ok-bg);
+  color: var(--status-ok);
+}
+
+.hub-tile-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hub-tile-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.hub-tile-sub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.empty-state {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* Dezenter Liquid-Glass Toast für geplante Module */
+.toast-pill {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 16px) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 40;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--glass-hero);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    inset 0 1px 1px 0 var(--edge),
+    var(--ios-shadow);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  max-width: calc(100vw - 28px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 220ms var(--ease-spring);
+}
+
+.toast-pill[data-visible="true"] {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
 }
 
 /* Live Ergebnis Hero */
@@ -753,6 +992,56 @@ textarea {
   color: var(--ink);
 }
 
+/* Referenzwert-Gitter (0 / 20 / 25 / 50 °C) */
+.ref-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.ref-cell {
+  background: var(--input-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.ref-temp {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.ref-ohm {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.custom-ntc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.custom-ntc-grid .well {
+  padding: 8px 10px;
+}
+
+.custom-ntc-grid .num-input {
+  text-align: left;
+  font-size: 17px;
+  min-height: 38px;
+}
+
 /* ==========================================================================
    9. TAKTILE PRESS-SCALE & DESKTOP-HOVER-GATING
    ========================================================================== */
@@ -781,6 +1070,9 @@ textarea {
   .chip-btn:hover:not([aria-pressed="true"]),
   .step-btn:hover,
   .theme-btn:hover,
+  .back-btn:hover,
+  .select-wrap:hover .glass-select-face,
+  .hub-tile:hover,
   .acc-trigger:hover {
     border-color: var(--brand-accent);
   }

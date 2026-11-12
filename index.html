@@ -7,7 +7,7 @@
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f6f9" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0f12" />
     <meta name="apple-mobile-web-app-title" content="HVAC·R" />
-    <title>HVAC·R Rechner · Design-Vorlagen</title>
+    <title>HVAC·R Rechner</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <link rel="apple-touch-icon" href="./icon.svg" />
@@ -21,15 +21,27 @@
       })();
     </script>
     <script type="module" src="./src/theme.js"></script>
-    <link rel="stylesheet" href="./src/styles/liquid-glass.css" />
+    <link rel="stylesheet" href="./src/styles/liquid-glass.css?v=3" />
   </head>
   <body>
     <main class="app-shell">
       <!-- Kompakte Top-Leiste (44px) -->
       <header class="top-bar">
         <div class="brand-mark">
-          <span class="brand-dot" aria-hidden="true"></span>
-          <span class="brand-title">HVAC·R</span>
+          <button
+            type="button"
+            id="nav-back-btn"
+            class="back-btn press-btn"
+            aria-label="Zurück zur Übersicht"
+            hidden
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span>Übersicht</span>
+          </button>
+          <span id="brand-dot" class="brand-dot" aria-hidden="true"></span>
+          <span id="brand-title" class="brand-title">HVAC·R</span>
         </div>
         <div class="top-actions">
           <button
@@ -44,182 +56,159 @@
         </div>
       </header>
 
-      <!-- Rechner-Auswahl -->
-      <div id="calc-switcher" class="segmented" role="tablist" aria-label="Rechner wählen">
-        <span class="t-tabs-pill" aria-hidden="true"></span>
-        <button type="button" class="tab-btn press-btn" role="tab" data-calc="refrig" aria-selected="true">
-          Kältekreis (ΔT)
-        </button>
-        <button type="button" class="tab-btn press-btn" role="tab" data-calc="duct" aria-selected="false">
-          Luftkanal (DN)
-        </button>
+      <!-- STARTSEITE -->
+      <section id="view-home" class="view-stack calc-panel" aria-label="Rechner-Übersicht">
+        <div class="liquid-glass-card">
+          <div class="search-well">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              id="hub-search"
+              class="search-input"
+              type="search"
+              placeholder="Rechner suchen (z. B. NTC, PT1000, Ohm)…"
+              aria-label="Rechner durchsuchen"
+              autocapitalize="none"
+              autocorrect="off"
+            />
+          </div>
+
+          <div class="select-wrap">
+            <div class="glass-select-face" aria-hidden="true">
+              <span id="hub-category-label" class="glass-select-label">Alle Kategorien</span>
+              <svg class="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <select id="hub-category-select" class="glass-select-native" aria-label="Kategorie wählen">
+              <option value="all">Alle Kategorien</option>
+              <option value="kaelte">Kälte</option>
+              <option value="klima">Lüftung</option>
+              <option value="heizung">Heizung</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="hub-grid" class="hub-grid" role="list"></div>
+        <div id="hub-empty" class="liquid-glass-card empty-state" hidden>
+          Kein passender Rechner gefunden.
+        </div>
+      </section>
+
+      <!-- DETAIL-ANSICHT: PTC & NTC SENSOR-RECHNER -->
+      <div id="view-calculator" hidden>
+        <section id="panel-sensor" class="liquid-glass-card calc-panel" aria-label="PTC und NTC Sensor-Rechner">
+          <!-- Richtung: Ohm -> °C vs. °C -> Ohm -->
+          <div id="sensor-dir-switcher" class="segmented segmented--compact" role="tablist" aria-label="Umrechnungsrichtung">
+            <span class="t-tabs-pill" aria-hidden="true"></span>
+            <button type="button" class="tab-btn press-btn" role="tab" data-dir="ohmToTemp" aria-selected="true">
+              Ohm → °C
+            </button>
+            <button type="button" class="tab-btn press-btn" role="tab" data-dir="tempToOhm" aria-selected="false">
+              °C → Ohm
+            </button>
+          </div>
+
+          <!-- Typ: NTC vs. PTC -->
+          <div id="sensor-family-switcher" class="segmented segmented--compact" role="tablist" aria-label="Sensortyp">
+            <span class="t-tabs-pill" aria-hidden="true"></span>
+            <button type="button" class="tab-btn press-btn" role="tab" data-family="ntc" aria-selected="true">
+              NTC-Fühler
+            </button>
+            <button type="button" class="tab-btn press-btn" role="tab" data-family="ptc" aria-selected="false">
+              PTC / Platin
+            </button>
+          </div>
+
+          <!-- Live Ergebnis Hero -->
+          <div class="result-hero" aria-live="polite">
+            <div class="result-top">
+              <span id="sensor-result-title" class="result-label">NTC 10 kΩ (B=3435)</span>
+              <span id="sensor-status-badge" class="status-badge" data-state="ok">Plausibel · Arbeitsbereich</span>
+            </div>
+            <div class="result-value-row">
+              <div id="sensor-result-val" class="result-main">25,0<span class="result-unit">°C</span></div>
+              <div id="sensor-result-sub" class="result-sub">R₂₅ = 10.000 Ω · B = 3435 K</div>
+            </div>
+          </div>
+
+          <!-- Kennlinien-Auswahl als Dropdown -->
+          <div class="well">
+            <div class="well-header">
+              <label class="well-label" for="sensor-select">Sensorkennlinie</label>
+              <span id="sensor-note-hint" class="well-hint">z. B. Carel / Kälteregler</span>
+            </div>
+            <div class="select-wrap">
+              <div class="glass-select-face" aria-hidden="true">
+                <span id="sensor-select-label" class="glass-select-label">NTC 10 kΩ (B=3435)</span>
+                <svg class="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+              <select id="sensor-select" class="glass-select-native" aria-label="Sensorkennlinie wählen"></select>
+            </div>
+          </div>
+
+          <!-- Optionales Panel für eigenen NTC (R25 & B-Wert) -->
+          <div id="custom-ntc-panel" class="t-acc-panel" data-open="false">
+            <div class="t-acc-panel-inner">
+              <div class="custom-ntc-grid">
+                <div class="well">
+                  <div class="well-header">
+                    <label class="well-label" for="input-custom-r25">R₂₅ (Ω)</label>
+                  </div>
+                  <input id="input-custom-r25" class="num-input" type="text" inputmode="numeric" value="10000" aria-label="Nennwiderstand R25 in Ohm" />
+                </div>
+                <div class="well">
+                  <div class="well-header">
+                    <label class="well-label" for="input-custom-b">B-Wert (K)</label>
+                  </div>
+                  <input id="input-custom-b" class="num-input" type="text" inputmode="numeric" value="3950" aria-label="B-Wert in Kelvin" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Haupt-Eingabe mit Steppern -->
+          <div class="well">
+            <div class="well-header">
+              <label id="sensor-input-label" class="well-label" for="input-sensor-val">Gemessener Widerstand</label>
+              <span id="sensor-step-hint" class="well-hint">Schritt ±100 Ω</span>
+            </div>
+            <div class="stepper-row">
+              <button type="button" id="sensor-step-minus" class="step-btn press-icon" aria-label="Wert verringern">−</button>
+              <input id="input-sensor-val" class="num-input" type="text" inputmode="decimal" value="10000" aria-label="Messwert eingeben" />
+              <span id="sensor-input-unit" class="num-unit">Ω</span>
+              <button type="button" id="sensor-step-plus" class="step-btn press-icon" aria-label="Wert erhöhen">+</button>
+            </div>
+          </div>
+
+          <!-- Aufklappbare Prüfpunkte (0 / 20 / 25 / 50 °C) -->
+          <button
+            type="button"
+            id="ref-acc-trigger"
+            class="acc-trigger press-card"
+            aria-expanded="false"
+            aria-controls="ref-acc-panel"
+          >
+            <span>Prüfpunkte dieser Kennlinie (0–50 °C)</span>
+            <svg class="acc-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div id="ref-acc-panel" class="t-acc-panel" data-open="false">
+            <div class="t-acc-panel-inner">
+              <div id="sensor-ref-grid" class="ref-grid"></div>
+            </div>
+          </div>
+        </section>
       </div>
-
-      <!-- RECHNER 1: Kältetechnik (Überhitzung & Unterkühlung) -->
-      <section id="panel-refrig" class="liquid-glass-card calc-panel" aria-label="Überhitzung und Unterkühlung">
-        <div id="refrig-mode-switcher" class="segmented segmented--compact" role="tablist" aria-label="Messmodus">
-          <span class="t-tabs-pill" aria-hidden="true"></span>
-          <button type="button" class="tab-btn press-btn" role="tab" data-mode="superheat" aria-selected="true">
-            Überhitzung
-          </button>
-          <button type="button" class="tab-btn press-btn" role="tab" data-mode="subcooling" aria-selected="false">
-            Unterkühlung
-          </button>
-        </div>
-
-        <div class="result-hero" aria-live="polite">
-          <div class="result-top">
-            <span id="refrig-result-title" class="result-label">Überhitzung (ΔT)</span>
-            <span id="refrig-status-badge" class="status-badge" data-state="ok">Optimal (4–10 K)</span>
-          </div>
-          <div class="result-value-row">
-            <div id="refrig-result-val" class="result-main">6,8<span class="result-unit">K</span></div>
-            <div id="refrig-result-sub" class="result-sub">T₀ = 7,2 °C</div>
-          </div>
-        </div>
-
-        <div id="refrigerant-chips" class="chip-group" role="group" aria-label="Kältemittel">
-          <button type="button" class="chip-btn press-btn" data-ref="R32" aria-pressed="true">R32</button>
-          <button type="button" class="chip-btn press-btn" data-ref="R410A" aria-pressed="false">R410A</button>
-          <button type="button" class="chip-btn press-btn" data-ref="R290" aria-pressed="false">R290</button>
-          <button type="button" class="chip-btn press-btn" data-ref="R134a" aria-pressed="false">R134a</button>
-        </div>
-
-        <div class="field-grid">
-          <div class="well">
-            <div class="well-header">
-              <label class="well-label" for="input-bar">Manometerdruck (bar ü)</label>
-              <span id="refrig-sat-hint" class="well-hint">Sättigung 7,2 °C</span>
-            </div>
-            <div class="stepper-row">
-              <button type="button" class="step-btn press-icon" data-step-target="input-bar" data-step-delta="-0.5" aria-label="Druck um 0,5 bar verringern">−</button>
-              <input id="input-bar" class="num-input" type="text" inputmode="decimal" value="7.2" aria-label="Manometerdruck in bar ü" />
-              <span class="num-unit">bar</span>
-              <button type="button" class="step-btn press-icon" data-step-target="input-bar" data-step-delta="0.5" aria-label="Druck um 0,5 bar erhöhen">+</button>
-            </div>
-          </div>
-
-          <div class="well">
-            <div class="well-header">
-              <label id="refrig-temp-label" class="well-label" for="input-temp">Saugleitung</label>
-              <span class="well-hint">Fühler-Messwert</span>
-            </div>
-            <div class="stepper-row">
-              <button type="button" class="step-btn press-icon" data-step-target="input-temp" data-step-delta="-0.5" aria-label="Temperatur um 0,5 °C verringern">−</button>
-              <input id="input-temp" class="num-input" type="text" inputmode="decimal" value="14.0" aria-label="Leitungstemperatur in Grad Celsius" />
-              <span class="num-unit">°C</span>
-              <button type="button" class="step-btn press-icon" data-step-target="input-temp" data-step-delta="0.5" aria-label="Temperatur um 0,5 °C erhöhen">+</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- RECHNER 2: Lüftungstechnik (Luftkanal) -->
-      <section id="panel-duct" class="liquid-glass-card calc-panel" aria-label="Luftkanal Dimensionierung" hidden>
-        <div id="duct-shape-switcher" class="segmented segmented--compact" role="tablist" aria-label="Kanalform">
-          <span class="t-tabs-pill" aria-hidden="true"></span>
-          <button type="button" class="tab-btn press-btn" role="tab" data-shape="round" aria-selected="true">
-            Rundrohr (DN)
-          </button>
-          <button type="button" class="tab-btn press-btn" role="tab" data-shape="rect" aria-selected="false">
-            Rechteck (B×H)
-          </button>
-        </div>
-
-        <div class="result-hero" aria-live="polite">
-          <div class="result-top">
-            <span class="result-label">Empfohlener Querschnitt</span>
-            <span id="duct-status-badge" class="status-badge" data-state="ok">Leise · Wohnbau-tauglich</span>
-          </div>
-          <div class="result-value-row">
-            <div id="duct-result-val" class="result-main">DN 200</div>
-            <div id="duct-result-sub" class="result-sub">v = 2,83 m/s · A = 314 cm²</div>
-          </div>
-        </div>
-
-        <div id="velocity-chips" class="chip-group" role="group" aria-label="Zielgeschwindigkeit">
-          <button type="button" class="chip-btn press-btn" data-velocity="2.5" aria-pressed="false">Wohnung 2,5 m/s</button>
-          <button type="button" class="chip-btn press-btn" data-velocity="3.5" aria-pressed="true">Büro 3,5 m/s</button>
-          <button type="button" class="chip-btn press-btn" data-velocity="6.0" aria-pressed="false">Technik 6,0 m/s</button>
-        </div>
-
-        <div class="field-grid">
-          <div class="well">
-            <div class="well-header">
-              <label class="well-label" for="input-flow">Volumenstrom</label>
-              <span class="well-hint">Anlagen-Nennluft</span>
-            </div>
-            <div class="stepper-row">
-              <button type="button" class="step-btn press-icon" data-step-target="input-flow" data-step-delta="-25" aria-label="Volumenstrom um 25 m³/h verringern">−</button>
-              <input id="input-flow" class="num-input" type="text" inputmode="numeric" value="320" aria-label="Volumenstrom in Kubikmeter pro Stunde" />
-              <span class="num-unit">m³/h</span>
-              <button type="button" class="step-btn press-icon" data-step-target="input-flow" data-step-delta="25" aria-label="Volumenstrom um 25 m³/h erhöhen">+</button>
-            </div>
-          </div>
-
-          <div id="duct-rect-fields" class="field-grid" hidden>
-            <div class="well">
-              <div class="well-header">
-                <label class="well-label" for="input-width">Kanalbreite (B)</label>
-              </div>
-              <div class="stepper-row">
-                <button type="button" class="step-btn press-icon" data-step-target="input-width" data-step-delta="-50" aria-label="Breite um 50 mm verringern">−</button>
-                <input id="input-width" class="num-input" type="text" inputmode="numeric" value="300" aria-label="Kanalbreite in Millimeter" />
-                <span class="num-unit">mm</span>
-                <button type="button" class="step-btn press-icon" data-step-target="input-width" data-step-delta="50" aria-label="Breite um 50 mm erhöhen">+</button>
-              </div>
-            </div>
-            <div class="well">
-              <div class="well-header">
-                <label class="well-label" for="input-height">Kanalhöhe (H)</label>
-              </div>
-              <div class="stepper-row">
-                <button type="button" class="step-btn press-icon" data-step-target="input-height" data-step-delta="-50" aria-label="Höhe um 50 mm verringern">−</button>
-                <input id="input-height" class="num-input" type="text" inputmode="numeric" value="150" aria-label="Kanalhöhe in Millimeter" />
-                <span class="num-unit">mm</span>
-                <button type="button" class="step-btn press-icon" data-step-target="input-height" data-step-delta="50" aria-label="Höhe um 50 mm erhöhen">+</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Aufklappbares Info-Accordion (Tokens & iPhone-Installation) -->
-      <section class="liquid-glass-card">
-        <button
-          type="button"
-          id="info-acc-trigger"
-          class="acc-trigger press-card"
-          aria-expanded="false"
-          aria-controls="info-acc-panel"
-        >
-          <span>Aktive Tokens &amp; iPhone-Installation</span>
-          <svg class="acc-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </button>
-        <div id="info-acc-panel" class="t-acc-panel" data-open="false">
-          <div class="t-acc-panel-inner">
-            <div class="acc-content">
-              <div class="token-list">
-                <div class="token-item">
-                  <span>Akzentfarbe</span>
-                  <code id="token-accent-val">#0071e3</code>
-                </div>
-                <div class="token-item">
-                  <span>Hintergrund</span>
-                  <code id="token-bg-val">#f4f6f9</code>
-                </div>
-              </div>
-              <p class="acc-tip">
-                <strong>Auf dem iPhone speichern:</strong> In Safari unten auf <em>Teilen</em> tippen und <strong>„Zum Home-Bildschirm“</strong> wählen. Die App startet im Vollbild ohne Safari-Leiste.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
     </main>
 
-    <script type="module" src="./src/app.js"></script>
+    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite" data-visible="false"></div>
+
+    <script type="module" src="./src/app.js?v=3"></script>
   </body>
 </html>

@@ -1,91 +1,39 @@
 /**
- * Modul: HVAC-R Fachberechnungen (calculators.js)
- * Zweck: Validierte physikalische Berechnungen für Kälte- und Lüftungstechnik
- *   (Sättigungstemperatur, Überhitzung, Unterkühlung, Luftkanal-Dimensionierung).
- * Verantwortlichkeit: Reine, zustandsfreie Rechenfunktionen mit Grenzprüfung gegen NaN/Infinity.
- * Sicherheits- & Stabilitätsrelevanz: Alle Eingaben werden auf plausible physikalische Bereiche
- *   begrenzt (Clamping), sodass keine unmöglichen Werte angezeigt werden.
+ * Modul: HVAC-R Sensor-Berechnungen (calculators.js)
+ * Zweck: Physikalische Umrechnung zwischen Widerstand (Ohm) und Temperatur (°C)
+ *   für gängige HVAC-R-Sensoren (NTC 2k/5k/10k/12k/20k/Eigen sowie PTC PT100, PT1000, KTY81-210).
+ * Verantwortlichkeit: Reine, zustandsfreie Rechenfunktionen nach B-Parameter-Gleichung (NTC),
+ *   Callendar-Van-Dusen / DIN EN 60751 (PT100/PT1000) und Silizium-Polynom (KTY81-210).
+ * Sicherheits- & Stabilitätsrelevanz: Eingabe-Clamping und Schutz vor Division durch Null / NaN.
  */
 
-/**
- * Druck-Temperatur-Stützstellen (Relativdruck in bar ü -> Sättigungstemperatur in °C)
- * Basis: Standard-Dampfdruckkurven für gängige HVAC-R-Kältemittel.
- */
-const REFRIGERANT_PT = {
-  R32: [
-    [-0.5, -62.0],
-    [0.0, -51.7],
-    [1.0, -37.2],
-    [2.0, -26.5],
-    [3.0, -18.0],
-    [4.0, -10.8],
-    [5.0, -4.5],
-    [6.0, 1.1],
-    [7.0, 6.1],
-    [8.0, 10.7],
-    [10.0, 18.8],
-    [12.0, 25.8],
-    [15.0, 34.8],
-    [18.0, 42.5],
-    [22.0, 51.3],
-    [26.0, 58.9],
-    [30.0, 65.7],
-  ],
-  R410A: [
-    [-0.5, -61.8],
-    [0.0, -51.4],
-    [1.0, -36.8],
-    [2.0, -26.1],
-    [3.0, -17.5],
-    [4.0, -10.3],
-    [5.0, -4.0],
-    [6.0, 1.6],
-    [7.0, 6.7],
-    [8.0, 11.3],
-    [10.0, 19.4],
-    [12.0, 26.5],
-    [15.0, 35.6],
-    [18.0, 43.3],
-    [22.0, 52.1],
-    [26.0, 59.7],
-    [30.0, 66.5],
-  ],
-  R290: [
-    [-0.5, -54.8],
-    [0.0, -42.1],
-    [1.0, -25.6],
-    [2.0, -13.5],
-    [3.0, -3.9],
-    [4.0, 4.1],
-    [5.0, 11.0],
-    [6.0, 17.2],
-    [7.0, 22.8],
-    [8.0, 27.9],
-    [10.0, 36.9],
-    [12.0, 44.7],
-    [15.0, 54.9],
-    [18.0, 63.8],
-    [22.0, 74.1],
-  ],
-  R134a: [
-    [-0.5, -40.5],
-    [0.0, -26.1],
-    [0.5, -16.8],
-    [1.0, -10.1],
-    [1.5, -4.5],
-    [2.0, 0.3],
-    [3.0, 8.6],
-    [4.0, 15.6],
-    [5.0, 21.6],
-    [6.0, 27.0],
-    [8.0, 36.2],
-    [10.0, 44.0],
-    [12.0, 50.8],
-    [15.0, 59.7],
-  ],
+export const NTC_SENSORS = {
+  ntc2k: { id: "ntc2k", label: "2k", fullLabel: "NTC 2 kΩ", r25: 2000, b: 3435, note: "z. B. Danfoss EKS" },
+  ntc5k: { id: "ntc5k", label: "5k", fullLabel: "NTC 5 kΩ", r25: 5000, b: 3977, note: "Standard-Fühler" },
+  ntc10k_3435: { id: "ntc10k_3435", label: "10k · 3435", fullLabel: "NTC 10 kΩ (B=3435)", r25: 10000, b: 3435, note: "z. B. Carel / Kälteregler" },
+  ntc10k_3977: { id: "ntc10k_3977", label: "10k · 3977", fullLabel: "NTC 10 kΩ (B=3977)", r25: 10000, b: 3977, note: "Standard-NTC" },
+  ntc12k: { id: "ntc12k", label: "12k", fullLabel: "NTC 12 kΩ", r25: 12000, b: 3977, note: "Split / Wärmepumpe" },
+  ntc20k: { id: "ntc20k", label: "20k", fullLabel: "NTC 20 kΩ", r25: 20000, b: 3977, note: "z. B. Honeywell / Siemens" },
+  ntc_custom: { id: "ntc_custom", label: "Eigen", fullLabel: "Eigener NTC", r25: 10000, b: 3950, note: "Freier R₂₅ & B-Wert" },
 };
 
-const STANDARD_DN = [80, 100, 125, 160, 200, 250, 315, 355, 400, 450, 500, 630];
+export const PTC_SENSORS = {
+  pt100: { id: "pt100", label: "PT100", fullLabel: "PT100 (DIN EN 60751)", r0: 100, note: "R₀ = 100,0 Ω" },
+  pt1000: { id: "pt1000", label: "PT1000", fullLabel: "PT1000 (DIN EN 60751)", r0: 1000, note: "R₀ = 1000,0 Ω" },
+  kty81_210: { id: "kty81_210", label: "KTY81-210", fullLabel: "KTY81-210 (2 kΩ)", r25: 2000, note: "R₂₅ = 2000 Ω" },
+};
+
+const T25_K = 298.15;
+const T0_K = 273.15;
+
+// Callendar-Van-Dusen Konstanten (DIN EN 60751)
+const CVD_A = 3.9083e-3;
+const CVD_B = -5.775e-7;
+const CVD_C = -4.183e-12;
+
+// KTY81-210 Silizium-Polynom um 25 °C
+const KTY_A = 7.874e-3;
+const KTY_B = 1.874e-5;
 
 export function clampNumber(value, min, max, fallback) {
   const num = Number(value);
@@ -93,135 +41,159 @@ export function clampNumber(value, min, max, fallback) {
   return Math.min(max, Math.max(min, num));
 }
 
-/**
- * Interpoliert die Sättigungstemperatur (°C) aus dem Überdruck (bar ü).
- */
-export function getSaturationTempC(refrigerant, gaugeBar) {
-  const table = REFRIGERANT_PT[refrigerant] || REFRIGERANT_PT.R32;
-  const p = clampNumber(gaugeBar, table[0][0], table[table.length - 1][0], 6.0);
+function ntcTempToOhm(tempC, r25, b) {
+  const tK = tempC + T0_K;
+  return r25 * Math.exp(b * (1 / tK - 1 / T25_K));
+}
 
-  for (let i = 0; i < table.length - 1; i += 1) {
-    const [p1, t1] = table[i];
-    const [p2, t2] = table[i + 1];
-    if (p >= p1 && p <= p2) {
-      const ratio = (p - p1) / (p2 - p1);
-      return t1 + ratio * (t2 - t1);
-    }
+function ntcOhmToTemp(ohm, r25, b) {
+  const safeOhm = Math.max(0.1, ohm);
+  const invT = 1 / T25_K + Math.log(safeOhm / r25) / b;
+  return 1 / invT - T0_K;
+}
+
+function ptTempToOhm(tempC, r0) {
+  if (tempC >= 0) {
+    return r0 * (1 + CVD_A * tempC + CVD_B * tempC * tempC);
   }
-  return table[table.length - 1][1];
+  return r0 * (1 + CVD_A * tempC + CVD_B * tempC * tempC + CVD_C * (tempC - 100) * Math.pow(tempC, 3));
+}
+
+function ptOhmToTemp(ohm, r0) {
+  const ratio = ohm / r0;
+  if (ratio >= 1) {
+    // Exakte quadratische Inversion für T >= 0 °C
+    const disc = CVD_A * CVD_A - 4 * CVD_B * (1 - ratio);
+    return (-CVD_A + Math.sqrt(Math.max(0, disc))) / (2 * CVD_B);
+  }
+  // Newton-Raphson für T < 0 °C (konvergiert in < 8 Schritten auf 10^-8 K)
+  let t = (ratio - 1) / CVD_A;
+  for (let i = 0; i < 10; i += 1) {
+    const f = 1 + CVD_A * t + CVD_B * t * t + CVD_C * (t - 100) * Math.pow(t, 3) - ratio;
+    const df = CVD_A + 2 * CVD_B * t + CVD_C * (4 * Math.pow(t, 3) - 300 * t * t);
+    if (Math.abs(df) < 1e-12) break;
+    t -= f / df;
+  }
+  return t;
+}
+
+function ktyTempToOhm(tempC) {
+  const dt = tempC - 25;
+  return 2000 * (1 + KTY_A * dt + KTY_B * dt * dt);
+}
+
+function ktyOhmToTemp(ohm) {
+  const ratio = ohm / 2000;
+  const disc = KTY_A * KTY_A - 4 * KTY_B * (1 - ratio);
+  if (disc < 0) return -60;
+  const dt = (-KTY_A + Math.sqrt(disc)) / (2 * KTY_B);
+  return 25 + dt;
 }
 
 /**
- * Berechnet Überhitzung (superheat) oder Unterkühlung (subcooling) inkl. Bewertung.
+ * Formatiert Widerstandswerte praxisgerecht in Ω oder kΩ.
  */
-export function calculateRefrigerationDelta({ refrigerant, mode, gaugeBar, measuredTempC }) {
-  const safeBar = clampNumber(gaugeBar, -0.5, 30, 6.5);
-  const safeTemp = clampNumber(measuredTempC, -50, 95, 10.0);
-  const tSat = getSaturationTempC(refrigerant, safeBar);
+export function formatOhm(ohm) {
+  if (!Number.isFinite(ohm) || ohm < 0) return { num: "—", unit: "Ω" };
+  if (ohm >= 10000) {
+    return { num: (ohm / 1000).toFixed(2).replace(".", ","), unit: "kΩ" };
+  }
+  if (ohm >= 1000) {
+    return { num: ohm.toFixed(1).replace(".", ","), unit: "Ω" };
+  }
+  return { num: ohm.toFixed(2).replace(".", ","), unit: "Ω" };
+}
 
-  // Überhitzung = T_Saugleitung - T_0 | Unterkühlung = T_c - T_Flüssigkeitsleitung
-  const deltaK = mode === "subcooling" ? tSat - safeTemp : safeTemp - tSat;
+/**
+ * Berechnet Sensor-Umrechnung (Ohm <-> °C) inkl. Statusbewertung und Referenzpunkten.
+ */
+export function calculateSensorConversion({
+  family,
+  sensorId,
+  direction,
+  inputValue,
+  customR25 = 10000,
+  customB = 3950,
+}) {
+  const isNtc = family === "ntc";
+  const r25 = clampNumber(customR25, 100, 500000, 10000);
+  const bVal = clampNumber(customB, 1500, 6500, 3950);
 
-  let statusState = "ok";
-  let statusText = "Optimal";
+  let tempC = 25;
+  let ohm = 10000;
+  let sensorName = "";
+  let sensorMeta = "";
 
-  if (mode === "superheat") {
-    if (deltaK < 4) {
-      statusState = "bad";
-      statusText = "Zu niedrig · Flüssigschlag-Gefahr";
-    } else if (deltaK <= 10) {
-      statusState = "ok";
-      statusText = "Optimal (4–10 K)";
+  const convertTtoR = (t) => {
+    if (isNtc) {
+      const spec = NTC_SENSORS[sensorId] || NTC_SENSORS.ntc10k_3435;
+      const useR25 = sensorId === "ntc_custom" ? r25 : spec.r25;
+      const useB = sensorId === "ntc_custom" ? bVal : spec.b;
+      return ntcTempToOhm(t, useR25, useB);
+    }
+    if (sensorId === "pt100") return ptTempToOhm(t, 100);
+    if (sensorId === "pt1000") return ptTempToOhm(t, 1000);
+    return ktyTempToOhm(t);
+  };
+
+  if (isNtc) {
+    const spec = NTC_SENSORS[sensorId] || NTC_SENSORS.ntc10k_3435;
+    const useR25 = sensorId === "ntc_custom" ? r25 : spec.r25;
+    const useB = sensorId === "ntc_custom" ? bVal : spec.b;
+    sensorName = spec.fullLabel;
+    sensorMeta = `R₂₅ = ${useR25.toLocaleString("de-DE")} Ω · B = ${useB} K`;
+
+    if (direction === "ohmToTemp") {
+      ohm = clampNumber(inputValue, 0.1, 2000000, useR25);
+      tempC = ntcOhmToTemp(ohm, useR25, useB);
     } else {
-      statusState = "warn";
-      statusText = "Hoch · Kältemittelmangel?";
+      tempC = clampNumber(inputValue, -60, 180, 25);
+      ohm = ntcTempToOhm(tempC, useR25, useB);
     }
   } else {
-    if (deltaK < 2) {
-      statusState = "bad";
-      statusText = "Zu niedrig · Dampfblasen";
-    } else if (deltaK <= 8) {
-      statusState = "ok";
-      statusText = "Optimal (2–8 K)";
+    const spec = PTC_SENSORS[sensorId] || PTC_SENSORS.pt1000;
+    sensorName = spec.fullLabel;
+    sensorMeta = spec.note;
+
+    if (direction === "ohmToTemp") {
+      ohm = clampNumber(inputValue, 1, 50000, sensorId === "pt100" ? 100 : 1000);
+      if (sensorId === "pt100") tempC = ptOhmToTemp(ohm, 100);
+      else if (sensorId === "pt1000") tempC = ptOhmToTemp(ohm, 1000);
+      else tempC = ktyOhmToTemp(ohm);
     } else {
-      statusState = "warn";
-      statusText = "Hoch · Überfüllung?";
+      tempC = clampNumber(inputValue, -100, 300, 25);
+      ohm = convertTtoR(tempC);
     }
   }
 
-  return {
-    tSat,
-    deltaK,
-    statusState,
-    statusText,
-  };
-}
-
-/**
- * Dimensioniert Rundrohre (DN) oder Rechteckkanäle (B × H) aus Volumenstrom und Zielgeschwindigkeit.
- */
-export function calculateDuctSizing({ flowM3h, maxVelocityMs, shape, widthMm, heightMm }) {
-  const flow = clampNumber(flowM3h, 20, 25000, 320);
-  const maxV = clampNumber(maxVelocityMs, 0.5, 15, 4.0);
-  const flowM3s = flow / 3600;
-
-  if (shape === "rect") {
-    const b = clampNumber(widthMm, 100, 2000, 300);
-    const h = clampNumber(heightMm, 100, 1500, 150);
-    const areaM2 = (b / 1000) * (h / 1000);
-    const actualV = flowM3s / areaM2;
-    const equivDn = Math.round((1.3 * Math.pow((b * h), 0.625)) / Math.pow(b + h, 0.25));
-
-    let statusState = "ok";
-    let statusText = "Ruhige Strömung";
-    if (actualV > maxV) {
-      statusState = "bad";
-      statusText = `Über Zielwert (${maxV.toFixed(1)} m/s)`;
-    } else if (actualV > 5.5) {
-      statusState = "warn";
-      statusText = "Hörbare Strömung";
-    }
-
-    return {
-      primaryLabel: `${b} × ${h}`,
-      primaryUnit: "mm",
-      actualVelocity: actualV,
-      subInfo: `dn_eq ≈ ${equivDn} mm · A = ${Math.round(areaM2 * 10000)} cm²`,
-      statusState,
-      statusText,
-    };
-  }
-
-  // Rundrohr: kleinsten Normdurchmesser wählen, bei dem v <= maxV bleibt
-  let chosenDn = STANDARD_DN[STANDARD_DN.length - 1];
-  let actualV = 0;
-
-  for (const dn of STANDARD_DN) {
-    const radiusM = dn / 2000;
-    const areaM2 = Math.PI * radiusM * radiusM;
-    const v = flowM3s / areaM2;
-    chosenDn = dn;
-    actualV = v;
-    if (v <= maxV) break;
-  }
-
-  const areaCm2 = Math.round(Math.PI * Math.pow(chosenDn / 20, 2));
+  // Plausibilitätsprüfung (Fühlerbruch / Kurzschluss / Messbereich)
   let statusState = "ok";
-  let statusText = "Leise · Wohnbau-tauglich";
-  if (actualV > 6.0) {
+  let statusText = "Plausibel · Arbeitsbereich";
+
+  if (direction === "ohmToTemp" && inputValue <= 1) {
     statusState = "bad";
-    statusText = "Technikbereich · Laut";
-  } else if (actualV > 3.5) {
+    statusText = "Kurzschluss-Verdacht (≤ 1 Ω)";
+  } else if (isNtc && ohm > 500000) {
+    statusState = "bad";
+    statusText = "Fühlerbruch-Verdacht (> 500 kΩ)";
+  } else if (tempC < -50 || tempC > 150) {
     statusState = "warn";
-    statusText = "Standard · Büro / Gewerbe";
+    statusText = "Außerhalb Standard-Bereich (−50…+150 °C)";
   }
 
+  const refPoints = [0, 20, 25, 50].map((t) => ({
+    tempC: t,
+    formattedOhm: formatOhm(convertTtoR(t)),
+  }));
+
   return {
-    primaryLabel: `DN ${chosenDn}`,
-    primaryUnit: "",
-    actualVelocity: actualV,
-    subInfo: `v = ${actualV.toFixed(2).replace(".", ",")} m/s · A = ${areaCm2} cm²`,
+    tempC,
+    ohm,
+    formattedOhm: formatOhm(ohm),
+    sensorName,
+    sensorMeta,
     statusState,
     statusText,
+    refPoints,
   };
 }
