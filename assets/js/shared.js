@@ -1,0 +1,106 @@
+/**
+ * Modul: Globale Hilfsfunktionen & 3-Stufen-Theme-Steuerung (assets/js/shared.js)
+ * Zweck: Stellt allen Seiten (Dashboard & Einzel-Apps) die FOUC-freie Theme-Initialisierung,
+ *   UI-Helfer für Segmented-Pills, Toast-Meldungen und Reduced-Motion-Abfrage bereit.
+ * Verantwortlichkeit: Theme-Persistenz ('auto' | 'light' | 'dark'), Statusbar-Meta-Sync
+ *   und gemeinsame DOM-Interaktionshelfer.
+ * Sicherheits- & Stabilitätsrelevanz: Whitelist-Validierung für Theme-Werte und
+ *   try/catch-Kapselung von localStorage für den iOS Safari Privatmodus.
+ */
+
+const THEME_STORAGE_KEY = "hvacr-theme-mode";
+const TOP_LIGHT = "#f2f2f7";
+const TOP_DARK = "#000000";
+
+let toastTimer = null;
+
+export function isValidThemeMode(value) {
+  return value === "auto" || value === "light" || value === "dark";
+}
+
+export function getStoredThemeMode() {
+  try {
+    const raw = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return isValidThemeMode(raw) ? raw : "auto";
+  } catch {
+    return "auto";
+  }
+}
+
+function syncStatusBarMeta(mode) {
+  const prefersDark =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const isDark = mode === "dark" || (mode === "auto" && prefersDark);
+  const targetColor = isDark ? TOP_DARK : TOP_LIGHT;
+
+  document.querySelectorAll('meta[name="theme-color"]').forEach((tag) => {
+    tag.setAttribute("content", targetColor);
+  });
+}
+
+export function applyThemeMode(mode) {
+  const safeMode = isValidThemeMode(mode) ? mode : "auto";
+  const root = document.documentElement;
+  if (safeMode === "auto") {
+    root.removeAttribute("data-theme");
+  } else {
+    root.setAttribute("data-theme", safeMode);
+  }
+
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, safeMode);
+  } catch {
+    // Im iOS Safari Privatmodus wird nur der DOM-Zustand verwendet.
+  }
+
+  syncStatusBarMeta(safeMode);
+  return safeMode;
+}
+
+export function getCurrentThemeMode() {
+  const attr = document.documentElement.getAttribute("data-theme");
+  return isValidThemeMode(attr) ? attr : "auto";
+}
+
+export function prefersReducedMotion() {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+export function showToast(message) {
+  const toast = document.getElementById("toast-pill");
+  if (!toast) return;
+  toast.textContent = message;
+  toast.setAttribute("data-visible", "true");
+  window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => {
+    toast.setAttribute("data-visible", "false");
+  }, 2200);
+}
+
+export function updateSegmentedPill(container) {
+  if (!container) return;
+  const pill = container.querySelector(".t-tabs-pill");
+  const buttons = Array.from(container.querySelectorAll(".tab-btn"));
+  const activeIdx = buttons.findIndex((btn) => btn.getAttribute("aria-selected") === "true");
+  if (!pill || activeIdx < 0) return;
+
+  const activeBtn = buttons[activeIdx];
+  const pad = container.classList.contains("segmented--compact") ? 2 : 3;
+  pill.style.width = `${activeBtn.offsetWidth}px`;
+  pill.style.transform = `translateX(${activeBtn.offsetLeft - pad}px)`;
+}
+
+export function updateAllPills() {
+  document.querySelectorAll(".segmented").forEach((seg) => updateSegmentedPill(seg));
+}
+
+// Theme beim Laden sofort anwenden, um Flackern (FOUC) zu vermeiden
+if (typeof document !== "undefined") {
+  applyThemeMode(getStoredThemeMode());
+}

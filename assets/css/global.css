@@ -1,60 +1,98 @@
 /**
- * Modul: Apple Liquid Glass Design-System & 3 HVAC-R Stilrichtungen (liquid-glass.css)
- * Zweck: Zentrale Design-, Farb-, Typografie- und Motion-Tokens für alle 3 Design-Vorlagen
- *   ("kupfer", "cryo", "nordic") im 3-Stufen-Darstellungsmodus (Auto / Hell / Dunkel).
- * Verantwortlichkeit: Stellt transluzente Glas-Schichten, konzentrische Radien, iOS-PWA-Safe-Areas,
- *   Anti-Truncation-Regeln und physikalische Motion-Tokens bereit.
+ * Modul: Globales Apple Liquid Glass Design-System (assets/css/global.css)
+ * Zweck: Zentrale Design-, Farb-, Typografie-, Layout- und Motion-Tokens für das Dashboard
+ *   und alle modularen Einzel-Apps im 3-Stufen-Darstellungsmodus (Auto / Hell / Dunkel).
+ * Verantwortlichkeit: Stellt transluzente Glas-Schichten ("Graphit & Signal-Orange"),
+ *   konzentrische Radien, iOS-PWA-Safe-Areas, Anti-Truncation-Regeln und gemeinsame
+ *   UI-Komponenten (Top-Bar, Karten, Wells, Inputs, Buttons, Segmented Controls) bereit.
  * Sicherheits- & A11y-Relevanz: DSGVO-konform ohne externe Font-CDNs; vollständige Fallbacks für
  *   prefers-reduced-motion, prefers-reduced-transparency und prefers-contrast.
  */
 
 /* ==========================================================================
-   1. BASIS-TOKENS & RICHTUNG 1: KUPFER & KÄLTE (Standard)
+   1. BASIS-TOKENS: PASTELL AUF SCHWARZ (FARBPALETTE.md)
    ========================================================================== */
-:root,
-:root[data-theme="light"] {
-  color-scheme: light;
+:root {
+  color-scheme: dark;
 
-  /* Richtung 1: Kupfer & Kälte (Hell) */
-  --brand-accent: #0071e3;
-  --brand-accent-hover: #0077ed;
-  --brand-accent-text: #0051a8;
-  --brand-warm: #c86d3b;
-  --brand-warm-soft: rgba(200, 109, 59, 0.12);
-  --tile: rgba(0, 113, 227, 0.1);
+  --pastel-rose: #f7b8c4;
+  --pastel-peach: #f9c6a5;
+  --pastel-butter: #f6e3a1;
+  --pastel-lime: #d3eba4;
+  --pastel-mint: #a8e6c3;
+  --pastel-aqua: #a0e3e0;
+  --pastel-sky: #a9d4f5;
+  --pastel-periwinkle: #b3bdf7;
+  --pastel-lavender: #cdb5f5;
+  --pastel-orchid: #edb4e6;
 
-  --status-ok: #1b8a4b;
-  --status-ok-bg: rgba(27, 138, 75, 0.12);
-  --status-warn: #b86e00;
-  --status-warn-bg: rgba(184, 110, 0, 0.12);
-  --status-bad: #c9342d;
-  --status-bad-bg: rgba(201, 52, 45, 0.12);
+  --gradient-sunrise: linear-gradient(135deg, #f7b8c4, #f9c6a5);
+  --gradient-honey: linear-gradient(135deg, #f9c6a5, #f6e3a1);
+  --gradient-spring: linear-gradient(135deg, #f6e3a1, #d3eba4);
+  --gradient-meadow: linear-gradient(135deg, #d3eba4, #a8e6c3);
+  --gradient-lagoon: linear-gradient(135deg, #a8e6c3, #a0e3e0, #a9d4f5);
+  --gradient-ocean: linear-gradient(135deg, #a0e3e0, #b3bdf7);
+  --gradient-dusk: linear-gradient(135deg, #a9d4f5, #cdb5f5);
+  --gradient-iris: linear-gradient(135deg, #b3bdf7, #edb4e6);
+  --gradient-blossom: linear-gradient(135deg, #cdb5f5, #f7b8c4);
+  --gradient-sorbet: linear-gradient(135deg, #f6e3a1, #f7b8c4, #cdb5f5);
 
-  --bg: #f4f6f9;
-  --ios-bg:
-    radial-gradient(circle at 12% 8%, rgba(0, 113, 227, 0.09), transparent 46%),
-    radial-gradient(circle at 88% 82%, rgba(200, 109, 59, 0.07), transparent 48%),
-    #f4f6f9;
-  --glass: rgba(255, 255, 255, 0.74);
-  --glass-hero: rgba(255, 255, 255, 0.86);
-  --input-bg: rgba(255, 255, 255, 0.58);
-  --pill-track: rgba(15, 23, 42, 0.06);
-  --pill-thumb: rgba(255, 255, 255, 0.94);
+  --bg: #000000;
+  --surface-card: #1c1c1e;
+  --surface-field: #2c2c2e;
+  --surface-hover: #3a3a3c;
+  --surface-active: #48484a;
+  --border: rgba(255, 255, 255, 0.08);
+  --shadow-card: none;
 
-  --edge: rgba(255, 255, 255, 0.88);
-  --edge-low: rgba(15, 23, 42, 0.06);
-  --border-subtle: rgba(15, 23, 42, 0.08);
-  --ios-shadow:
-    0 12px 32px -8px rgba(15, 23, 42, 0.08),
-    0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(235, 235, 245, 0.6);
+  --text-tertiary: rgba(235, 235, 245, 0.3);
+  --text-on-accent: #1c1c1e;
 
-  --ink: #16181d;
-  --muted: #525866;
+  --accent-text-rose: #f7b8c4;
+  --accent-text-peach: #f9c6a5;
+  --accent-text-butter: #f6e3a1;
+  --accent-text-lime: #d3eba4;
+  --accent-text-mint: #a8e6c3;
+  --accent-text-aqua: #a0e3e0;
+  --accent-text-sky: #a9d4f5;
+  --accent-text-periwinkle: #b3bdf7;
+  --accent-text-lavender: #cdb5f5;
+  --accent-text-orchid: #edb4e6;
 
-  /* Typografie (Richtung 1: SF Pro System-Klarheit) */
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
-  --font-mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Semantische Aliase für bestehende Komponenten */
+  --ink: var(--text-primary);
+  --muted: var(--text-secondary);
+  --glass: var(--surface-card);
+  --glass-hero: var(--surface-card);
+  --input-bg: var(--surface-field);
+  --tile: var(--surface-field);
+  --pill-track: var(--surface-field);
+  --pill-thumb: var(--surface-hover);
+  --ios-bg: var(--bg);
+  --edge: rgba(255, 255, 255, 0.06);
+  --edge-low: transparent;
+  --border-subtle: var(--border);
+  --ios-shadow: var(--shadow-card);
+
+  --brand-accent: var(--pastel-sky);
+  --brand-accent-hover: var(--pastel-aqua);
+  --brand-accent-text: var(--accent-text-sky);
+  --brand-warm: var(--pastel-peach);
+  --brand-warm-soft: color-mix(in srgb, var(--pastel-peach) 16%, transparent);
+
+  --status-ok: var(--accent-text-mint);
+  --status-ok-bg: color-mix(in srgb, var(--pastel-mint) 16%, transparent);
+  --status-warn: var(--accent-text-peach);
+  --status-warn-bg: color-mix(in srgb, var(--pastel-peach) 16%, transparent);
+  --status-bad: var(--accent-text-rose);
+  --status-bad-bg: color-mix(in srgb, var(--pastel-rose) 16%, transparent);
+
+  /* Typografie (FARBPALETTE.md Abschnitt 9) */
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --num-weight: 600;
   --display-tracking: -0.02em;
 
@@ -65,89 +103,171 @@
   --radius-control: 11px;
 
   /* Physikalische Motion-Tokens */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
-  --dur-fast: 150ms;
-  --dur-normal: 250ms;
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.1);
+  --dur-fast: 120ms;
+  --dur-normal: 280ms;
   --scale-tiny: 0.99;
   --scale-medium: 0.97;
-  --scale-small: 0.95;
+  --scale-small: 0.94;
 }
 
-/* Richtung 1: Kupfer & Kälte (Dunkel) */
-:root[data-theme="dark"] {
-  color-scheme: dark;
+:root[data-theme="light"] {
+  color-scheme: light;
 
-  --brand-accent: #389bff;
-  --brand-accent-hover: #52a8ff;
-  --brand-accent-text: #74b9ff;
-  --brand-warm: #e08a58;
-  --brand-warm-soft: rgba(224, 138, 88, 0.16);
-  --tile: rgba(56, 155, 255, 0.16);
+  --bg: #f2f2f7;
+  --surface-card: #ffffff;
+  --surface-field: #f2f2f7;
+  --surface-hover: #e5e5ea;
+  --surface-active: #d1d1d6;
+  --border: rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
 
-  --status-ok: #34d37d;
-  --status-ok-bg: rgba(52, 211, 125, 0.15);
-  --status-warn: #f5a623;
-  --status-warn-bg: rgba(245, 166, 35, 0.15);
-  --status-bad: #ff6961;
-  --status-bad-bg: rgba(255, 105, 97, 0.16);
+  --text-primary: #000000;
+  --text-secondary: rgba(60, 60, 67, 0.7);
+  --text-tertiary: rgba(60, 60, 67, 0.3);
 
-  --bg: #0d0f12;
-  --ios-bg:
-    radial-gradient(circle at 14% 8%, rgba(56, 155, 255, 0.14), transparent 46%),
-    radial-gradient(circle at 86% 84%, rgba(224, 138, 88, 0.10), transparent 50%),
-    #0d0f12;
-  --glass: rgba(24, 27, 34, 0.70);
-  --glass-hero: rgba(16, 18, 23, 0.84);
-  --input-bg: rgba(15, 17, 22, 0.68);
-  --pill-track: rgba(255, 255, 255, 0.08);
-  --pill-thumb: rgba(46, 51, 64, 0.92);
+  --accent-text-rose: #b8405a;
+  --accent-text-peach: #a35320;
+  --accent-text-butter: #7d620a;
+  --accent-text-lime: #527018;
+  --accent-text-mint: #1f7a4d;
+  --accent-text-aqua: #177a76;
+  --accent-text-sky: #1f6aa8;
+  --accent-text-periwinkle: #4553c4;
+  --accent-text-lavender: #7046c2;
+  --accent-text-orchid: #a53a98;
 
-  --edge: rgba(255, 255, 255, 0.14);
-  --edge-low: rgba(0, 0, 0, 0.45);
-  --border-subtle: rgba(255, 255, 255, 0.10);
-  --ios-shadow:
-    0 16px 36px -8px rgba(0, 0, 0, 0.50),
-    0 4px 10px -2px rgba(0, 0, 0, 0.32);
-
-  --ink: #f4f6f9;
-  --muted: #9aa2b1;
+  --pill-thumb: var(--surface-card);
+  --edge: transparent;
+  --status-ok: var(--text-on-accent);
+  --status-ok-bg: var(--pastel-mint);
+  --status-warn: var(--text-on-accent);
+  --status-warn-bg: var(--pastel-peach);
+  --status-bad: var(--text-on-accent);
+  --status-bad-bg: var(--pastel-rose);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]):not([data-theme="dark"]) {
-    color-scheme: dark;
-    --brand-accent: #389bff;
-    --brand-accent-hover: #52a8ff;
-    --brand-accent-text: #74b9ff;
-    --brand-warm: #e08a58;
-    --brand-warm-soft: rgba(224, 138, 88, 0.16);
-    --tile: rgba(56, 155, 255, 0.16);
-    --status-ok: #34d37d;
-    --status-ok-bg: rgba(52, 211, 125, 0.15);
-    --status-warn: #f5a623;
-    --status-warn-bg: rgba(245, 166, 35, 0.15);
-    --status-bad: #ff6961;
-    --status-bad-bg: rgba(255, 105, 97, 0.16);
-    --bg: #0d0f12;
-    --ios-bg:
-      radial-gradient(circle at 14% 8%, rgba(56, 155, 255, 0.14), transparent 46%),
-      radial-gradient(circle at 86% 84%, rgba(224, 138, 88, 0.10), transparent 50%),
-      #0d0f12;
-    --glass: rgba(24, 27, 34, 0.70);
-    --glass-hero: rgba(16, 18, 23, 0.84);
-    --input-bg: rgba(15, 17, 22, 0.68);
-    --pill-track: rgba(255, 255, 255, 0.08);
-    --pill-thumb: rgba(46, 51, 64, 0.92);
-    --edge: rgba(255, 255, 255, 0.14);
-    --edge-low: rgba(0, 0, 0, 0.45);
-    --border-subtle: rgba(255, 255, 255, 0.10);
-    --ios-shadow:
-      0 16px 36px -8px rgba(0, 0, 0, 0.50),
-      0 4px 10px -2px rgba(0, 0, 0, 0.32);
-    --ink: #f4f6f9;
-    --muted: #9aa2b1;
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]):not([data-theme="light"]) {
+    color-scheme: light;
+
+    --bg: #f2f2f7;
+    --surface-card: #ffffff;
+    --surface-field: #f2f2f7;
+    --surface-hover: #e5e5ea;
+    --surface-active: #d1d1d6;
+    --border: rgba(0, 0, 0, 0.06);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+    --text-primary: #000000;
+    --text-secondary: rgba(60, 60, 67, 0.7);
+    --text-tertiary: rgba(60, 60, 67, 0.3);
+
+    --accent-text-rose: #b8405a;
+    --accent-text-peach: #a35320;
+    --accent-text-butter: #7d620a;
+    --accent-text-lime: #527018;
+    --accent-text-mint: #1f7a4d;
+    --accent-text-aqua: #177a76;
+    --accent-text-sky: #1f6aa8;
+    --accent-text-periwinkle: #4553c4;
+    --accent-text-lavender: #7046c2;
+    --accent-text-orchid: #a53a98;
+
+    --pill-thumb: var(--surface-card);
+    --edge: transparent;
+    --status-ok: var(--text-on-accent);
+    --status-ok-bg: var(--pastel-mint);
+    --status-warn: var(--text-on-accent);
+    --status-warn-bg: var(--pastel-peach);
+    --status-bad: var(--text-on-accent);
+    --status-bad-bg: var(--pastel-rose);
   }
+}
+
+/* ==========================================================================
+   1b. VERBINDLICHE ICON-BASIS: GOOGLE MATERIAL SYMBOLS ROUNDED (ICONS.md)
+   ========================================================================== */
+:root {
+  --icon-color-inactive: #9499ad;
+  --icon-color-hover: #f4f5f8;
+  --icon-color-active: #c8b6ff;
+  --icon-grad: -25;
+}
+
+.light-mode,
+[data-theme="light"] {
+  --icon-color-inactive: #5e6375;
+  --icon-color-hover: #121318;
+  --icon-color-active: #c8b6ff;
+  --icon-grad: 0;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]):not([data-theme="light"]) {
+    --icon-color-inactive: #5e6375;
+    --icon-color-hover: #121318;
+    --icon-grad: 0;
+  }
+}
+
+.ag-icon {
+  font-family: "Material Symbols Rounded";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  flex-shrink: 0;
+  color: var(--icon-color-inactive);
+  font-variation-settings: "FILL" 0, "wght" 300, "GRAD" var(--icon-grad), "opsz" 24;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.ag-icon--xs {
+  font-size: 16px;
+  font-variation-settings: "FILL" 0, "wght" 300, "GRAD" var(--icon-grad), "opsz" 20;
+}
+
+.ag-icon--sm {
+  font-size: 20px;
+  font-variation-settings: "FILL" 0, "wght" 300, "GRAD" var(--icon-grad), "opsz" 20;
+}
+
+.ag-icon--lg {
+  font-size: 32px;
+  font-variation-settings: "FILL" 0, "wght" 300, "GRAD" var(--icon-grad), "opsz" 40;
+}
+
+.ag-icon:hover,
+.press-btn:hover .ag-icon,
+.press-icon:hover .ag-icon,
+.hub-tile:hover .ag-icon {
+  color: var(--icon-color-hover);
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" var(--icon-grad), "opsz" 24;
+}
+
+.ag-icon--xs:hover,
+.press-btn:hover .ag-icon--xs {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" var(--icon-grad), "opsz" 20;
+}
+
+.ag-icon--sm:hover,
+.press-btn:hover .ag-icon--sm,
+.press-icon:hover .ag-icon--sm,
+.hub-tile:hover .ag-icon--sm {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" var(--icon-grad), "opsz" 20;
+}
+
+.ag-icon--active {
+  color: var(--icon-color-active);
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+  filter: drop-shadow(0 0 8px rgba(200, 182, 255, 0.65))
+    drop-shadow(0 0 16px rgba(200, 182, 255, 0.35));
 }
 
 /* ==========================================================================
@@ -200,6 +320,8 @@ body {
 
 /* Touch-Optimierung: keine Text-Markierung auf Steuerelementen, keine 300ms-Verzögerung */
 button,
+a.back-btn,
+a.hub-tile,
 [role="button"],
 .tab-btn,
 .chip-btn {
@@ -220,7 +342,7 @@ textarea {
 }
 
 /* ==========================================================================
-   5. LAYOUT-SHELL & KOMPAKTER HEADER (Minimalismus: Content First)
+   3. LAYOUT-SHELL & KOMPAKTER HEADER (Minimalismus: Content First)
    ========================================================================== */
 .app-shell {
   width: 100%;
@@ -233,6 +355,8 @@ textarea {
 }
 
 .top-bar {
+  position: relative;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -255,6 +379,7 @@ textarea {
   align-items: center;
   gap: 8px;
   min-width: 0;
+  flex: 1;
 }
 
 .brand-dot {
@@ -272,18 +397,43 @@ textarea {
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.01em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .top-actions {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
 }
 
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 0 10px 0 6px;
+  border-radius: 11px;
+  border: 1px solid var(--border-subtle);
+  background: var(--input-bg);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.back-btn[hidden] {
+  display: none;
+}
+
 /* ==========================================================================
-   6. SEGMENTED CONTROLS MIT GLEITENDER PILL (.t-tabs-pill)
+   4. SEGMENTED CONTROLS MIT GLEITENDER PILL (.t-tabs-pill)
    ========================================================================== */
 .segmented {
   position: relative;
@@ -354,40 +504,91 @@ textarea {
   color: var(--ink);
 }
 
-/* Theme Cycle Button */
-.theme-btn {
+/* ==========================================================================
+   5. EINSTELLUNGEN & THEME-UMSCHALTER
+   ========================================================================== */
+.settings-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  min-height: 38px;
-  padding: 0 10px;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
   border-radius: 12px;
   border: 1px solid var(--border-subtle);
   background: var(--input-bg);
   color: var(--ink);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.settings-btn[aria-expanded="true"] {
+  border-color: var(--brand-accent);
+  color: var(--brand-accent);
+}
+
+.settings-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--pill-track);
+  border: 1px solid var(--border-subtle);
+}
+
+.settings-seg-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
   font-size: 12px;
   font-weight: 600;
+  min-height: 36px;
+  padding: 4px 6px;
+  border-radius: 9px;
   cursor: pointer;
-}
-
-.t-icon-swap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
   transition:
-    opacity var(--dur-normal) var(--ease-spring),
-    transform var(--dur-normal) var(--ease-spring);
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
-.t-icon-swap.is-swapping {
-  opacity: 0;
-  transform: scale(0.75) rotate(-25deg);
+.settings-seg-btn[aria-checked="true"] {
+  background: var(--pill-thumb);
+  color: var(--ink);
+  box-shadow:
+    inset 0 1px 0 0 var(--edge),
+    0 2px 6px rgba(0, 0, 0, 0.22);
+}
+
+.settings-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.settings-meta-val {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.settings-placeholder {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
 }
 
 /* ==========================================================================
-   7. LIQUID GLASS KARTEN, WELLS & ANTI-TRUNCATION
+   6. LIQUID GLASS KARTEN, WELLS, SELECTS & ANTI-TRUNCATION
    ========================================================================== */
 .liquid-glass-card {
   background: var(--glass);
@@ -415,7 +616,6 @@ textarea {
   min-width: 0;
 }
 
-/* Zurück-Button in der Top-Bar */
 .view-stack {
   display: flex;
   flex-direction: column;
@@ -474,26 +674,9 @@ textarea {
   border-color: var(--brand-accent);
 }
 
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 36px;
-  padding: 0 10px 0 6px;
-  border-radius: 11px;
-  border: 1px solid var(--border-subtle);
-  background: var(--input-bg);
-  color: var(--ink);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.back-btn[hidden] {
-  display: none;
-}
-
-/* Startseite: Suche & Kategorie-Filter */
+/* ==========================================================================
+   7. DASHBOARD: SUCHE & MODUL-KARTEN GRID
+   ========================================================================== */
 .search-well {
   display: flex;
   align-items: center;
@@ -526,17 +709,10 @@ textarea {
   color: var(--muted);
 }
 
-/* Startseite: Modul-Karten Grid */
 .hub-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
-}
-
-@media (max-width: 359px) {
-  .hub-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .hub-tile {
@@ -544,9 +720,10 @@ textarea {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 12px;
-  min-height: 122px;
-  padding: 14px;
+  gap: 10px;
+  width: 100%;
+  min-height: 88px;
+  padding: 14px 16px;
   border-radius: 20px;
   border: 1px solid var(--border-subtle);
   background: var(--glass);
@@ -557,10 +734,11 @@ textarea {
     inset 0 -1px 0 0 var(--edge-low),
     var(--ios-shadow);
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   color: var(--ink);
-  animation: tile-enter 240ms var(--ease-out) both;
-  animation-delay: calc(var(--stagger, 0) * 35ms);
+  animation: tile-enter 280ms var(--ease-out) both;
+  animation-delay: calc(var(--stagger, 0) * 28ms);
 }
 
 .hub-tile > * {
@@ -648,7 +826,6 @@ textarea {
   color: var(--muted);
 }
 
-/* Dezenter Liquid-Glass Toast für geplante Module */
 .toast-pill {
   position: fixed;
   left: 50%;
@@ -683,7 +860,9 @@ textarea {
   transform: translate(-50%, 0) scale(1);
 }
 
-/* Live Ergebnis Hero */
+/* ==========================================================================
+   8. GEMEINSAME RECHNER-KOMPONENTEN (Hero, Chips, Wells, Stepper, Accordion)
+   ========================================================================== */
 .result-hero {
   background: var(--tile);
   border: 1px solid var(--border-subtle);
@@ -746,18 +925,27 @@ textarea {
 }
 
 .result-main {
-  font-family: var(--font-mono);
+  font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
   font-size: 34px;
   font-weight: var(--num-weight);
   letter-spacing: var(--display-tracking);
   line-height: 1.1;
-  color: var(--ink);
-  transition: transform 180ms var(--ease-spring);
+  color: var(--accent-text-sky);
+  transition: transform 220ms var(--ease-spring);
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  :root:not([data-theme="light"]) .result-main > span:first-child {
+    background: var(--gradient-ocean);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 .result-main.is-popping {
-  transform: scale(1.03);
+  transform: scale(1.018);
 }
 
 .result-unit {
@@ -774,7 +962,6 @@ textarea {
   color: var(--muted);
 }
 
-/* 1-Tap Chips (Kältemittel / Presets) */
 .chip-group {
   display: flex;
   flex-wrap: wrap;
@@ -801,17 +988,11 @@ textarea {
 }
 
 .chip-btn[aria-pressed="true"] {
-  background: var(--brand-accent);
-  color: #ffffff;
+  background: var(--gradient-ocean);
+  color: var(--text-on-accent);
   border-color: transparent;
-  box-shadow: 0 4px 12px -2px rgba(0, 113, 227, 0.28);
 }
 
-:root[data-design="cryo"][data-theme="dark"] .chip-btn[aria-pressed="true"] {
-  color: #05070a;
-}
-
-/* Eingabefelder & Stepper (Well) */
 .field-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -885,30 +1066,57 @@ textarea {
   font-weight: var(--num-weight);
   color: var(--ink);
   outline: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.num-input::-webkit-outer-spin-button,
+.num-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.num-value-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  cursor: text;
+}
+
+.num-value-wrap .num-input {
+  width: auto;
+  min-width: 2ch;
+  max-width: calc(100% - 28px);
+  text-align: right;
+  field-sizing: content;
 }
 
 .num-unit {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: var(--num-weight);
+  color: var(--ink);
+  line-height: 1;
   flex-shrink: 0;
 }
 
-/* ==========================================================================
-   8. PANEL-WECHSEL & ACCORDION (.t-acc-panel)
-   ========================================================================== */
+/* Panel-Wechsel & Accordion */
 .calc-panel[hidden] {
   display: none;
 }
 
-.calc-panel.is-entering {
-  animation: panel-enter 220ms var(--ease-out) both;
+.calc-panel.is-entering,
+.well-reveal:not([hidden]) {
+  animation: panel-enter 260ms var(--ease-out) both;
 }
 
 @keyframes panel-enter {
   from {
     opacity: 0;
-    transform: translateY(6px) scale(0.985);
+    transform: translateY(8px) scale(0.99);
   }
   to {
     opacity: 1;
@@ -956,92 +1164,6 @@ textarea {
   overflow: hidden;
 }
 
-.acc-content {
-  padding: 12px 4px 2px;
-  font-size: 13px;
-  color: var(--muted);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.acc-tip {
-  margin: 4px 0 0;
-}
-
-.token-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.token-item {
-  background: var(--input-bg);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 7px 10px;
-  font-size: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.token-item code {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--ink);
-}
-
-/* Referenzwert-Gitter (0 / 20 / 25 / 50 °C) */
-.ref-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  padding-top: 8px;
-}
-
-.ref-cell {
-  background: var(--input-bg);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 8px 10px;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.ref-temp {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.ref-ohm {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.custom-ntc-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  padding-top: 4px;
-}
-
-.custom-ntc-grid .well {
-  padding: 8px 10px;
-}
-
-.custom-ntc-grid .num-input {
-  text-align: left;
-  font-size: 17px;
-  min-height: 38px;
-}
-
 /* ==========================================================================
    9. TAKTILE PRESS-SCALE & DESKTOP-HOVER-GATING
    ========================================================================== */
@@ -1069,7 +1191,8 @@ textarea {
 @media (hover: hover) and (pointer: fine) {
   .chip-btn:hover:not([aria-pressed="true"]),
   .step-btn:hover,
-  .theme-btn:hover,
+  .settings-btn:hover,
+  .settings-seg-btn:hover,
   .back-btn:hover,
   .select-wrap:hover .glass-select-face,
   .hub-tile:hover,
@@ -1083,7 +1206,8 @@ textarea {
    ========================================================================== */
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   .top-bar,
-  .liquid-glass-card {
+  .liquid-glass-card,
+  .hub-tile {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     background: var(--bg);

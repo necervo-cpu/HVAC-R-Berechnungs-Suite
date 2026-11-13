@@ -1,0 +1,54 @@
+/**
+ * Modul: App-spezifische Styles für PTC/NTC Sensoren (apps/sensor/style.css)
+ * Zweck: Ergänzt das globale Design-System um das 2-spaltige Prüfpunkt-Gitter
+ *   sowie die kompakte Eingabe für benutzerdefinierte NTC-Parameter (R25, B-Wert).
+ */
+
+.ref-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.ref-cell {
+  background: var(--input-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.ref-temp {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.ref-ohm {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.custom-ntc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.custom-ntc-grid .well {
+  padding: 8px 10px;
+}
+
+.custom-ntc-grid .num-input {
+  text-align: left;
+  font-size: 17px;
+  min-height: 38px;
+}

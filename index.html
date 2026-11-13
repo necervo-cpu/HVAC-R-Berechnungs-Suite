@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f6f9" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0f12" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f7" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
     <meta name="apple-mobile-web-app-title" content="HVAC·R" />
     <title>HVAC·R Rechner</title>
     <link rel="manifest" href="./manifest.webmanifest" />
@@ -20,8 +20,9 @@
         window.scrollTo(0, 0);
       })();
     </script>
-    <script type="module" src="./src/theme.js"></script>
-    <link rel="stylesheet" href="./src/styles/liquid-glass.css?v=3" />
+    <script type="module" src="./assets/js/shared.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="./assets/css/global.css" />
   </head>
   <body>
     <main class="app-shell">
@@ -35,9 +36,7 @@
             aria-label="Zurück zur Übersicht"
             hidden
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
+            <span class="ag-icon ag-icon--xs" aria-hidden="true">arrow_back_ios_new</span>
             <span>Übersicht</span>
           </button>
           <span id="brand-dot" class="brand-dot" aria-hidden="true"></span>
@@ -46,24 +45,20 @@
         <div class="top-actions">
           <button
             type="button"
-            id="theme-toggle-btn"
-            class="theme-btn press-btn"
-            aria-label="Darstellungsmodus wechseln (Auto, Hell, Dunkel)"
+            id="settings-toggle-btn"
+            class="settings-btn press-icon"
+            aria-label="Einstellungen öffnen"
           >
-            <span id="theme-icon" class="t-icon-swap"></span>
-            <span id="theme-label">Auto</span>
+            <span class="ag-icon ag-icon--sm" aria-hidden="true">settings</span>
           </button>
         </div>
       </header>
 
-      <!-- STARTSEITE -->
+      <!-- DASHBOARD / APP-LAUNCHER -->
       <section id="view-home" class="view-stack calc-panel" aria-label="Rechner-Übersicht">
         <div class="liquid-glass-card">
           <div class="search-well">
-            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
+            <span class="ag-icon ag-icon--xs search-icon" aria-hidden="true">search</span>
             <input
               id="hub-search"
               class="search-input"
@@ -78,9 +73,7 @@
           <div class="select-wrap">
             <div class="glass-select-face" aria-hidden="true">
               <span id="hub-category-label" class="glass-select-label">Alle Kategorien</span>
-              <svg class="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
+              <span class="ag-icon ag-icon--xs select-chevron" aria-hidden="true">expand_more</span>
             </div>
             <select id="hub-category-select" class="glass-select-native" aria-label="Kategorie wählen">
               <option value="all">Alle Kategorien</option>
@@ -97,118 +90,40 @@
         </div>
       </section>
 
-      <!-- DETAIL-ANSICHT: PTC & NTC SENSOR-RECHNER -->
-      <div id="view-calculator" hidden>
-        <section id="panel-sensor" class="liquid-glass-card calc-panel" aria-label="PTC und NTC Sensor-Rechner">
-          <!-- Richtung: Ohm -> °C vs. °C -> Ohm -->
-          <div id="sensor-dir-switcher" class="segmented segmented--compact" role="tablist" aria-label="Umrechnungsrichtung">
-            <span class="t-tabs-pill" aria-hidden="true"></span>
-            <button type="button" class="tab-btn press-btn" role="tab" data-dir="ohmToTemp" aria-selected="true">
-              Ohm → °C
-            </button>
-            <button type="button" class="tab-btn press-btn" role="tab" data-dir="tempToOhm" aria-selected="false">
-              °C → Ohm
-            </button>
+      <!-- EINSTELLUNGEN-ANSICHT -->
+      <section id="view-settings" class="liquid-glass-card calc-panel" aria-label="Einstellungen" hidden>
+        <div class="well">
+          <div class="well-header">
+            <span class="well-label">Darstellung</span>
+            <span class="well-hint">3-Stufen-Modus</span>
           </div>
+          <div id="theme-mode-group" class="settings-segmented" role="radiogroup" aria-label="Darstellungsmodus">
+            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="auto" aria-checked="true">Auto</button>
+            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="light" aria-checked="false">Hell</button>
+            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="dark" aria-checked="false">Dunkel</button>
+          </div>
+        </div>
 
-          <!-- Typ: NTC vs. PTC -->
-          <div id="sensor-family-switcher" class="segmented segmented--compact" role="tablist" aria-label="Sensortyp">
-            <span class="t-tabs-pill" aria-hidden="true"></span>
-            <button type="button" class="tab-btn press-btn" role="tab" data-family="ntc" aria-selected="true">
-              NTC-Fühler
-            </button>
-            <button type="button" class="tab-btn press-btn" role="tab" data-family="ptc" aria-selected="false">
-              PTC / Platin
-            </button>
+        <div class="well">
+          <div class="settings-meta">
+            <span>Design-System</span>
+            <span class="settings-meta-val">Pastell auf Schwarz</span>
           </div>
+        </div>
 
-          <!-- Live Ergebnis Hero -->
-          <div class="result-hero" aria-live="polite">
-            <div class="result-top">
-              <span id="sensor-result-title" class="result-label">NTC 10 kΩ (B=3435)</span>
-              <span id="sensor-status-badge" class="status-badge" data-state="ok">Plausibel · Arbeitsbereich</span>
-            </div>
-            <div class="result-value-row">
-              <div id="sensor-result-val" class="result-main">25,0<span class="result-unit">°C</span></div>
-              <div id="sensor-result-sub" class="result-sub">R₂₅ = 10.000 Ω · B = 3435 K</div>
-            </div>
+        <div class="well">
+          <div class="well-header">
+            <span class="well-label">Weitere Optionen</span>
           </div>
-
-          <!-- Kennlinien-Auswahl als Dropdown -->
-          <div class="well">
-            <div class="well-header">
-              <label class="well-label" for="sensor-select">Sensorkennlinie</label>
-              <span id="sensor-note-hint" class="well-hint">z. B. Carel / Kälteregler</span>
-            </div>
-            <div class="select-wrap">
-              <div class="glass-select-face" aria-hidden="true">
-                <span id="sensor-select-label" class="glass-select-label">NTC 10 kΩ (B=3435)</span>
-                <svg class="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </div>
-              <select id="sensor-select" class="glass-select-native" aria-label="Sensorkennlinie wählen"></select>
-            </div>
-          </div>
-
-          <!-- Optionales Panel für eigenen NTC (R25 & B-Wert) -->
-          <div id="custom-ntc-panel" class="t-acc-panel" data-open="false">
-            <div class="t-acc-panel-inner">
-              <div class="custom-ntc-grid">
-                <div class="well">
-                  <div class="well-header">
-                    <label class="well-label" for="input-custom-r25">R₂₅ (Ω)</label>
-                  </div>
-                  <input id="input-custom-r25" class="num-input" type="text" inputmode="numeric" value="10000" aria-label="Nennwiderstand R25 in Ohm" />
-                </div>
-                <div class="well">
-                  <div class="well-header">
-                    <label class="well-label" for="input-custom-b">B-Wert (K)</label>
-                  </div>
-                  <input id="input-custom-b" class="num-input" type="text" inputmode="numeric" value="3950" aria-label="B-Wert in Kelvin" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Haupt-Eingabe mit Steppern -->
-          <div class="well">
-            <div class="well-header">
-              <label id="sensor-input-label" class="well-label" for="input-sensor-val">Gemessener Widerstand</label>
-              <span id="sensor-step-hint" class="well-hint">Schritt ±100 Ω</span>
-            </div>
-            <div class="stepper-row">
-              <button type="button" id="sensor-step-minus" class="step-btn press-icon" aria-label="Wert verringern">−</button>
-              <input id="input-sensor-val" class="num-input" type="text" inputmode="decimal" value="10000" aria-label="Messwert eingeben" />
-              <span id="sensor-input-unit" class="num-unit">Ω</span>
-              <button type="button" id="sensor-step-plus" class="step-btn press-icon" aria-label="Wert erhöhen">+</button>
-            </div>
-          </div>
-
-          <!-- Aufklappbare Prüfpunkte (0 / 20 / 25 / 50 °C) -->
-          <button
-            type="button"
-            id="ref-acc-trigger"
-            class="acc-trigger press-card"
-            aria-expanded="false"
-            aria-controls="ref-acc-panel"
-          >
-            <span>Prüfpunkte dieser Kennlinie (0–50 °C)</span>
-            <svg class="acc-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-          <div id="ref-acc-panel" class="t-acc-panel" data-open="false">
-            <div class="t-acc-panel-inner">
-              <div id="sensor-ref-grid" class="ref-grid"></div>
-            </div>
-          </div>
-        </section>
-      </div>
+          <p class="settings-placeholder">
+            Hier können später Einheiten, Standard-Kältemittel und weitere App-Einstellungen ergänzt werden.
+          </p>
+        </div>
+      </section>
     </main>
 
     <div id="toast-pill" class="toast-pill" role="status" aria-live="polite" data-visible="false"></div>
 
-    <script type="module" src="./src/app.js?v=3"></script>
+    <script type="module" src="./assets/js/dashboard.js"></script>
   </body>
 </html>

@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f7" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+    <meta name="apple-mobile-web-app-title" content="Wärmeleistung" />
+    <title>Wärmeleistung · HVAC·R Rechner</title>
+    <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
+    <link rel="apple-touch-icon" href="../../icon.svg" />
+    <script>
+      (function () {
+        var root = document.documentElement;
+        root.style.transform = "translateZ(0)";
+        void root.offsetHeight;
+        root.style.transform = "";
+        window.scrollTo(0, 0);
+      })();
+    </script>
+    <script type="module" src="../../assets/js/shared.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="../../assets/css/global.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <!-- Kompakte Top-Leiste (44px) -->
+      <header class="top-bar">
+        <div class="brand-mark">
+          <a
+            href="../../index.html"
+            id="nav-home-link"
+            class="back-btn press-btn"
+            aria-label="Zurück zum Dashboard"
+          >
+            <span class="ag-icon ag-icon--xs" aria-hidden="true">arrow_back_ios_new</span>
+            <span>Übersicht</span>
+          </a>
+          <button
+            type="button"
+            id="nav-back-btn"
+            class="back-btn press-btn"
+            aria-label="Zurück zum Rechner"
+            hidden
+          >
+            <span class="ag-icon ag-icon--xs" aria-hidden="true">arrow_back_ios_new</span>
+            <span>Zurück</span>
+          </button>
+          <span id="brand-title" class="brand-title">Wärmeleistung</span>
+        </div>
+        <div class="top-actions">
+          <button
+            type="button"
+            id="settings-toggle-btn"
+            class="settings-btn press-icon"
+            aria-label="Einstellungen öffnen"
+          >
+            <span class="ag-icon ag-icon--sm" aria-hidden="true">settings</span>
+          </button>
+        </div>
+      </header>
+
+      <div id="view-calc" class="view-stack calc-panel">
+
+      <!-- Modus-Auswahl -->
+      <div class="segmented" id="mode-tabs" role="tablist" aria-label="Berechnungsmodus">
+        <span class="t-tabs-pill" aria-hidden="true"></span>
+        <button
+          type="button"
+          class="tab-btn press-btn"
+          role="tab"
+          aria-selected="true"
+          data-mode="hydraulik"
+        >
+          Hydraulik
+        </button>
+        <button
+          type="button"
+          class="tab-btn press-btn"
+          role="tab"
+          aria-selected="false"
+          data-mode="volumenstrom"
+        >
+          Volumenstrom
+        </button>
+        <button
+          type="button"
+          class="tab-btn press-btn"
+          role="tab"
+          aria-selected="false"
+          data-mode="heizlast"
+        >
+          Heizlast
+        </button>
+      </div>
+
+      <!-- Hauptkarte -->
+      <section class="liquid-glass-card" aria-label="Wärmeleistungsberechnung">
+        <!-- Live-Ergebnis -->
+        <div class="result-hero" aria-live="polite">
+          <div class="result-top">
+            <span id="result-label" class="result-label">Wärmeleistung Q̇</span>
+            <span id="result-badge" class="status-badge" data-state="ok">Optimal</span>
+          </div>
+          <div class="result-value-row">
+            <div class="result-main" id="result-main">
+              <span id="result-number">17,45</span><span id="result-unit" class="result-unit">kW</span>
+            </div>
+          </div>
+          <div id="result-sub" class="result-sub">17.294 W · 1.488 kg/h</div>
+        </div>
+
+        <!-- PANEL 1: Hydraulische Wärmeleistung (Q = V * rho * cp * dT) -->
+        <div id="panel-hydraulik" class="calc-panel view-stack">
+          <div class="well">
+            <div class="well-header">
+              <span class="well-label">Medium</span>
+            </div>
+            <div class="chip-group" id="hyd-medium-group" role="group" aria-label="Wärmeträgermedium">
+              <button type="button" class="chip-btn press-btn" data-medium="water" aria-pressed="true">Wasser</button>
+              <button type="button" class="chip-btn press-btn" data-medium="glycol" aria-pressed="false">Glykol</button>
+              <button type="button" class="chip-btn press-btn" data-medium="air" aria-pressed="false">Luft</button>
+            </div>
+          </div>
+
+          <div class="well well-reveal" id="hyd-glycol-well" hidden>
+            <div class="well-header">
+              <label class="well-label" for="hyd-glycol-input">Glykol-Anteil</label>
+            </div>
+            <div class="stepper-row">
+              <button type="button" class="step-btn press-btn" id="hyd-glycol-minus" aria-label="Glykol-Anteil verringern">−</button>
+              <div class="num-value-wrap">
+                <input
+                  id="hyd-glycol-input"
+                  class="num-input"
+                  type="number"
+                  inputmode="decimal"
+                  step="5"
+                  min="0"
+                  max="60"
+                  value="30"
+                  aria-label="Glykol-Anteil in Prozent"
+                />
+                <span class="num-unit">%</span>
+              </div>
+              <button type="button" class="step-btn press-btn" id="hyd-glycol-plus" aria-label="Glykol-Anteil erhöhen">+</button>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <div class="well">
+              <div class="well-header">
+                <label class="well-label" for="hyd-flow-input">Volumenstrom V̇</label>
+              </div>
+              <div class="segmented segmented--compact" id="flow-unit-tabs" role="tablist" aria-label="Einheit Volumenstrom">
+                <span class="t-tabs-pill" aria-hidden="true"></span>
+                <button type="button" class="tab-btn press-btn" role="tab" aria-selected="true" data-flow-unit="m3h">m³/h</button>
+                <button type="button" class="tab-btn press-btn" role="tab" aria-selected="false" data-flow-unit="lh">l/h</button>
+                <button type="button" class="tab-btn press-btn" role="tab" aria-selected="false" data-flow-unit="lmin">l/min</button>
+              </div>
+              <div class="stepper-row">
+                <button type="button" class="step-btn press-btn" id="hyd-flow-minus" aria-label="Volumenstrom verringern">−</button>
+                <div class="num-value-wrap">
+                  <input
+                    id="hyd-flow-input"
+                    class="num-input"
+                    type="number"
+                    inputmode="decimal"
+                    step="any"
+                    min="0"
+                    value="1.5"
+                    aria-label="Volumenstrom"
+                  />
+                  <span id="hyd-flow-unit-label" class="num-unit">m³/h</span>
+                </div>
+                <button type="button" class="step-btn press-btn" id="hyd-flow-plus" aria-label="Volumenstrom erhöhen">+</button>
+              </div>
+            </div>
+
+            <div class="well">
+              <div class="well-header">
+                <label class="well-label" for="hyd-dt-input">Temperaturspreizung ΔT</label>
+              </div>
+              <div class="stepper-row">
+                <button type="button" class="step-btn press-btn" id="hyd-dt-minus" aria-label="Spreizung verringern">−</button>
+                <div class="num-value-wrap">
+                  <input
+                    id="hyd-dt-input"
+                    class="num-input"
+                    type="number"
+                    inputmode="decimal"
+                    step="0.5"
+                    min="0"
+                    value="10"
+                    aria-label="Temperaturspreizung in Kelvin"
+                  />
+                  <span class="num-unit">K</span>
+                </div>
+                <button type="button" class="step-btn press-btn" id="hyd-dt-plus" aria-label="Spreizung erhöhen">+</button>
+              </div>
+              <div class="chip-group" id="dt-preset-group" role="group" aria-label="Typische Spreizungswerte">
+                <button type="button" class="chip-btn press-btn" data-dt="5" aria-pressed="false">5 K</button>
+                <button type="button" class="chip-btn press-btn" data-dt="7" aria-pressed="false">7 K</button>
+                <button type="button" class="chip-btn press-btn" data-dt="10" aria-pressed="true">10 K</button>
+                <button type="button" class="chip-btn press-btn" data-dt="15" aria-pressed="false">15 K</button>
+                <button type="button" class="chip-btn press-btn" data-dt="20" aria-pressed="false">20 K</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 2: Erforderlicher Volumenstrom (V = Q / (rho * cp * dT)) -->
+        <div id="panel-volumenstrom" class="calc-panel view-stack" hidden>
+          <div class="well">
+            <div class="well-header">
+              <span class="well-label">Medium</span>
+            </div>
+            <div class="chip-group" id="vol-medium-group" role="group" aria-label="Wärmeträgermedium">
+              <button type="button" class="chip-btn press-btn" data-medium="water" aria-pressed="true">Wasser</button>
+              <button type="button" class="chip-btn press-btn" data-medium="glycol" aria-pressed="false">Glykol</button>
+              <button type="button" class="chip-btn press-btn" data-medium="air" aria-pressed="false">Luft</button>
+            </div>
+          </div>
+
+          <div class="well well-reveal" id="vol-glycol-well" hidden>
+            <div class="well-header">
+              <label class="well-label" for="vol-glycol-input">Glykol-Anteil</label>
+            </div>
+            <div class="stepper-row">
+              <button type="button" class="step-btn press-btn" id="vol-glycol-minus" aria-label="Glykol-Anteil verringern">−</button>
+              <div class="num-value-wrap">
+                <input
+                  id="vol-glycol-input"
+                  class="num-input"
+                  type="number"
+                  inputmode="decimal"
+                  step="5"
+                  min="0"
+                  max="60"
+                  value="30"
+                  aria-label="Glykol-Anteil in Prozent"
+                />
+                <span class="num-unit">%</span>
+              </div>
+              <button type="button" class="step-btn press-btn" id="vol-glycol-plus" aria-label="Glykol-Anteil erhöhen">+</button>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <div class="well">
+              <div class="well-header">
+                <label class="well-label" for="vol-power-input">Wärmeleistung Q̇</label>
+              </div>
+              <div class="stepper-row">
+                <button type="button" class="step-btn press-btn" id="vol-power-minus" aria-label="Wärmeleistung verringern">−</button>
+                <div class="num-value-wrap">
+                  <input
+                    id="vol-power-input"
+                    class="num-input"
+                    type="number"
+                    inputmode="decimal"
+                    step="0.5"
+                    min="0"
+                    value="15"
+                    aria-label="Wärmeleistung in Kilowatt"
+                  />
+                  <span class="num-unit">kW</span>
+                </div>
+                <button type="button" class="step-btn press-btn" id="vol-power-plus" aria-label="Wärmeleistung erhöhen">+</button>
+              </div>
+            </div>
+
+            <div class="well">
+              <div class="well-header">
+                <label class="well-label" for="vol-dt-input">Temperaturspreizung ΔT</label>
+              </div>
+              <div class="stepper-row">
+                <button type="button" class="step-btn press-btn" id="vol-dt-minus" aria-label="Spreizung verringern">−</button>
+                <div class="num-value-wrap">
+                  <input
+                    id="vol-dt-input"
+                    class="num-input"
+                    type="number"
+                    inputmode="decimal"
+                    step="0.5"
+                    min="0.1"
+                    value="10"
+                    aria-label="Temperaturspreizung in Kelvin"
+                  />
+                  <span class="num-unit">K</span>
+                </div>
+                <button type="button" class="step-btn press-btn" id="vol-dt-plus" aria-label="Spreizung erhöhen">+</button>
+              </div>
+              <div class="chip-group" id="vol-dt-preset-group" role="group" aria-label="Typische Spreizungswerte">
+                <button type="button" class="chip-btn press-btn" data-dt="5" aria-pressed="false">5 K</button>
+                <button type="button" class="chip-btn press-btn" data-dt="7" aria-pressed="false">7 K</button>
+                <button type="button" class="chip-btn press-btn" data-dt="10" aria-pressed="true">10 K</button>
+                <button type="button" class="chip-btn press-btn" data-dt="15" aria-pressed="false">15 K</button>
+                <button type="button" class="chip-btn press-btn" data-dt="20" aria-pressed="false">20 K</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 3: Überschlägige Raum-/Gebäude-Heizlast (Q = A * q_spez) -->
+        <div id="panel-heizlast" class="calc-panel view-stack" hidden>
+          <div class="well">
+            <div class="well-header">
+              <span class="well-label">Gebäudestandard</span>
+            </div>
+            <div class="chip-group" id="hl-preset-group" role="group" aria-label="Gebäudestandard">
+              <button type="button" class="chip-btn press-btn" data-q="15" aria-pressed="false">Passiv</button>
+              <button type="button" class="chip-btn press-btn" data-q="40" aria-pressed="true">Neubau</button>
+              <button type="button" class="chip-btn press-btn" data-q="75" aria-pressed="false">Teilsaniert</button>
+              <button type="button" class="chip-btn press-btn" data-q="110" aria-pressed="false">Altbau</button>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <div class="well">
+              <div class="well-header">
+                <label class="well-label" for="hl-area-input">Beheizte Fläche A</label>
+              </div>
+              <div class="stepper-row">
+                <button type="button" class="step-btn press-btn" id="hl-area-minus" aria-label="Fläche verringern">−</button>
+                <div class="num-value-wrap">
+                  <input
+                    id="hl-area-input"
+                    class="num-input"
+                    type="number"
+                    inputmode="decimal"
+                    step="5"
+                    min="0"
+                    value="140"
+                    aria-label="Beheizte Fläche in Quadratmetern"
+                  />
+                  <span class="num-unit">m²</span>
+                </div>
+                <button type="button" class="step-btn press-btn" id="hl-area-plus" aria-label="Fläche erhöhen">+</button>
+              </div>
+            </div>
+
+            <div class="well">
+              <div class="well-header">
+                <label class="well-label" for="hl-spec-input">Spezifische Heizlast q</label>
+              </div>
+              <div class="stepper-row">
+                <button type="button" class="step-btn press-btn" id="hl-spec-minus" aria-label="Spezifische Heizlast verringern">−</button>
+                <div class="num-value-wrap">
+                  <input
+                    id="hl-spec-input"
+                    class="num-input"
+                    type="number"
+                    inputmode="decimal"
+                    step="5"
+                    min="0"
+                    value="40"
+                    aria-label="Spezifische Heizlast in Watt pro Quadratmeter"
+                  />
+                  <span class="num-unit">W/m²</span>
+                </div>
+                <button type="button" class="step-btn press-btn" id="hl-spec-plus" aria-label="Spezifische Heizlast erhöhen">+</button>
+              </div>
+            </div>
+
+            <div class="well">
+              <div class="well-header">
+                <label class="well-label" for="hl-dt-input">Spreizung ΔT (für l/h)</label>
+              </div>
+              <div class="stepper-row">
+                <button type="button" class="step-btn press-btn" id="hl-dt-minus" aria-label="Spreizung verringern">−</button>
+                <div class="num-value-wrap">
+                  <input
+                    id="hl-dt-input"
+                    class="num-input"
+                    type="number"
+                    inputmode="decimal"
+                    step="0.5"
+                    min="0.1"
+                    value="5"
+                    aria-label="Spreizung für Volumenstrom in Kelvin"
+                  />
+                  <span class="num-unit">K</span>
+                </div>
+                <button type="button" class="step-btn press-btn" id="hl-dt-plus" aria-label="Spreizung erhöhen">+</button>
+              </div>
+              <div class="chip-group" id="hl-dt-preset-group" role="group" aria-label="Typische Spreizungswerte">
+                <button type="button" class="chip-btn press-btn" data-dt="5" aria-pressed="true">5 K</button>
+                <button type="button" class="chip-btn press-btn" data-dt="7" aria-pressed="false">7 K</button>
+                <button type="button" class="chip-btn press-btn" data-dt="10" aria-pressed="false">10 K</button>
+                <button type="button" class="chip-btn press-btn" data-dt="15" aria-pressed="false">15 K</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      </div>
+
+      <!-- EINSTELLUNGEN-ANSICHT -->
+      <section id="view-settings" class="liquid-glass-card calc-panel" aria-label="Einstellungen" hidden>
+        <div class="well">
+          <div class="well-header">
+            <span class="well-label">Darstellung</span>
+          </div>
+          <div id="theme-mode-group" class="settings-segmented" role="radiogroup" aria-label="Darstellungsmodus">
+            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="auto" aria-checked="true">Auto</button>
+            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="light" aria-checked="false">Hell</button>
+            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="dark" aria-checked="false">Dunkel</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite" data-visible="false"></div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
