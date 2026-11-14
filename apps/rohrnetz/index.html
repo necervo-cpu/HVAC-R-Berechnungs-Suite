@@ -114,17 +114,18 @@
             </div>
           </div>
 
-          <!-- Rohrmaterial -->
+          <!-- Rohrmaterial (Viega) -->
           <div class="well">
             <div class="well-header">
-              <span class="well-label">Rohrmaterial</span>
+              <span class="well-label">Rohrsystem (Viega)</span>
               <span id="pipe-roughness-hint" class="well-hint">k = 0,0015 mm</span>
             </div>
-            <div class="chip-group" id="material-group" role="group" aria-label="Rohrmaterial">
-              <button type="button" class="chip-btn press-btn" data-material="copper" aria-pressed="true">Kupfer</button>
-              <button type="button" class="chip-btn press-btn" data-material="pex" aria-pressed="false">Verbund</button>
-              <button type="button" class="chip-btn press-btn" data-material="steel_press" aria-pressed="false">C-Stahl</button>
-              <button type="button" class="chip-btn press-btn" data-material="steel_thread" aria-pressed="false">Gewinde</button>
+            <div class="chip-group" id="material-group" role="group" aria-label="Viega Rohrsystem">
+              <button type="button" class="chip-btn press-btn" data-material="profipress" aria-pressed="true">Profipress (Cu)</button>
+              <button type="button" class="chip-btn press-btn" data-material="prestabo" aria-pressed="false">Prestabo (C-Stahl)</button>
+              <button type="button" class="chip-btn press-btn" data-material="sanpress_inox" aria-pressed="false">Sanpress Inox</button>
+              <button type="button" class="chip-btn press-btn" data-material="raxofix" aria-pressed="false">Raxofix (Verbund)</button>
+              <button type="button" class="chip-btn press-btn" data-material="megapress" aria-pressed="false">Megapress (Stahl)</button>
             </div>
           </div>
 
@@ -245,6 +246,10 @@
               <button type="button" class="chip-btn press-btn" data-fluid="glycol_30" aria-pressed="false">Glykol 30 %</button>
             </div>
           </div>
+
+          <p class="well-hint" style="margin: 2px 4px 0;">
+            Hinweis: Für die Berechnung wurden die Rohrdimensionen (Innendurchmesser dᵢ) und Wandrauhigkeiten des Herstellers Viega herangezogen (Profipress, Prestabo, Sanpress Inox, Raxofix, Megapress Reihe M).
+          </p>
         </section>
       </div>
 
