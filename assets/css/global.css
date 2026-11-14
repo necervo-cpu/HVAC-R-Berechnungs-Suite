@@ -1355,6 +1355,129 @@ textarea {
 }
 
 /* ==========================================================================
+   9a. APP-UPDATE-BANNER & UPDATE-BUTTON (Liquid Glass)
+   ========================================================================== */
+.update-check-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--tile);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.update-check-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.update-banner {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 24px) scale(0.97);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 45;
+  width: min(440px, calc(100vw - 24px));
+  padding: 10px 12px 10px 14px;
+  border-radius: 20px;
+  background: var(--glass-hero);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    inset 0 1px 1px 0 var(--edge),
+    var(--ios-shadow);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition:
+    opacity 220ms var(--ease-out),
+    transform 260ms var(--ease-spring);
+}
+
+.update-banner[data-visible="true"] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.update-banner-icon {
+  flex-shrink: 0;
+  color: var(--accent-text-sky);
+}
+
+.update-banner-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.update-banner-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.update-banner-sub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+.update-banner-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.update-banner-btn {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: none;
+  background: var(--pastel-sky);
+  color: #1c1c1e;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.update-banner-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.update-banner-close {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+/* ==========================================================================
    10. BARRIEREFREIHEIT: REDUZIERTE TRANSPARENZ & REDUZIERTE BEWEGUNG
    ========================================================================== */
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {

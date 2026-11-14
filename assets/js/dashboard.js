@@ -8,7 +8,9 @@
  */
 
 import {
+  APP_VERSION,
   applyThemeMode,
+  checkForAppUpdate,
   getCurrentThemeMode,
   showToast,
 } from "./shared.js";
@@ -275,9 +277,20 @@ function wireEvents() {
       renderSettingsTheme();
     });
   }
+
+  const checkUpdateBtn = document.getElementById("check-update-btn");
+  if (checkUpdateBtn) {
+    checkUpdateBtn.addEventListener("click", async () => {
+      checkUpdateBtn.disabled = true;
+      await checkForAppUpdate({ manual: true });
+      checkUpdateBtn.disabled = false;
+    });
+  }
 }
 
 function init() {
+  const versionLabel = document.getElementById("app-version-label");
+  if (versionLabel) versionLabel.textContent = `v${APP_VERSION}`;
   wireEvents();
   renderSettingsTheme();
   renderHubGrid();

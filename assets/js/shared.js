@@ -8,11 +8,20 @@
  *   try/catch-Kapselung von localStorage für den iOS Safari Privatmodus.
  */
 
+export const APP_VERSION = "1.1.0";
+
 const THEME_STORAGE_KEY = "hvacr-theme-mode";
 const TOP_LIGHT = "#f2f2f7";
 const TOP_DARK = "#000000";
+const ROOT_URL = new URL("../../", import.meta.url);
+const SW_URL = new URL("sw.js", ROOT_URL).href;
+const VERSION_URL = new URL("version.json", ROOT_URL).href;
 
 let toastTimer = null;
+let swRegistration = null;
+let updateDismissed = false;
+let isReloading = false;
+let lastCheckTimestamp = 0;
 
 export function isValidThemeMode(value) {
   return value === "auto" || value === "light" || value === "dark";
@@ -212,8 +221,190 @@ function initNumInputSizingFallback() {
   });
 }
 
+async function applyAppUpdate() {
+  if (isReloading) return;
+  isReloading = true;
+
+  try {
+    if (swRegistration?.waiting) {
+      swRegistration.waiting.postMessage({ type: "SKIP_WAITING" });
+    }
+    if ("caches" in window) {
+      const keys = await window.caches.keys();
+      await Promise.all(keys.map((key) => window.caches.delete(key)));
+    }
+  } catch {
+    // Auch falls Cache-Bereinigung blockiert ist, erzwingt reload() den Neustart.
+  }
+
+  window.location.reload();
+}
+
+function showUpdateBanner(remoteVersion) {
+  if (updateDismissed || !document.body) return;
+  let banner = document.getElementById("app-update-banner");
+
+  if (!banner) {
+    banner = document.createElement("aside");
+    banner.id = "app-update-banner";
+    banner.className = "update-banner";
+    banner.setAttribute("role", "region");
+    banner.setAttribute("aria-label", "App-Aktualisierung");
+
+    const icon = document.createElement("span");
+    icon.className = "ag-icon ag-icon--sm update-banner-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = "system_update";
+
+    const textWrap = document.createElement("div");
+    textWrap.className = "update-banner-text";
+
+    const title = document.createElement("strong");
+    title.className = "update-banner-title";
+    title.textContent = "Neue Version verfügbar";
+
+    const sub = document.createElement("span");
+    sub.className = "update-banner-sub";
+
+    textWrap.append(title, sub);
+
+    const actions = document.createElement("div");
+    actions.className = "update-banner-actions";
+
+    const reloadBtn = document.createElement("button");
+    reloadBtn.type = "button";
+    reloadBtn.className = "update-banner-btn press-btn";
+    reloadBtn.textContent = "Aktualisieren";
+    reloadBtn.addEventListener("click", () => {
+      reloadBtn.disabled = true;
+      reloadBtn.textContent = "Lädt …";
+      void applyAppUpdate();
+    });
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "update-banner-close press-icon";
+    closeBtn.setAttribute("aria-label", "Hinweis schließen");
+    const closeIcon = document.createElement("span");
+    closeIcon.className = "ag-icon ag-icon--sm";
+    closeIcon.setAttribute("aria-hidden", "true");
+    closeIcon.textContent = "close";
+    closeBtn.appendChild(closeIcon);
+    closeBtn.addEventListener("click", () => {
+      updateDismissed = true;
+      banner.setAttribute("data-visible", "false");
+    });
+
+    actions.append(reloadBtn, closeBtn);
+    banner.append(icon, textWrap, actions);
+    document.body.appendChild(banner);
+  }
+
+  const subEl = banner.querySelector(".update-banner-sub");
+  if (subEl) {
+    subEl.textContent = remoteVersion
+      ? `Version ${remoteVersion} steht bereit`
+      : "Änderungen sind bereit zum Laden";
+  }
+
+  window.requestAnimationFrame(() => {
+    banner.setAttribute("data-visible", "true");
+  });
+}
+
+export async function checkForAppUpdate({ manual = false } = {}) {
+  const now = Date.now();
+  if (!manual && now - lastCheckTimestamp < 15000) return false;
+  lastCheckTimestamp = now;
+
+  try {
+    if (swRegistration) {
+      await swRegistration.update();
+      if (swRegistration.waiting) {
+        if (manual) updateDismissed = false;
+        showUpdateBanner("");
+        return true;
+      }
+    }
+
+    const res = await fetch(`${VERSION_URL}?t=${now}`, { cache: "no-store" });
+    if (!res.ok) {
+      if (manual) showToast("Update-Prüfung fehlgeschlagen");
+      return false;
+    }
+
+    const data = await res.json();
+    const remoteVersion = typeof data?.version === "string" ? data.version.trim() : "";
+
+    if (remoteVersion && remoteVersion !== APP_VERSION) {
+      if (manual) updateDismissed = false;
+      showUpdateBanner(remoteVersion);
+      return true;
+    }
+
+    if (manual) {
+      showToast(`Aktuell (v${APP_VERSION})`);
+    }
+    return false;
+  } catch {
+    if (manual) {
+      showToast("Offline – Update-Prüfung nicht möglich");
+    }
+    return false;
+  }
+}
+
+function initServiceWorkerAndUpdates() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker
+      .register(SW_URL, { scope: ROOT_URL.href, updateViaCache: "none" })
+      .then((reg) => {
+        swRegistration = reg;
+        if (reg.waiting) {
+          showUpdateBanner("");
+        }
+        reg.addEventListener("updatefound", () => {
+          const installing = reg.installing;
+          if (!installing) return;
+          installing.addEventListener("statechange", () => {
+            if (installing.state === "installed" && navigator.serviceWorker.controller) {
+              showUpdateBanner("");
+            }
+          });
+        });
+      })
+      .catch(() => {
+        // Fallback: Versionsprüfung über version.json funktioniert auch ohne Service Worker.
+      });
+
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!isReloading) {
+        isReloading = true;
+        window.location.reload();
+      }
+    });
+  }
+
+  const runCheck = () => {
+    void checkForAppUpdate();
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", runCheck, { once: true });
+  } else {
+    runCheck();
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      runCheck();
+    }
+  });
+}
+
 // Theme beim Laden sofort anwenden, um Flackern (FOUC) zu vermeiden
 if (typeof document !== "undefined") {
   applyThemeMode(getStoredThemeMode());
   initNumInputSizingFallback();
+  initServiceWorkerAndUpdates();
 }
