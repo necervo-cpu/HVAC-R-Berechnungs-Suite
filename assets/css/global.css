@@ -70,7 +70,15 @@
   --tile: var(--surface-field);
   --pill-track: var(--surface-field);
   --pill-thumb: var(--surface-hover);
-  --ios-bg: var(--bg);
+  /* OKLab-Interpolationsraum für Verläufe nur bei Browser-Support aktivieren */
+  --in-oklab: ;
+  /* Subtiler Hintergrund-Verlauf auf #000000 (ausdrückliche Abweichung gemäß DESIGN.md) */
+  --ios-bg:
+    radial-gradient(ellipse 85% 55% at 15% -5% var(--in-oklab), color-mix(in oklab, var(--pastel-aqua) 9%, transparent), transparent 65%),
+    radial-gradient(ellipse 80% 55% at 88% 12% var(--in-oklab), color-mix(in oklab, var(--pastel-periwinkle) 8%, transparent), transparent 65%),
+    radial-gradient(ellipse 75% 50% at 50% 105% var(--in-oklab), color-mix(in oklab, var(--pastel-lavender) 5%, transparent), transparent 65%),
+    linear-gradient(180deg var(--in-oklab), color-mix(in oklab, var(--surface-card) 42%, transparent) 0%, transparent 58%, color-mix(in oklab, var(--pastel-periwinkle) 4%, transparent) 100%),
+    var(--bg);
   --edge: rgba(255, 255, 255, 0.06);
   --edge-low: transparent;
   --border-subtle: var(--border);
@@ -112,6 +120,12 @@
   --scale-small: 0.94;
 }
 
+@supports (linear-gradient(in oklab, white, black)) and (radial-gradient(ellipse at center in oklab, white, black)) {
+  :root {
+    --in-oklab: in oklab;
+  }
+}
+
 :root[data-theme="light"] {
   color-scheme: light;
 
@@ -139,6 +153,7 @@
   --accent-text-orchid: #a53a98;
 
   --pill-thumb: var(--surface-card);
+  --ios-bg: var(--bg);
   --edge: transparent;
   --status-ok: var(--text-on-accent);
   --status-ok-bg: var(--pastel-mint);
@@ -176,6 +191,7 @@
     --accent-text-orchid: #a53a98;
 
     --pill-thumb: var(--surface-card);
+    --ios-bg: var(--bg);
     --edge: transparent;
     --status-ok: var(--text-on-accent);
     --status-ok-bg: var(--pastel-mint);
@@ -1323,6 +1339,12 @@ textarea {
    10. BARRIEREFREIHEIT: REDUZIERTE TRANSPARENZ & REDUZIERTE BEWEGUNG
    ========================================================================== */
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root,
+  :root[data-theme="light"],
+  :root:not([data-theme="dark"]):not([data-theme="light"]) {
+    --ios-bg: var(--bg);
+  }
+
   .top-bar,
   .liquid-glass-card,
   .hub-tile {
@@ -1330,6 +1352,15 @@ textarea {
     -webkit-backdrop-filter: none;
     background: var(--bg);
     border-width: 1.5px;
+  }
+}
+
+@media (forced-colors: active) {
+  :root,
+  :root[data-theme="light"],
+  :root:not([data-theme="dark"]):not([data-theme="light"]) {
+    --bg: Canvas;
+    --ios-bg: Canvas;
   }
 }
 
