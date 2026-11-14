@@ -97,7 +97,6 @@ const MODULES = [
 
 const state = {
   view: "home",
-  category: "all",
   query: "",
 };
 
@@ -119,13 +118,12 @@ function renderHubGrid() {
 
   const q = state.query.trim().toLowerCase();
   const filtered = MODULES.filter((mod) => {
-    const matchesCat = state.category === "all" || mod.category === state.category;
-    const matchesQuery =
+    return (
       !q ||
       mod.title.toLowerCase().includes(q) ||
       mod.sub.toLowerCase().includes(q) ||
-      mod.keywords.includes(q);
-    return matchesCat && matchesQuery;
+      mod.keywords.includes(q)
+    );
   });
 
   if (filtered.length === 0) {
@@ -191,12 +189,11 @@ function renderHubGrid() {
 
 function openSettings() {
   state.view = "settings";
+  const topBar = document.getElementById("top-bar");
   const homeView = document.getElementById("view-home");
   const settingsView = document.getElementById("view-settings");
-  const backBtn = document.getElementById("nav-back-btn");
-  const brandDot = document.getElementById("brand-dot");
-  const brandTitle = document.getElementById("brand-title");
 
+  if (topBar) topBar.hidden = false;
   if (homeView) homeView.hidden = true;
   if (settingsView) {
     settingsView.hidden = false;
@@ -204,21 +201,17 @@ function openSettings() {
     void settingsView.offsetWidth;
     settingsView.classList.add("is-entering");
   }
-  if (backBtn) backBtn.hidden = false;
-  if (brandDot) brandDot.hidden = true;
-  if (brandTitle) brandTitle.textContent = "Einstellungen";
 
   renderSettingsTheme();
 }
 
 function openHome() {
   state.view = "home";
+  const topBar = document.getElementById("top-bar");
   const homeView = document.getElementById("view-home");
   const settingsView = document.getElementById("view-settings");
-  const backBtn = document.getElementById("nav-back-btn");
-  const brandDot = document.getElementById("brand-dot");
-  const brandTitle = document.getElementById("brand-title");
 
+  if (topBar) topBar.hidden = true;
   if (settingsView) settingsView.hidden = true;
   if (homeView) {
     homeView.hidden = false;
@@ -226,9 +219,6 @@ function openHome() {
     void homeView.offsetWidth;
     homeView.classList.add("is-entering");
   }
-  if (backBtn) backBtn.hidden = true;
-  if (brandDot) brandDot.hidden = false;
-  if (brandTitle) brandTitle.textContent = "HVAC·R";
 }
 
 function wireEvents() {
@@ -236,19 +226,6 @@ function wireEvents() {
   if (searchInput) {
     searchInput.addEventListener("input", () => {
       state.query = searchInput.value;
-      renderHubGrid();
-    });
-  }
-
-  const catPills = document.getElementById("hub-category-pills");
-  if (catPills) {
-    catPills.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-cat]");
-      if (!btn) return;
-      state.category = btn.dataset.cat || "all";
-      catPills.querySelectorAll("[data-cat]").forEach((b) => {
-        b.setAttribute("aria-pressed", String(b === btn));
-      });
       renderHubGrid();
     });
   }

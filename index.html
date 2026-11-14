@@ -33,40 +33,40 @@
   </head>
   <body>
     <main class="app-shell">
-      <!-- Kompakte Top-Leiste (44px) -->
-      <header class="top-bar">
+      <!-- Kompakte Top-Leiste (nur in der Einstellungen-Ansicht sichtbar) -->
+      <header id="top-bar" class="top-bar" hidden>
         <div class="brand-mark">
           <button
             type="button"
             id="nav-back-btn"
             class="back-btn press-btn"
             aria-label="Zurück zur Übersicht"
-            hidden
           >
             <span class="ag-icon ag-icon--xs" aria-hidden="true">arrow_back_ios_new</span>
             <span>Übersicht</span>
           </button>
-          <span id="brand-dot" class="brand-dot" aria-hidden="true"></span>
-          <span id="brand-title" class="brand-title">HVAC·R</span>
-        </div>
-        <div class="top-actions">
-          <button
-            type="button"
-            id="settings-toggle-btn"
-            class="settings-btn press-icon"
-            aria-label="Einstellungen öffnen"
-          >
-            <span class="ag-icon" aria-hidden="true">settings</span>
-          </button>
+          <span id="brand-title" class="brand-title">Einstellungen</span>
         </div>
       </header>
 
       <!-- DASHBOARD / APP-LAUNCHER -->
       <section id="view-home" class="view-stack calc-panel" aria-label="Rechner-Übersicht">
         <header class="hub-hero">
-          <h1 class="hub-hero-title">HVAC·R Rechner</h1>
-          <p class="hub-hero-sub">Berechnung, Kennlinien und Auslegung – alles an einem Ort.</p>
-          <div class="search-well search-well--pill">
+          <div class="hub-hero-top">
+            <div class="hub-hero-copy">
+              <h1 class="hub-hero-title">HVAC·R Rechner</h1>
+              <p class="hub-hero-sub">Berechnung, Kennlinien und Auslegung – alles an einem Ort.</p>
+            </div>
+            <button
+              type="button"
+              id="settings-toggle-btn"
+              class="settings-btn press-icon"
+              aria-label="Einstellungen öffnen"
+            >
+              <span class="ag-icon" aria-hidden="true">settings</span>
+            </button>
+          </div>
+          <div class="search-well">
             <span class="ag-icon ag-icon--xs search-icon" aria-hidden="true">search</span>
             <input
               id="hub-search"
@@ -79,13 +79,6 @@
             />
           </div>
         </header>
-
-        <div id="hub-category-pills" class="cat-pills" role="group" aria-label="Kategorie wählen">
-          <button type="button" class="cat-pill press-btn" data-cat="all" aria-pressed="true">Alle</button>
-          <button type="button" class="cat-pill press-btn" data-cat="kaelte" aria-pressed="false">Kälte</button>
-          <button type="button" class="cat-pill press-btn" data-cat="heizung" aria-pressed="false">Heizung</button>
-          <button type="button" class="cat-pill press-btn" data-cat="lueftung" aria-pressed="false">Lüftung</button>
-        </div>
 
         <div id="hub-grid" class="hub-grid" role="list"></div>
         <div id="hub-empty" class="liquid-glass-card empty-state" hidden>
