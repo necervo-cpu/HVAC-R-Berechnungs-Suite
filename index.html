@@ -63,26 +63,28 @@
 
       <!-- DASHBOARD / APP-LAUNCHER -->
       <section id="view-home" class="view-stack calc-panel" aria-label="Rechner-Übersicht">
-        <div class="liquid-glass-card">
-          <div class="search-well">
+        <header class="hub-hero">
+          <h1 class="hub-hero-title">HVAC·R Rechner</h1>
+          <p class="hub-hero-sub">Berechnung, Kennlinien und Auslegung – alles an einem Ort.</p>
+          <div class="search-well search-well--pill">
             <span class="ag-icon ag-icon--xs search-icon" aria-hidden="true">search</span>
             <input
               id="hub-search"
               class="search-input"
               type="search"
-              placeholder="Rechner suchen (z. B. NTC, PT1000, Ohm)…"
+              placeholder="App suchen …"
               aria-label="Rechner durchsuchen"
               autocapitalize="none"
               autocorrect="off"
             />
           </div>
+        </header>
 
-          <div id="hub-category-pills" class="cat-pills" role="group" aria-label="Kategorie wählen">
-            <button type="button" class="cat-pill press-btn" data-cat="all" aria-pressed="true">Alle</button>
-            <button type="button" class="cat-pill press-btn" data-cat="kaelte" aria-pressed="false">Kälte</button>
-            <button type="button" class="cat-pill press-btn" data-cat="heizung" aria-pressed="false">Heizung</button>
-            <button type="button" class="cat-pill press-btn" data-cat="lueftung" aria-pressed="false">Lüftung</button>
-          </div>
+        <div id="hub-category-pills" class="cat-pills" role="group" aria-label="Kategorie wählen">
+          <button type="button" class="cat-pill press-btn" data-cat="all" aria-pressed="true">Alle</button>
+          <button type="button" class="cat-pill press-btn" data-cat="kaelte" aria-pressed="false">Kälte</button>
+          <button type="button" class="cat-pill press-btn" data-cat="heizung" aria-pressed="false">Heizung</button>
+          <button type="button" class="cat-pill press-btn" data-cat="lueftung" aria-pressed="false">Lüftung</button>
         </div>
 
         <div id="hub-grid" class="hub-grid" role="list"></div>

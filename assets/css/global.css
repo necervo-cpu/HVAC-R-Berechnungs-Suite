@@ -727,8 +727,36 @@ textarea {
 }
 
 /* ==========================================================================
-   7. DASHBOARD: SUCHE & MODUL-KARTEN GRID
+   7. DASHBOARD: HERO-HEADLINE, SUCHE & MODUL-KARTEN GRID
    ========================================================================== */
+.hub-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 6px 4px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.hub-hero-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 6vw, 32px);
+  font-weight: 700;
+  letter-spacing: var(--display-tracking);
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.hub-hero-sub {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--muted);
+  max-width: 38ch;
+}
+
 .search-well {
   display: flex;
   align-items: center;
@@ -739,6 +767,13 @@ textarea {
   background: var(--input-bg);
   border: 1px solid var(--border-subtle);
   box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+.search-well--pill {
+  width: 100%;
+  max-width: 440px;
+  padding: 0 16px;
+  border-radius: 999px;
 }
 
 .search-icon {
@@ -1198,11 +1233,18 @@ textarea {
 }
 
 .num-value-wrap .num-input {
-  width: auto;
+  width: 4.5ch;
   min-width: 2ch;
-  max-width: calc(100% - 28px);
+  max-width: calc(100% - 32px);
+  padding: 0;
   text-align: right;
-  field-sizing: content;
+}
+
+@supports (field-sizing: content) {
+  .num-value-wrap .num-input {
+    width: auto;
+    field-sizing: content;
+  }
 }
 
 .num-unit {

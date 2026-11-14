@@ -178,7 +178,42 @@ export function createNumberAnimator({ duration = 220, epsilon = 0.001, render }
   };
 }
 
+function syncNumInputWidth(input) {
+  const len = String(input.value ?? "").length || 1;
+  input.style.width = `${Math.max(2, len + 0.4)}ch`;
+}
+
+// Fallback für Browser ohne CSS field-sizing: content (z. B. iOS Safari)
+function initNumInputSizingFallback() {
+  if (typeof CSS !== "undefined" && CSS.supports && CSS.supports("field-sizing", "content")) {
+    return;
+  }
+
+  const syncAll = () => {
+    document.querySelectorAll(".num-value-wrap .num-input").forEach(syncNumInputWidth);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", syncAll);
+  } else {
+    syncAll();
+  }
+
+  document.addEventListener("input", (e) => {
+    const target = e.target;
+    if (target instanceof HTMLInputElement && target.closest(".num-value-wrap")) {
+      syncNumInputWidth(target);
+    }
+  });
+
+  // Synchronisiert Breite auch nach JS-Wertänderungen durch Stepper-Buttons oder Chips
+  document.addEventListener("click", () => {
+    window.requestAnimationFrame(syncAll);
+  });
+}
+
 // Theme beim Laden sofort anwenden, um Flackern (FOUC) zu vermeiden
 if (typeof document !== "undefined") {
   applyThemeMode(getStoredThemeMode());
+  initNumInputSizingFallback();
 }
