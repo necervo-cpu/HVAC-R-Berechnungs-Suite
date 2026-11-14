@@ -100,6 +100,64 @@ export function updateAllPills() {
   document.querySelectorAll(".segmented").forEach((seg) => updateSegmentedPill(seg));
 }
 
+/**
+ * Erzeugt einen wiederverwendbaren Zahlen-Animator (Count-Up / Count-Down) für Live-Ergebnisse.
+ * Respektiert prefers-reduced-motion und springt bei Kontext-/Einheitenwechsel direkt.
+ */
+export function createNumberAnimator({ duration = 220, epsilon = 0.001, render }) {
+  let rafId = null;
+  let lastValue = null;
+  let lastContext = null;
+
+  return {
+    update(targetValue, context = null, animate = true) {
+      if (typeof render !== "function") return;
+
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+
+      if (
+        !Number.isFinite(targetValue) ||
+        !animate ||
+        prefersReducedMotion() ||
+        lastValue === null ||
+        lastContext !== context ||
+        Math.abs(targetValue - lastValue) < epsilon
+      ) {
+        lastValue = targetValue;
+        lastContext = context;
+        render(targetValue, context);
+        return;
+      }
+
+      const startValue = lastValue;
+      const startTime = performance.now();
+
+      const tick = (now) => {
+        const progress = Math.min(1, (now - startTime) / duration);
+        // easeOutCubic für schnellen Antritt und weiches Einrasten
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = startValue + (targetValue - startValue) * eased;
+        lastValue = current;
+        render(current, context);
+
+        if (progress < 1) {
+          rafId = window.requestAnimationFrame(tick);
+        } else {
+          lastValue = targetValue;
+          lastContext = context;
+          render(targetValue, context);
+          rafId = null;
+        }
+      };
+
+      rafId = window.requestAnimationFrame(tick);
+    },
+  };
+}
+
 // Theme beim Laden sofort anwenden, um Flackern (FOUC) zu vermeiden
 if (typeof document !== "undefined") {
   applyThemeMode(getStoredThemeMode());

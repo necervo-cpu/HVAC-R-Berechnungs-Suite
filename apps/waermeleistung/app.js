@@ -10,6 +10,7 @@
 
 import {
   applyThemeMode,
+  createNumberAnimator,
   getCurrentThemeMode,
   prefersReducedMotion,
   updateAllPills,
@@ -197,16 +198,39 @@ function syncPresetChips(groupSelector, attr, activeValue) {
   });
 }
 
-function setResult({ label, value, unit, sub, badgeText, badgeState, meterPct = 40 }) {
+let activeResultFormatter = (val) => formatDe(val, 2);
+
+const resultNumberAnimator = createNumberAnimator({
+  duration: 220,
+  epsilon: 0.001,
+  render: (val) => {
+    const numEl = document.getElementById("result-number");
+    if (numEl) numEl.textContent = activeResultFormatter(val);
+  },
+});
+
+function setResult({
+  label,
+  numericValue,
+  formatValue,
+  unit,
+  sub,
+  badgeText,
+  badgeState,
+  meterPct = 40,
+  animate = true,
+}) {
   const labelEl = document.getElementById("result-label");
-  const numEl = document.getElementById("result-number");
   const unitEl = document.getElementById("result-unit");
   const subEl = document.getElementById("result-sub");
   const badgeEl = document.getElementById("result-badge");
   const meterEl = document.getElementById("result-meter-fill");
 
   if (labelEl) labelEl.textContent = label;
-  if (numEl) numEl.textContent = value;
+  if (typeof formatValue === "function") {
+    activeResultFormatter = formatValue;
+  }
+  resultNumberAnimator.update(numericValue, state.mode, animate);
   if (unitEl) unitEl.textContent = unit;
   if (subEl) subEl.textContent = sub;
   if (badgeEl) {
@@ -243,7 +267,8 @@ function calculateHydraulik() {
 
   setResult({
     label: "Wärmeleistung Q̇",
-    value: formatDe(qKw, qKw >= 100 ? 1 : 2),
+    numericValue: qKw,
+    formatValue: (v) => formatDe(v, v >= 100 ? 1 : 2),
     unit: "kW",
     sub: `${formatDe(qWatt, 0)} W · ${formatDe(massFlowKgH, 0)} kg/h`,
     badgeText,
@@ -271,7 +296,8 @@ function calculateVolumenstrom() {
 
   setResult({
     label: "Volumenstrom V̇",
-    value: formatDe(flowM3h, flowM3h >= 10 ? 2 : 3),
+    numericValue: flowM3h,
+    formatValue: (v) => formatDe(v, v >= 10 ? 2 : 3),
     unit: "m³/h",
     sub: `${formatDe(flowLh, 0)} l/h · ${formatDe(flowLmin, 1)} l/min`,
     badgeText,
@@ -299,7 +325,8 @@ function calculateHeizlast() {
 
   setResult({
     label: "Gebäude-Heizlast Q̇",
-    value: formatDe(qKw, qKw >= 100 ? 1 : 2),
+    numericValue: qKw,
+    formatValue: (v) => formatDe(v, v >= 100 ? 1 : 2),
     unit: "kW",
     sub: `${formatDe(qWatt, 0)} W · ${formatDe(flowLh, 0)} l/h (${formatDe(flowM3h, 2)} m³/h bei ${formatDe(state.hlDt, 1)} K)`,
     badgeText,

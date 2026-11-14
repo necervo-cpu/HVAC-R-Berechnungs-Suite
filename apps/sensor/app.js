@@ -9,7 +9,7 @@
  */
 
 import {
-  prefersReducedMotion,
+  createNumberAnimator,
   updateAllPills,
   updateSegmentedPill,
 } from "../../assets/js/shared.js";
@@ -51,9 +51,20 @@ const state = {
   customB: 3950,
 };
 
-let countRafId = null;
-let lastDisplayedValue = null;
-let lastDisplayedDirection = null;
+const resultNumberAnimator = createNumberAnimator({
+  duration: 220,
+  epsilon: 0.01,
+  render: (val, direction) => {
+    const valEl = document.getElementById("sensor-result-val");
+    if (!valEl) return;
+    if (direction === "ohmToTemp") {
+      valEl.innerHTML = `${formatDE(val, 1)}<span class="result-unit">°C</span>`;
+    } else {
+      const f = formatOhm(val);
+      valEl.innerHTML = `${f.num}<span class="result-unit">${f.unit}</span>`;
+    }
+  },
+});
 
 function clampNumber(value, min, max, fallback) {
   const num = Number(value);
@@ -213,60 +224,6 @@ function calculateSensorConversion({
   };
 }
 
-function animateResultNumber(element, targetVal, direction, animate) {
-  if (!element) return;
-
-  const renderExact = (val) => {
-    if (direction === "ohmToTemp") {
-      element.innerHTML = `${formatDE(val, 1)}<span class="result-unit">°C</span>`;
-    } else {
-      const f = formatOhm(val);
-      element.innerHTML = `${f.num}<span class="result-unit">${f.unit}</span>`;
-    }
-  };
-
-  if (countRafId !== null) {
-    window.cancelAnimationFrame(countRafId);
-    countRafId = null;
-  }
-
-  if (
-    !animate ||
-    prefersReducedMotion() ||
-    lastDisplayedValue === null ||
-    lastDisplayedDirection !== direction ||
-    Math.abs(targetVal - lastDisplayedValue) < 0.01
-  ) {
-    lastDisplayedValue = targetVal;
-    lastDisplayedDirection = direction;
-    renderExact(targetVal);
-    return;
-  }
-
-  const startVal = lastDisplayedValue;
-  const startTime = performance.now();
-  const duration = 220;
-
-  const tick = (now) => {
-    const t = Math.min(1, (now - startTime) / duration);
-    const eased = 1 - Math.pow(1 - t, 3);
-    const current = startVal + (targetVal - startVal) * eased;
-    lastDisplayedValue = current;
-    renderExact(current);
-
-    if (t < 1) {
-      countRafId = window.requestAnimationFrame(tick);
-    } else {
-      lastDisplayedValue = targetVal;
-      lastDisplayedDirection = direction;
-      renderExact(targetVal);
-      countRafId = null;
-    }
-  };
-
-  countRafId = window.requestAnimationFrame(tick);
-}
-
 function getStepDelta() {
   if (state.direction === "tempToOhm") return 1.0;
   if (state.family === "ptc") {
@@ -334,7 +291,7 @@ function renderSensorResult(animate = true) {
   }
 
   const targetNum = state.direction === "ohmToTemp" ? res.tempC : res.ohm;
-  animateResultNumber(valEl, targetNum, state.direction, animate);
+  resultNumberAnimator.update(targetNum, state.direction, animate);
 
   const delta = getStepDelta();
   if (state.direction === "ohmToTemp") {

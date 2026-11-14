@@ -366,34 +366,34 @@
                 <button type="button" class="step-btn press-btn" id="hl-spec-plus" aria-label="Spezifische Heizlast erhöhen">+</button>
               </div>
             </div>
+          </div>
 
-            <div class="well well--full">
-              <div class="well-header">
-                <label class="well-label" for="hl-dt-input">Spreizung ΔT (für l/h)</label>
+          <div class="well">
+            <div class="well-header">
+              <label class="well-label" for="hl-dt-input">Spreizung ΔT (für l/h)</label>
+            </div>
+            <div class="stepper-row">
+              <button type="button" class="step-btn press-btn" id="hl-dt-minus" aria-label="Spreizung verringern">−</button>
+              <div class="num-value-wrap">
+                <input
+                  id="hl-dt-input"
+                  class="num-input"
+                  type="number"
+                  inputmode="decimal"
+                  step="0.5"
+                  min="0.1"
+                  value="5"
+                  aria-label="Spreizung für Volumenstrom in Kelvin"
+                />
+                <span class="num-unit">K</span>
               </div>
-              <div class="stepper-row">
-                <button type="button" class="step-btn press-btn" id="hl-dt-minus" aria-label="Spreizung verringern">−</button>
-                <div class="num-value-wrap">
-                  <input
-                    id="hl-dt-input"
-                    class="num-input"
-                    type="number"
-                    inputmode="decimal"
-                    step="0.5"
-                    min="0.1"
-                    value="5"
-                    aria-label="Spreizung für Volumenstrom in Kelvin"
-                  />
-                  <span class="num-unit">K</span>
-                </div>
-                <button type="button" class="step-btn press-btn" id="hl-dt-plus" aria-label="Spreizung erhöhen">+</button>
-              </div>
-              <div class="chip-group" id="hl-dt-preset-group" role="group" aria-label="Typische Spreizungswerte">
-                <button type="button" class="chip-btn press-btn" data-dt="5" aria-pressed="true">5 K</button>
-                <button type="button" class="chip-btn press-btn" data-dt="7" aria-pressed="false">7 K</button>
-                <button type="button" class="chip-btn press-btn" data-dt="10" aria-pressed="false">10 K</button>
-                <button type="button" class="chip-btn press-btn" data-dt="15" aria-pressed="false">15 K</button>
-              </div>
+              <button type="button" class="step-btn press-btn" id="hl-dt-plus" aria-label="Spreizung erhöhen">+</button>
+            </div>
+            <div class="chip-group" id="hl-dt-preset-group" role="group" aria-label="Typische Spreizungswerte">
+              <button type="button" class="chip-btn press-btn" data-dt="5" aria-pressed="true">5 K</button>
+              <button type="button" class="chip-btn press-btn" data-dt="7" aria-pressed="false">7 K</button>
+              <button type="button" class="chip-btn press-btn" data-dt="10" aria-pressed="false">10 K</button>
+              <button type="button" class="chip-btn press-btn" data-dt="15" aria-pressed="false">15 K</button>
             </div>
           </div>
         </div>
