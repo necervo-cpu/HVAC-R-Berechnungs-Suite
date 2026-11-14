@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f4" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#18181b" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f7" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
     <meta name="apple-mobile-web-app-title" content="PTC / NTC Sensoren" />
     <title>PTC / NTC Sensoren · HVAC·R</title>
     <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
@@ -13,13 +13,19 @@
     <script>
       (function () {
         var root = document.documentElement;
+        try {
+          var mode = window.localStorage.getItem("hvacr-theme-mode");
+          if (mode === "light" || mode === "dark") {
+            root.setAttribute("data-theme", mode);
+          }
+        } catch (e) {}
         root.style.transform = "translateZ(0)";
         void root.offsetHeight;
         root.style.transform = "";
         window.scrollTo(0, 0);
       })();
     </script>
-    <script type="module" src="../../assets/js/shared.js"></script>
+    <script type="module" src="../../assets/js/shared.js" blocking="render"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="../../assets/css/global.css" />
     <link rel="stylesheet" href="./style.css" />
@@ -88,9 +94,7 @@
           <div class="select-wrap">
             <div class="glass-select-face" aria-hidden="true">
               <span id="sensor-select-label" class="glass-select-label">NTC 10 kΩ (B=3435)</span>
-              <svg class="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
+              <span class="ag-icon ag-icon--xs select-chevron" aria-hidden="true">expand_more</span>
             </div>
             <select id="sensor-select" class="glass-select-native" aria-label="Sensorkennlinie wählen"></select>
           </div>
@@ -141,9 +145,7 @@
           aria-controls="ref-acc-panel"
         >
           <span>Prüfpunkte dieser Kennlinie (0–50 °C)</span>
-          <svg class="acc-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
+          <span class="ag-icon ag-icon--xs acc-chevron" aria-hidden="true">expand_more</span>
         </button>
         <div id="ref-acc-panel" class="t-acc-panel" data-open="false">
           <div class="t-acc-panel-inner">

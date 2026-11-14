@@ -13,13 +13,19 @@
     <script>
       (function () {
         var root = document.documentElement;
+        try {
+          var mode = window.localStorage.getItem("hvacr-theme-mode");
+          if (mode === "light" || mode === "dark") {
+            root.setAttribute("data-theme", mode);
+          }
+        } catch (e) {}
         root.style.transform = "translateZ(0)";
         void root.offsetHeight;
         root.style.transform = "";
         window.scrollTo(0, 0);
       })();
     </script>
-    <script type="module" src="../../assets/js/shared.js"></script>
+    <script type="module" src="../../assets/js/shared.js" blocking="render"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="../../assets/css/global.css" />
   </head>

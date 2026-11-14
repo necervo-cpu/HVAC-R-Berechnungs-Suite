@@ -2,11 +2,11 @@
  * Modul: Globales Apple Liquid Glass Design-System (assets/css/global.css)
  * Zweck: Zentrale Design-, Farb-, Typografie-, Layout- und Motion-Tokens für das Dashboard
  *   und alle modularen Einzel-Apps im 3-Stufen-Darstellungsmodus (Auto / Hell / Dunkel).
- * Verantwortlichkeit: Stellt transluzente Glas-Schichten ("Graphit & Signal-Orange"),
+ * Verantwortlichkeit: Stellt transluzente Glas-Schichten ("Pastell auf Schwarz"),
  *   konzentrische Radien, iOS-PWA-Safe-Areas, Anti-Truncation-Regeln und gemeinsame
  *   UI-Komponenten (Top-Bar, Karten, Wells, Inputs, Buttons, Segmented Controls) bereit.
- * Sicherheits- & A11y-Relevanz: DSGVO-konform ohne externe Font-CDNs; vollständige Fallbacks für
- *   prefers-reduced-motion, prefers-reduced-transparency und prefers-contrast.
+ * Sicherheits- & A11y-Relevanz: DSGVO-konforme Systemschriften für UI/Text plus Material Symbols Rounded;
+ *   vollständige Fallbacks für prefers-reduced-motion, prefers-reduced-transparency und prefers-contrast.
  */
 
 /* ==========================================================================
@@ -798,13 +798,13 @@ textarea {
 
 .cat-pills {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
 }
 
 .cat-pill {
   min-height: 38px;
-  padding: 6px 10px;
+  padding: 6px 6px;
   border-radius: 10px;
   border: 1px solid var(--border-subtle);
   background: var(--surface-field);
@@ -813,6 +813,7 @@ textarea {
   font-weight: 600;
   cursor: pointer;
   text-align: center;
+  min-width: 0;
   transition:
     background var(--dur-fast) var(--ease-out),
     color var(--dur-fast) var(--ease-out),

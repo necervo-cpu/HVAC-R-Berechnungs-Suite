@@ -18,6 +18,21 @@ const CORE_ASSETS = [
   "./assets/css/global.css",
   "./assets/js/shared.js",
   "./assets/js/dashboard.js",
+  "./apps/sensor/index.html",
+  "./apps/sensor/style.css",
+  "./apps/sensor/app.js",
+  "./apps/waermeleistung/index.html",
+  "./apps/waermeleistung/app.js",
+  "./apps/rohrnetz/index.html",
+  "./apps/rohrnetz/app.js",
+  "./apps/kaeltemittel/index.html",
+  "./apps/kaeltemittel/app.js",
+  "./apps/taupunkt/index.html",
+  "./apps/taupunkt/app.js",
+  "./apps/mag/index.html",
+  "./apps/mag/app.js",
+  "./apps/luftkanal/index.html",
+  "./apps/luftkanal/app.js",
 ];
 
 self.addEventListener("install", (event) => {
