@@ -20,9 +20,13 @@ import {
 
 const MAG_PARAMS_KEY = "hvacr-params-mag";
 const magParams = loadAppParams(MAG_PARAMS_KEY, {
-  reserveBar: 0.3,
+  safetyBar: 0.3,
   p0MinBar: 0.8,
 });
+// Altlasten aus früherer Speicherung mit reserveBar auf safetyBar übernehmen
+if (typeof magParams.safetyBar !== "number" || !Number.isFinite(magParams.safetyBar)) {
+  magParams.safetyBar = Number.isFinite(magParams.reserveBar) ? magParams.reserveBar : 0.3;
+}
 
 const STANDARD_MAG_SIZES = [8, 12, 18, 25, 35, 50, 80, 100, 140, 200, 250, 300, 400, 500, 600, 800, 1000];
 
@@ -77,7 +81,8 @@ function triggerResultPop() {
 
 function calculateAndRender(animate = true) {
   const pStat = state.heightM / 10;
-  const p0 = Math.max(magParams.p0MinBar, Number((pStat + magParams.reserveBar).toFixed(2)));
+  const safety = sanitizeNumber(magParams.safetyBar, 0.3, 0, 1.0);
+  const p0 = Math.max(magParams.p0MinBar, Number((pStat + safety).toFixed(2)));
   const pa = Number((p0 + 0.3).toFixed(2));
   const pe = state.svBar <= 3.0 ? Number((state.svBar - 0.5).toFixed(2)) : Number((state.svBar * 0.9).toFixed(2));
 
@@ -93,7 +98,7 @@ function calculateAndRender(animate = true) {
   let badgeText = "EN 12828";
   let badgeState = "ok";
   let meterPct = (p0 / pe) * 100;
-  let sub = `Fülldruck kalt pₐ = ${formatDe(pa, 2)} bar · Enddruck pₑ = ${formatDe(pe, 2)} bar`;
+  let sub = `pₛₜ = ${formatDe(pStat, 2)} bar + ${formatDe(safety, 2)} bar Zuschlag · Fülldruck pₐ = ${formatDe(pa, 2)} bar · pₑ = ${formatDe(pe, 2)} bar`;
 
   if (pa >= pe) {
     badgeText = "SV-Druck zu niedrig!";
@@ -126,7 +131,7 @@ function calculateAndRender(animate = true) {
       numericValue = vn;
       badgeText = `Empfehlung: ${nextStd} l MAG`;
       badgeState = "ok";
-      sub = `Ausdehnung Vₑ = ${formatDe(ve, 1)} l · p₀ = ${formatDe(p0, 2)} bar · pₑ = ${formatDe(pe, 2)} bar`;
+      sub = `Ausdehnung Vₑ = ${formatDe(ve, 1)} l · p₀ = ${formatDe(p0, 2)} bar (inkl. +${formatDe(safety, 2)} bar) · pₑ = ${formatDe(pe, 2)} bar`;
       meterPct = Math.min(100, Math.max(8, (vn / 300) * 100));
     }
   }
@@ -174,14 +179,14 @@ function wireStepper(minusId, plusId, inputId, step, min, max, onUpdate) {
 
   minus.addEventListener("click", () => {
     const cur = sanitizeNumber(input.value, min, min, max);
-    const next = Math.max(min, Number((cur - step).toFixed(1)));
+    const next = Math.max(min, Number((cur - step).toFixed(2)));
     input.value = String(next);
     onUpdate(next);
   });
 
   plus.addEventListener("click", () => {
     const cur = sanitizeNumber(input.value, min, min, max);
-    const next = Math.min(max, Number((cur + step).toFixed(1)));
+    const next = Math.min(max, Number((cur + step).toFixed(2)));
     input.value = String(next);
     onUpdate(next);
   });
@@ -279,13 +284,13 @@ function init() {
     });
   });
 
-  const resIn = document.getElementById("param-reserve-input");
+  const safetyIn = document.getElementById("param-safety-input");
   const p0In = document.getElementById("param-p0min-input");
-  if (resIn) resIn.value = String(magParams.reserveBar);
+  if (safetyIn) safetyIn.value = String(magParams.safetyBar);
   if (p0In) p0In.value = String(magParams.p0MinBar);
 
-  wireStepper("param-reserve-minus", "param-reserve-plus", "param-reserve-input", 0.05, 0.1, 0.8, (v) => {
-    magParams.reserveBar = v;
+  wireStepper("param-safety-minus", "param-safety-plus", "param-safety-input", 0.1, 0, 1.0, (v) => {
+    magParams.safetyBar = v;
     saveAppParams(MAG_PARAMS_KEY, magParams);
     calculateAndRender(true);
   });

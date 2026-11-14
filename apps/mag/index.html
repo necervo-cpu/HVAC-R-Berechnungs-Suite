@@ -62,7 +62,7 @@
                 <span id="result-number">1,20</span><span id="result-unit" class="result-unit">bar</span>
               </div>
             </div>
-            <div id="result-sub" class="result-sub">Fülldruck kalt pₐ = 1,50 bar · Enddruck pₑ = 2,50 bar</div>
+            <div id="result-sub" class="result-sub">pₛₜ = 0,90 bar + 0,30 bar Zuschlag · Fülldruck pₐ = 1,50 bar · pₑ = 2,50 bar</div>
             <div class="result-meter" aria-hidden="true">
               <div id="result-meter-fill" class="result-meter-fill" data-state="ok"></div>
             </div>
@@ -151,15 +151,15 @@
         <div class="field-grid field-grid--2">
           <div class="well">
             <div class="well-header">
-              <label class="well-label" for="param-reserve-input">Dampfdruck-Reserve</label>
+              <label class="well-label" for="param-safety-input">Sicherheitszuschlag</label>
             </div>
             <div class="stepper-row">
-              <button type="button" class="step-btn press-btn" id="param-reserve-minus" aria-label="Reserve verringern">−</button>
+              <button type="button" class="step-btn press-btn" id="param-safety-minus" aria-label="Sicherheitszuschlag verringern">−</button>
               <div class="num-value-wrap">
-                <input id="param-reserve-input" class="num-input" type="number" inputmode="decimal" step="0.05" min="0.1" max="0.8" value="0.3" aria-label="Druckreserve in bar" />
+                <input id="param-safety-input" class="num-input" type="number" inputmode="decimal" step="0.1" min="0" max="1.0" value="0.3" aria-label="Sicherheitszuschlag in bar" />
                 <span class="num-unit">bar</span>
               </div>
-              <button type="button" class="step-btn press-btn" id="param-reserve-plus" aria-label="Reserve erhöhen">+</button>
+              <button type="button" class="step-btn press-btn" id="param-safety-plus" aria-label="Sicherheitszuschlag erhöhen">+</button>
             </div>
           </div>
 
