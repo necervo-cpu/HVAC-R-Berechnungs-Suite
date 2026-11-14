@@ -197,12 +197,13 @@ function syncPresetChips(groupSelector, attr, activeValue) {
   });
 }
 
-function setResult({ label, value, unit, sub, badgeText, badgeState }) {
+function setResult({ label, value, unit, sub, badgeText, badgeState, meterPct = 40 }) {
   const labelEl = document.getElementById("result-label");
   const numEl = document.getElementById("result-number");
   const unitEl = document.getElementById("result-unit");
   const subEl = document.getElementById("result-sub");
   const badgeEl = document.getElementById("result-badge");
+  const meterEl = document.getElementById("result-meter-fill");
 
   if (labelEl) labelEl.textContent = label;
   if (numEl) numEl.textContent = value;
@@ -211,6 +212,11 @@ function setResult({ label, value, unit, sub, badgeText, badgeState }) {
   if (badgeEl) {
     badgeEl.textContent = badgeText;
     badgeEl.setAttribute("data-state", badgeState);
+  }
+  if (meterEl) {
+    const safePct = Math.min(100, Math.max(6, Number.isFinite(meterPct) ? meterPct : 40));
+    meterEl.style.width = `${safePct}%`;
+    meterEl.setAttribute("data-state", badgeState);
   }
   triggerResultPop();
 }
@@ -242,6 +248,7 @@ function calculateHydraulik() {
     sub: `${formatDe(qWatt, 0)} W · ${formatDe(massFlowKgH, 0)} kg/h`,
     badgeText,
     badgeState,
+    meterPct: (state.hydDt / 25) * 100,
   });
 }
 
@@ -269,6 +276,7 @@ function calculateVolumenstrom() {
     sub: `${formatDe(flowLh, 0)} l/h · ${formatDe(flowLmin, 1)} l/min`,
     badgeText,
     badgeState,
+    meterPct: (state.volDt / 25) * 100,
   });
 }
 
@@ -296,6 +304,7 @@ function calculateHeizlast() {
     sub: `${formatDe(qWatt, 0)} W · ${formatDe(flowLh, 0)} l/h (${formatDe(flowM3h, 2)} m³/h bei ${formatDe(state.hlDt, 1)} K)`,
     badgeText,
     badgeState,
+    meterPct: (state.hlSpec / 150) * 100,
   });
 }
 

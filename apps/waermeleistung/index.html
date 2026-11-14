@@ -56,7 +56,7 @@
             class="settings-btn press-icon"
             aria-label="Einstellungen öffnen"
           >
-            <span class="ag-icon ag-icon--sm" aria-hidden="true">settings</span>
+            <span class="ag-icon" aria-hidden="true">settings</span>
           </button>
         </div>
       </header>
@@ -109,6 +109,9 @@
             </div>
           </div>
           <div id="result-sub" class="result-sub">17.294 W · 1.488 kg/h</div>
+          <div class="result-meter" aria-hidden="true">
+            <div id="result-meter-fill" class="result-meter-fill" data-state="ok"></div>
+          </div>
         </div>
 
         <!-- PANEL 1: Hydraulische Wärmeleistung (Q = V * rho * cp * dT) -->
@@ -317,7 +320,7 @@
             </div>
           </div>
 
-          <div class="field-grid">
+          <div class="field-grid field-grid--2">
             <div class="well">
               <div class="well-header">
                 <label class="well-label" for="hl-area-input">Beheizte Fläche A</label>

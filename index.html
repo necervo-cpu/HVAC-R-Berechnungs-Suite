@@ -49,7 +49,7 @@
             class="settings-btn press-icon"
             aria-label="Einstellungen öffnen"
           >
-            <span class="ag-icon ag-icon--sm" aria-hidden="true">settings</span>
+            <span class="ag-icon" aria-hidden="true">settings</span>
           </button>
         </div>
       </header>
@@ -70,17 +70,10 @@
             />
           </div>
 
-          <div class="select-wrap">
-            <div class="glass-select-face" aria-hidden="true">
-              <span id="hub-category-label" class="glass-select-label">Alle Kategorien</span>
-              <span class="ag-icon ag-icon--xs select-chevron" aria-hidden="true">expand_more</span>
-            </div>
-            <select id="hub-category-select" class="glass-select-native" aria-label="Kategorie wählen">
-              <option value="all">Alle Kategorien</option>
-              <option value="kaelte">Kälte</option>
-              <option value="klima">Lüftung</option>
-              <option value="heizung">Heizung</option>
-            </select>
+          <div id="hub-category-pills" class="cat-pills" role="group" aria-label="Kategorie wählen">
+            <button type="button" class="cat-pill press-btn" data-cat="all" aria-pressed="true">Alle</button>
+            <button type="button" class="cat-pill press-btn" data-cat="kaelte" aria-pressed="false">Kälte</button>
+            <button type="button" class="cat-pill press-btn" data-cat="heizung" aria-pressed="false">Heizung</button>
           </div>
         </div>
 

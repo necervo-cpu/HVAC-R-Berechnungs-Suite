@@ -81,16 +81,19 @@ function renderHubGrid() {
   grid.innerHTML = filtered
     .map((mod, index) => {
       const inner = `
-        <div class="hub-tile-top">
+        <div class="hub-tile-main">
           <span class="hub-tile-icon">${mod.icon}</span>
-          <span class="hub-tile-badge" data-live="${String(mod.live)}">
-            ${mod.live ? "Aktiv" : "Geplant"}
-          </span>
+          <div class="hub-tile-body">
+            <div class="hub-tile-title-row">
+              <span class="hub-tile-title">${mod.title}</span>
+              <span class="hub-tile-badge" data-live="${String(mod.live)}">
+                ${mod.live ? "Aktiv" : "Geplant"}
+              </span>
+            </div>
+            <span class="hub-tile-sub">${mod.sub}</span>
+          </div>
         </div>
-        <div class="hub-tile-body">
-          <span class="hub-tile-title">${mod.title}</span>
-          <span class="hub-tile-sub">${mod.sub}</span>
-        </div>
+        <span class="ag-icon ag-icon--sm hub-tile-chevron" aria-hidden="true">chevron_right</span>
       `;
 
       if (mod.live && mod.href) {
@@ -180,14 +183,15 @@ function wireEvents() {
     });
   }
 
-  const catSelect = document.getElementById("hub-category-select");
-  const catLabel = document.getElementById("hub-category-label");
-  if (catSelect) {
-    catSelect.addEventListener("change", () => {
-      state.category = catSelect.value;
-      if (catLabel && catSelect.selectedOptions[0]) {
-        catLabel.textContent = catSelect.selectedOptions[0].textContent;
-      }
+  const catPills = document.getElementById("hub-category-pills");
+  if (catPills) {
+    catPills.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-cat]");
+      if (!btn) return;
+      state.category = btn.dataset.cat || "all";
+      catPills.querySelectorAll("[data-cat]").forEach((b) => {
+        b.setAttribute("aria-pressed", String(b === btn));
+      });
       renderHubGrid();
     });
   }
