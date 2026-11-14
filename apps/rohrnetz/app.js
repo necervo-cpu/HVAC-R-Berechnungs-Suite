@@ -78,6 +78,23 @@ const PIPE_MATERIALS = {
       { id: "si108", label: "108×2", diMm: 104.0 },
     ],
   },
+  temponox: {
+    label: "Viega Temponox (Heizung-Edelstahl)",
+    roughnessMm: 0.0015,
+    sizes: [
+      { id: "tn15", label: "15×1", diMm: 13.0 },
+      { id: "tn18", label: "18×1", diMm: 16.0 },
+      { id: "tn22", label: "22×1,2", diMm: 19.6 },
+      { id: "tn28", label: "28×1,2", diMm: 25.6 },
+      { id: "tn35", label: "35×1,5", diMm: 32.0 },
+      { id: "tn42", label: "42×1,5", diMm: 39.0 },
+      { id: "tn54", label: "54×1,5", diMm: 51.0 },
+      { id: "tn64", label: "64×1,5", diMm: 61.0 },
+      { id: "tn76", label: "76,1×1,5", diMm: 73.1 },
+      { id: "tn88", label: "88,9×1,5", diMm: 85.9 },
+      { id: "tn108", label: "108×1,5", diMm: 105.0 },
+    ],
+  },
   raxofix: {
     label: "Viega Raxofix (Verbund)",
     roughnessMm: 0.007,
