@@ -805,6 +805,14 @@ textarea {
   flex-shrink: 0;
 }
 
+.hub-tile[data-tone="cool"] .hub-tile-icon .ag-icon {
+  color: var(--accent-text-sky);
+}
+
+.hub-tile[data-tone="warm"] .hub-tile-icon .ag-icon {
+  color: var(--accent-text-peach);
+}
+
 .hub-tile-title-row {
   display: flex;
   align-items: center;
