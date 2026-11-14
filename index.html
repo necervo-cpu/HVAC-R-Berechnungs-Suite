@@ -14,15 +14,22 @@
     <script>
       (function () {
         var root = document.documentElement;
+        try {
+          var mode = window.localStorage.getItem("hvacr-theme-mode");
+          if (mode === "light" || mode === "dark") {
+            root.setAttribute("data-theme", mode);
+          }
+        } catch (e) {}
         root.style.transform = "translateZ(0)";
         void root.offsetHeight;
         root.style.transform = "";
         window.scrollTo(0, 0);
       })();
     </script>
-    <script type="module" src="./assets/js/shared.js?v=20261114c"></script>
+    <script type="module" src="./assets/js/shared.js" blocking="render"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link rel="stylesheet" href="./assets/css/global.css?v=20261114c" />
+    <link rel="stylesheet" href="./assets/css/global.css" />
+    <script type="module" src="./assets/js/dashboard.js" blocking="render"></script>
   </head>
   <body>
     <main class="app-shell">
@@ -100,7 +107,5 @@
     </main>
 
     <div id="toast-pill" class="toast-pill" role="status" aria-live="polite" data-visible="false"></div>
-
-    <script type="module" src="./assets/js/dashboard.js?v=20261114"></script>
   </body>
 </html>
