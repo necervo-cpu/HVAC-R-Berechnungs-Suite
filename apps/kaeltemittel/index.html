@@ -30,10 +30,10 @@
     <link rel="stylesheet" href="../../assets/css/global.css" />
   </head>
   <body>
-    <main class="app-shell">
-      <header class="app-hero">
-        <div class="app-hero-top">
-          <div class="app-hero-nav">
+    <header class="hero hero--app">
+      <div class="hero-in">
+        <div class="hero-nav-row">
+          <div class="hero-nav-left">
             <a href="../../index.html" id="nav-home-link" class="back-btn press-btn" aria-label="Zurück zum Dashboard">
               <span class="ag-icon ag-icon--xs" aria-hidden="true">arrow_back_ios_new</span>
               <span>Übersicht</span>
@@ -44,11 +44,16 @@
             </button>
           </div>
           <button type="button" id="settings-toggle-btn" class="settings-btn press-icon" aria-label="Einstellungen öffnen">
-            <span class="ag-icon" aria-hidden="true">settings</span>
+            <span class="ag-icon ag-icon--sm" aria-hidden="true">settings</span>
           </button>
         </div>
-        <h1 id="brand-title" class="app-hero-title">Kältemittel</h1>
-      </header>
+        <div class="hero-tt">
+          <h1 id="brand-title">Kältemittel</h1>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-shell">
 
       <div id="view-calc" class="view-stack calc-panel">
         <!-- Modus-Auswahl -->

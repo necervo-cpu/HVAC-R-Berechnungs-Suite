@@ -189,10 +189,12 @@ function renderHubGrid() {
 
 function openSettings() {
   state.view = "settings";
+  const heroHome = document.getElementById("hero-home");
   const topBar = document.getElementById("top-bar");
   const homeView = document.getElementById("view-home");
   const settingsView = document.getElementById("view-settings");
 
+  if (heroHome) heroHome.hidden = true;
   if (topBar) topBar.hidden = false;
   if (homeView) homeView.hidden = true;
   if (settingsView) {
@@ -207,10 +209,12 @@ function openSettings() {
 
 function openHome() {
   state.view = "home";
+  const heroHome = document.getElementById("hero-home");
   const topBar = document.getElementById("top-bar");
   const homeView = document.getElementById("view-home");
   const settingsView = document.getElementById("view-settings");
 
+  if (heroHome) heroHome.hidden = false;
   if (topBar) topBar.hidden = true;
   if (settingsView) settingsView.hidden = true;
   if (homeView) {

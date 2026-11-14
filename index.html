@@ -32,6 +32,39 @@
     <script type="module" src="./assets/js/dashboard.js" blocking="render"></script>
   </head>
   <body>
+    <header id="hero-home" class="hero">
+      <div class="hero-in">
+        <div class="hero-top">
+          <div class="hero-tt">
+            <h1>HVAC·R Rechner</h1>
+            <p class="hero-sub">Berechnung, Kennlinien und Auslegung – alles an einem Ort.</p>
+          </div>
+          <button
+            type="button"
+            id="settings-toggle-btn"
+            class="settings-btn hero-action-btn press-icon"
+            aria-label="Einstellungen öffnen"
+          >
+            <span class="ag-icon ag-icon--sm" aria-hidden="true">settings</span>
+          </button>
+        </div>
+
+        <label class="hero-search">
+          <span class="ag-icon ag-icon--sm" aria-hidden="true">search</span>
+          <input
+            id="hub-search"
+            type="search"
+            placeholder="App suchen …"
+            aria-label="Rechner durchsuchen"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            enterkeyhint="search"
+          />
+        </label>
+      </div>
+    </header>
+
     <main class="app-shell">
       <!-- Kompakte Top-Leiste (nur in der Einstellungen-Ansicht sichtbar) -->
       <header id="top-bar" class="top-bar" hidden>
@@ -51,35 +84,6 @@
 
       <!-- DASHBOARD / APP-LAUNCHER -->
       <section id="view-home" class="view-stack calc-panel" aria-label="Rechner-Übersicht">
-        <header class="hub-hero">
-          <div class="hub-hero-top">
-            <div class="hub-hero-copy">
-              <h1 class="hub-hero-title">HVAC·R Rechner</h1>
-              <p class="hub-hero-sub">Berechnung, Kennlinien und Auslegung – alles an einem Ort.</p>
-            </div>
-            <button
-              type="button"
-              id="settings-toggle-btn"
-              class="settings-btn press-icon"
-              aria-label="Einstellungen öffnen"
-            >
-              <span class="ag-icon" aria-hidden="true">settings</span>
-            </button>
-          </div>
-          <div class="search-well">
-            <span class="ag-icon ag-icon--xs search-icon" aria-hidden="true">search</span>
-            <input
-              id="hub-search"
-              class="search-input"
-              type="search"
-              placeholder="App suchen …"
-              aria-label="Rechner durchsuchen"
-              autocapitalize="none"
-              autocorrect="off"
-            />
-          </div>
-        </header>
-
         <div id="hub-grid" class="hub-grid" role="list"></div>
         <div id="hub-empty" class="liquid-glass-card empty-state" hidden>
           Kein passender Rechner gefunden.
