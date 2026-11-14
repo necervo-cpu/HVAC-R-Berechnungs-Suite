@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f7" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+    <meta name="apple-mobile-web-app-title" content="Kältemittel" />
+    <title>Kältemittel · HVAC·R Rechner</title>
+    <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
+    <link rel="apple-touch-icon" href="../../icon.svg" />
+    <script>
+      (function () {
+        var root = document.documentElement;
+        root.style.transform = "translateZ(0)";
+        void root.offsetHeight;
+        root.style.transform = "";
+        window.scrollTo(0, 0);
+      })();
+    </script>
+    <script type="module" src="../../assets/js/shared.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="../../assets/css/global.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="top-bar">
+        <div class="brand-mark">
+          <a href="../../index.html" id="nav-home-link" class="back-btn press-btn" aria-label="Zurück zum Dashboard">
+            <span class="ag-icon ag-icon--xs" aria-hidden="true">arrow_back_ios_new</span>
+            <span>Übersicht</span>
+          </a>
+          <button type="button" id="nav-back-btn" class="back-btn press-btn" aria-label="Zurück zum Rechner" hidden>
+            <span class="ag-icon ag-icon--xs" aria-hidden="true">arrow_back_ios_new</span>
+            <span>Zurück</span>
+          </button>
+          <span id="brand-title" class="brand-title">Kältemittel</span>
+        </div>
+        <div class="top-actions">
+          <button type="button" id="settings-toggle-btn" class="settings-btn press-icon" aria-label="Einstellungen öffnen">
+            <span class="ag-icon" aria-hidden="true">settings</span>
+          </button>
+        </div>
+      </header>
+
+      <div id="view-calc" class="view-stack calc-panel">
+        <!-- Modus-Auswahl -->
+        <div class="segmented" id="mode-tabs" role="tablist" aria-label="Berechnungsmodus">
+          <span class="t-tabs-pill" aria-hidden="true"></span>
+          <button type="button" class="tab-btn press-btn" role="tab" aria-selected="true" data-mode="p2t">Druck → °C</button>
+          <button type="button" class="tab-btn press-btn" role="tab" aria-selected="false" data-mode="t2p">°C → Druck</button>
+          <button type="button" class="tab-btn press-btn" role="tab" aria-selected="false" data-mode="shsc">SH / SC</button>
+        </div>
+
+        <section class="liquid-glass-card" aria-label="Kältemittel-Berechnung">
+          <div class="result-hero" aria-live="polite">
+            <div class="result-top">
+              <span id="result-label" class="result-label">Sättigungstemperatur</span>
+              <span id="result-badge" class="status-badge" data-state="ok">Plausibel</span>
+            </div>
+            <div class="result-value-row">
+              <div class="result-main" id="result-main">
+                <span id="result-number">0,0</span><span id="result-unit" class="result-unit">°C</span>
+              </div>
+            </div>
+            <div id="result-sub" class="result-sub">R32 · p_abs = 8,13 bar</div>
+            <div class="result-meter" aria-hidden="true">
+              <div id="result-meter-fill" class="result-meter-fill" data-state="ok"></div>
+            </div>
+          </div>
+
+          <!-- Kältemittel -->
+          <div class="well">
+            <div class="well-header">
+              <span class="well-label">Kältemittel</span>
+              <span id="ref-meta-hint" class="well-hint">GWP 675 · A2L</span>
+            </div>
+            <div class="chip-group" id="refrigerant-group" role="group" aria-label="Kältemittel auswählen">
+              <button type="button" class="chip-btn press-btn" data-ref="R32" aria-pressed="true">R32</button>
+              <button type="button" class="chip-btn press-btn" data-ref="R410A" aria-pressed="false">R410A</button>
+              <button type="button" class="chip-btn press-btn" data-ref="R290" aria-pressed="false">R290</button>
+              <button type="button" class="chip-btn press-btn" data-ref="R134a" aria-pressed="false">R134a</button>
+              <button type="button" class="chip-btn press-btn" data-ref="R404A" aria-pressed="false">R404A</button>
+              <button type="button" class="chip-btn press-btn" data-ref="R449A" aria-pressed="false">R449A</button>
+              <button type="button" class="chip-btn press-btn" data-ref="R1234yf" aria-pressed="false">R1234yf</button>
+              <button type="button" class="chip-btn press-btn" data-ref="R744" aria-pressed="false">R744</button>
+            </div>
+          </div>
+
+          <!-- Druckbezug (bar ü / bar abs) -->
+          <div class="well" id="pressure-ref-well">
+            <div class="well-header">
+              <span class="well-label">Druckbezug</span>
+            </div>
+            <div class="segmented segmented--compact" id="pressure-ref-tabs" role="tablist" aria-label="Druckbezug">
+              <span class="t-tabs-pill" aria-hidden="true"></span>
+              <button type="button" class="tab-btn press-btn" role="tab" aria-selected="true" data-pref="gauge">bar ü (Manometer)</button>
+              <button type="button" class="tab-btn press-btn" role="tab" aria-selected="false" data-pref="abs">bar abs</button>
+            </div>
+          </div>
+
+          <!-- PANEL: Druck -> Temp -->
+          <div id="panel-p2t" class="calc-panel view-stack">
+            <div class="well">
+              <div class="well-header">
+                <label class="well-label" for="p2t-input">Gemessener Druck</label>
+              </div>
+              <div class="stepper-row">
+                <button type="button" class="step-btn press-btn" id="p2t-minus" aria-label="Druck verringern">−</button>
+                <div class="num-value-wrap">
+                  <input id="p2t-input" class="num-input" type="number" inputmode="decimal" step="0.2" min="-0.9" max="120" value="7.1" aria-label="Druck in bar" />
+                  <span id="p2t-unit-label" class="num-unit">bar ü</span>
+                </div>
+                <button type="button" class="step-btn press-btn" id="p2t-plus" aria-label="Druck erhöhen">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL: Temp -> Druck -->
+          <div id="panel-t2p" class="calc-panel view-stack" hidden>
+            <div class="well">
+              <div class="well-header">
+                <label class="well-label" for="t2p-input">Sättigungstemperatur</label>
+              </div>
+              <div class="stepper-row">
+                <button type="button" class="step-btn press-btn" id="t2p-minus" aria-label="Temperatur verringern">−</button>
+                <div class="num-value-wrap">
+                  <input id="t2p-input" class="num-input" type="number" inputmode="decimal" step="1" min="-50" max="80" value="0" aria-label="Temperatur in Grad Celsius" />
+                  <span class="num-unit">°C</span>
+                </div>
+                <button type="button" class="step-btn press-btn" id="t2p-plus" aria-label="Temperatur erhöhen">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL: Überhitzung / Unterkühlung -->
+          <div id="panel-shsc" class="calc-panel view-stack" hidden>
+            <div class="well">
+              <div class="well-header">
+                <span class="well-label">Prüfart</span>
+              </div>
+              <div class="segmented segmented--compact" id="shsc-type-tabs" role="tablist" aria-label="Überhitzung oder Unterkühlung">
+                <span class="t-tabs-pill" aria-hidden="true"></span>
+                <button type="button" class="tab-btn press-btn" role="tab" aria-selected="true" data-shsc="sh">Überhitzung (SH)</button>
+                <button type="button" class="tab-btn press-btn" role="tab" aria-selected="false" data-shsc="sc">Unterkühlung (SC)</button>
+              </div>
+            </div>
+
+            <div class="field-grid field-grid--2">
+              <div class="well">
+                <div class="well-header">
+                  <label class="well-label" for="shsc-p-input">Manometerdruck</label>
+                </div>
+                <div class="stepper-row">
+                  <button type="button" class="step-btn press-btn" id="shsc-p-minus" aria-label="Druck verringern">−</button>
+                  <div class="num-value-wrap">
+                    <input id="shsc-p-input" class="num-input" type="number" inputmode="decimal" step="0.2" min="-0.9" max="120" value="7.1" aria-label="Manometerdruck in bar" />
+                    <span id="shsc-p-unit" class="num-unit">bar ü</span>
+                  </div>
+                  <button type="button" class="step-btn press-btn" id="shsc-p-plus" aria-label="Druck erhöhen">+</button>
+                </div>
+              </div>
+
+              <div class="well">
+                <div class="well-header">
+                  <label class="well-label" for="shsc-t-input" id="shsc-t-label">Sauggas-Temp</label>
+                </div>
+                <div class="stepper-row">
+                  <button type="button" class="step-btn press-btn" id="shsc-t-minus" aria-label="Rohrtemperatur verringern">−</button>
+                  <div class="num-value-wrap">
+                    <input id="shsc-t-input" class="num-input" type="number" inputmode="decimal" step="0.5" min="-50" max="120" value="6.5" aria-label="Gemessene Rohrtemperatur in Grad Celsius" />
+                    <span class="num-unit">°C</span>
+                  </div>
+                  <button type="button" class="step-btn press-btn" id="shsc-t-plus" aria-label="Rohrtemperatur erhöhen">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section id="view-settings" class="liquid-glass-card calc-panel" aria-label="Einstellungen" hidden>
+        <div class="well">
+          <div class="well-header">
+            <span class="well-label">Darstellung</span>
+          </div>
+          <div id="theme-mode-group" class="settings-segmented" role="radiogroup" aria-label="Darstellungsmodus">
+            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="auto" aria-checked="true">Auto</button>
+            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="light" aria-checked="false">Hell</button>
+            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="dark" aria-checked="false">Dunkel</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite" data-visible="false"></div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
