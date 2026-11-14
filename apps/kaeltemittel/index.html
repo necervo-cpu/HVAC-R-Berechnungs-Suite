@@ -2,23 +2,22 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f7" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-title" content="Kältemittel" />
     <title>Kältemittel · HVAC·R Rechner</title>
     <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
     <link rel="apple-touch-icon" href="../../icon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0..200&display=swap"
+      rel="stylesheet"
+    />
     <script>
       (function () {
         var root = document.documentElement;
-        try {
-          var mode = window.localStorage.getItem("hvacr-theme-mode");
-          if (mode === "light" || mode === "dark") {
-            root.setAttribute("data-theme", mode);
-          }
-        } catch (e) {}
         root.style.transform = "translateZ(0)";
         void root.offsetHeight;
         root.style.transform = "";
@@ -26,34 +25,42 @@
       })();
     </script>
     <script type="module" src="../../assets/js/shared.js" blocking="render"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="../../assets/css/global.css" />
   </head>
   <body>
-    <header class="hero hero--app">
-      <div class="hero-in">
-        <div class="hero-nav-row">
-          <div class="hero-nav-left">
-            <a href="../../index.html" id="nav-home-link" class="back-btn press-btn" aria-label="Zurück zum Dashboard">
-              <span class="ag-icon ag-icon--xs" aria-hidden="true">arrow_back_ios_new</span>
-              <span>Übersicht</span>
-            </a>
-            <button type="button" id="nav-back-btn" class="back-btn press-btn" aria-label="Zurück zum Rechner" hidden>
-              <span class="ag-icon ag-icon--xs" aria-hidden="true">arrow_back_ios_new</span>
-              <span>Zurück</span>
-            </button>
-          </div>
-          <button type="button" id="settings-toggle-btn" class="settings-btn press-icon" aria-label="Einstellungen öffnen">
-            <span class="ag-icon ag-icon--sm" aria-hidden="true">settings</span>
-          </button>
-        </div>
-        <div class="hero-tt">
-          <h1 id="brand-title">Kältemittel</h1>
-        </div>
-      </div>
-    </header>
+    <div class="ambient-canvas" aria-hidden="true">
+      <div class="ambient-blob ambient-blob--cyan"></div>
+      <div class="ambient-blob ambient-blob--purple"></div>
+    </div>
 
     <main class="app-shell">
+      <header class="app-header">
+        <div class="hero-nav-left">
+          <a href="../../index.html" id="nav-home-link" class="back-btn press-btn no-print" aria-label="Zurück zum Dashboard">
+            <span class="material-symbols-rounded" aria-hidden="true">arrow_back_ios_new</span>
+            <span>Übersicht</span>
+          </a>
+          <button type="button" id="nav-back-btn" class="back-btn press-btn no-print" aria-label="Zurück zum Rechner" hidden>
+            <span class="material-symbols-rounded" aria-hidden="true">arrow_back_ios_new</span>
+            <span>Zurück</span>
+          </button>
+        </div>
+        <div class="top-actions no-print">
+          <button type="button" id="reset-calc-btn" class="icon-btn press-icon" aria-label="Eingaben zurücksetzen" title="Zurücksetzen">
+            <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span>
+          </button>
+          <button type="button" class="icon-btn press-icon" onclick="window.print()" aria-label="Ansicht drucken oder als PDF speichern" title="Drucken / PDF">
+            <span class="material-symbols-rounded" aria-hidden="true">print</span>
+          </button>
+          <button type="button" id="settings-toggle-btn" class="icon-btn settings-btn press-icon" aria-label="Einstellungen öffnen" title="Einstellungen">
+            <span class="material-symbols-rounded" aria-hidden="true">settings</span>
+          </button>
+        </div>
+        <h1 class="brand-title" style="flex-basis: 100%;">
+          <span class="material-symbols-rounded" style="color: var(--system-cyan);" aria-hidden="true">ac_unit</span>
+          <span id="brand-title">Kältemittel</span>
+        </h1>
+      </header>
 
       <div id="view-calc" class="view-stack calc-panel">
         <!-- Modus-Auswahl -->
@@ -64,8 +71,8 @@
           <button type="button" class="tab-btn press-btn" role="tab" aria-selected="false" data-mode="shsc">SH / SC</button>
         </div>
 
-        <section class="liquid-glass-card" aria-label="Kältemittel-Berechnung">
-          <div class="result-hero" aria-live="polite">
+        <section class="liquid-glass glass-card" aria-label="Kältemittel-Berechnung">
+          <div class="liquid-surface-inner result-hero" aria-live="polite">
             <div class="result-top">
               <span id="result-label" class="result-label">Sättigungstemperatur</span>
               <span id="result-badge" class="status-badge" data-state="ok">Plausibel</span>
@@ -74,6 +81,9 @@
               <div class="result-main" id="result-main">
                 <span id="result-number">0,0</span><span id="result-unit" class="result-unit">°C</span>
               </div>
+              <button type="button" id="copy-result-btn" class="copy-result-btn press-icon no-print" aria-label="Ergebnis kopieren" title="Ergebnis kopieren">
+                <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+              </button>
             </div>
             <div id="result-sub" class="result-sub">R32 · p_abs = 8,13 bar</div>
             <div class="result-meter" aria-hidden="true">
@@ -82,7 +92,7 @@
           </div>
 
           <!-- Kältemittel -->
-          <div class="well">
+          <div class="liquid-surface-inner well">
             <div class="well-header">
               <span class="well-label">Kältemittel</span>
               <span id="ref-meta-hint" class="well-hint">GWP 675 · A2L</span>
@@ -100,7 +110,7 @@
           </div>
 
           <!-- Druckbezug (bar ü / bar abs) -->
-          <div class="well" id="pressure-ref-well">
+          <div class="liquid-surface-inner well" id="pressure-ref-well">
             <div class="well-header">
               <span class="well-label">Druckbezug</span>
             </div>
@@ -113,14 +123,14 @@
 
           <!-- PANEL: Druck -> Temp -->
           <div id="panel-p2t" class="calc-panel view-stack">
-            <div class="well">
+            <div class="liquid-surface-inner well">
               <div class="well-header">
                 <label class="well-label" for="p2t-input">Gemessener Druck</label>
               </div>
               <div class="stepper-row">
                 <button type="button" class="step-btn press-btn" id="p2t-minus" aria-label="Druck verringern">−</button>
                 <div class="num-value-wrap">
-                  <input id="p2t-input" class="num-input" type="number" inputmode="decimal" step="0.2" min="-0.9" max="120" value="7.1" aria-label="Druck in bar" />
+                  <input id="p2t-input" class="num-input" type="text" inputmode="decimal" step="0.2" min="-0.9" max="120" value="7.1" aria-label="Druck in bar" />
                   <span id="p2t-unit-label" class="num-unit">bar ü</span>
                 </div>
                 <button type="button" class="step-btn press-btn" id="p2t-plus" aria-label="Druck erhöhen">+</button>
@@ -130,14 +140,14 @@
 
           <!-- PANEL: Temp -> Druck -->
           <div id="panel-t2p" class="calc-panel view-stack" hidden>
-            <div class="well">
+            <div class="liquid-surface-inner well">
               <div class="well-header">
                 <label class="well-label" for="t2p-input">Sättigungstemperatur</label>
               </div>
               <div class="stepper-row">
                 <button type="button" class="step-btn press-btn" id="t2p-minus" aria-label="Temperatur verringern">−</button>
                 <div class="num-value-wrap">
-                  <input id="t2p-input" class="num-input" type="number" inputmode="decimal" step="1" min="-50" max="80" value="0" aria-label="Temperatur in Grad Celsius" />
+                  <input id="t2p-input" class="num-input" type="text" inputmode="decimal" step="1" min="-50" max="80" value="0" aria-label="Temperatur in Grad Celsius" />
                   <span class="num-unit">°C</span>
                 </div>
                 <button type="button" class="step-btn press-btn" id="t2p-plus" aria-label="Temperatur erhöhen">+</button>
@@ -147,7 +157,7 @@
 
           <!-- PANEL: Überhitzung / Unterkühlung -->
           <div id="panel-shsc" class="calc-panel view-stack" hidden>
-            <div class="well">
+            <div class="liquid-surface-inner well">
               <div class="well-header">
                 <span class="well-label">Prüfart</span>
               </div>
@@ -159,28 +169,28 @@
             </div>
 
             <div class="field-grid field-grid--2">
-              <div class="well">
+              <div class="liquid-surface-inner well">
                 <div class="well-header">
                   <label class="well-label" for="shsc-p-input">Manometerdruck</label>
                 </div>
                 <div class="stepper-row">
                   <button type="button" class="step-btn press-btn" id="shsc-p-minus" aria-label="Druck verringern">−</button>
                   <div class="num-value-wrap">
-                    <input id="shsc-p-input" class="num-input" type="number" inputmode="decimal" step="0.2" min="-0.9" max="120" value="7.1" aria-label="Manometerdruck in bar" />
+                    <input id="shsc-p-input" class="num-input" type="text" inputmode="decimal" step="0.2" min="-0.9" max="120" value="7.1" aria-label="Manometerdruck in bar" />
                     <span id="shsc-p-unit" class="num-unit">bar ü</span>
                   </div>
                   <button type="button" class="step-btn press-btn" id="shsc-p-plus" aria-label="Druck erhöhen">+</button>
                 </div>
               </div>
 
-              <div class="well">
+              <div class="liquid-surface-inner well">
                 <div class="well-header">
                   <label class="well-label" for="shsc-t-input" id="shsc-t-label">Sauggas-Temp</label>
                 </div>
                 <div class="stepper-row">
                   <button type="button" class="step-btn press-btn" id="shsc-t-minus" aria-label="Rohrtemperatur verringern">−</button>
                   <div class="num-value-wrap">
-                    <input id="shsc-t-input" class="num-input" type="number" inputmode="decimal" step="0.5" min="-50" max="120" value="6.5" aria-label="Gemessene Rohrtemperatur in Grad Celsius" />
+                    <input id="shsc-t-input" class="num-input" type="text" inputmode="decimal" step="0.5" min="-50" max="120" value="6.5" aria-label="Gemessene Rohrtemperatur in Grad Celsius" />
                     <span class="num-unit">°C</span>
                   </div>
                   <button type="button" class="step-btn press-btn" id="shsc-t-plus" aria-label="Rohrtemperatur erhöhen">+</button>
@@ -191,10 +201,11 @@
         </section>
       </div>
 
-      <section id="view-settings" class="liquid-glass-card calc-panel" aria-label="Einstellungen" hidden>
-        <div class="well">
+      <section id="view-settings" class="liquid-glass glass-card calc-panel" aria-label="Einstellungen" hidden>
+        <div class="liquid-surface-inner well">
           <div class="well-header">
             <span class="well-label">Darstellung</span>
+            <span class="well-hint">Pure Black Standard</span>
           </div>
           <div id="theme-mode-group" class="settings-segmented" role="radiogroup" aria-label="Darstellungsmodus">
             <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="auto" aria-checked="true">Auto</button>
@@ -204,28 +215,28 @@
         </div>
 
         <div class="field-grid field-grid--2">
-          <div class="well">
+          <div class="liquid-surface-inner well">
             <div class="well-header">
               <label class="well-label" for="param-patm-input">Luftdruck p_atm</label>
             </div>
             <div class="stepper-row">
               <button type="button" class="step-btn press-btn" id="param-patm-minus" aria-label="Luftdruck verringern">−</button>
               <div class="num-value-wrap">
-                <input id="param-patm-input" class="num-input" type="number" inputmode="decimal" step="0.01" min="0.7" max="1.1" value="1.013" aria-label="Atmosphärendruck in bar" />
+                <input id="param-patm-input" class="num-input" type="text" inputmode="decimal" step="0.01" min="0.7" max="1.1" value="1.013" aria-label="Atmosphärendruck in bar" />
                 <span class="num-unit">bar</span>
               </div>
               <button type="button" class="step-btn press-btn" id="param-patm-plus" aria-label="Luftdruck erhöhen">+</button>
             </div>
           </div>
 
-          <div class="well">
+          <div class="liquid-surface-inner well">
             <div class="well-header">
               <label class="well-label" for="param-shmax-input">SH/SC Ziel max.</label>
             </div>
             <div class="stepper-row">
               <button type="button" class="step-btn press-btn" id="param-shmax-minus" aria-label="Zielwert verringern">−</button>
               <div class="num-value-wrap">
-                <input id="param-shmax-input" class="num-input" type="number" inputmode="decimal" step="0.5" min="4" max="15" value="8" aria-label="Maximale Ziel-Überhitzung in Kelvin" />
+                <input id="param-shmax-input" class="num-input" type="text" inputmode="decimal" step="0.5" min="4" max="15" value="8" aria-label="Maximale Ziel-Überhitzung in Kelvin" />
                 <span class="num-unit">K</span>
               </div>
               <button type="button" class="step-btn press-btn" id="param-shmax-plus" aria-label="Zielwert erhöhen">+</button>
@@ -234,6 +245,25 @@
         </div>
       </section>
     </main>
+
+    <nav class="liquid-glass floating-nav no-print" aria-label="App-Navigation">
+      <a href="../../index.html" class="nav-item" aria-label="Dashboard">
+        <span class="material-symbols-rounded" aria-hidden="true">grid_view</span>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <button type="button" class="nav-item active" data-nav-action="calc" aria-label="Rechner">
+        <span class="material-symbols-rounded is-active" aria-hidden="true">ac_unit</span>
+        <span class="nav-label">Rechner</span>
+      </button>
+      <button type="button" class="nav-item" data-nav-action="settings" aria-label="Parameter">
+        <span class="material-symbols-rounded" aria-hidden="true">tune</span>
+        <span class="nav-label">Parameter</span>
+      </button>
+      <button type="button" class="nav-item" data-nav-action="print" aria-label="Drucken">
+        <span class="material-symbols-rounded" aria-hidden="true">print</span>
+        <span class="nav-label">PDF / Druck</span>
+      </button>
+    </nav>
 
     <div id="toast-pill" class="toast-pill" role="status" aria-live="polite" data-visible="false"></div>
     <script type="module" src="./app.js"></script>

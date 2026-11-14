@@ -10,12 +10,16 @@
 
 import {
   applyThemeMode,
+  clearAppStorage,
   createNumberAnimator,
   getCurrentThemeMode,
   loadAppParams,
+  parseLocaleNumber,
   saveAppParams,
+  showToast,
   updateAllPills,
   updateSegmentedPill,
+  wireCopyResultButton,
 } from "../../assets/js/shared.js";
 
 const NTC_SENSORS = {
@@ -46,7 +50,8 @@ const CVD_C = -4.183e-12;
 const KTY_A = 7.874e-3;
 const KTY_B = 1.874e-5;
 
-const state = {
+const SENSOR_STATE_KEY = "hvacr-state-sensor";
+const DEFAULT_STATE = {
   family: "ntc",
   sensorId: "ntc10k_3435",
   direction: "ohmToTemp",
@@ -54,6 +59,26 @@ const state = {
   customR25: 10000,
   customB: 3950,
 };
+
+function sanitizeSensorState(raw) {
+  const family = raw.family === "ptc" ? "ptc" : "ntc";
+  const map = family === "ntc" ? NTC_SENSORS : PTC_SENSORS;
+  const sensorId = map[raw.sensorId] ? raw.sensorId : family === "ntc" ? "ntc10k_3435" : "pt1000";
+  const direction = raw.direction === "tempToOhm" ? "tempToOhm" : "ohmToTemp";
+  const customR25 = parseLocaleNumber(raw.customR25, 10000, 100, 500000);
+  const customB = parseLocaleNumber(raw.customB, 3950, 1500, 6500);
+  const inputValue =
+    direction === "ohmToTemp"
+      ? parseLocaleNumber(raw.inputValue, 10000, 0.1, 2000000)
+      : parseLocaleNumber(raw.inputValue, 25, -100, 300);
+  return { family, sensorId, direction, inputValue, customR25, customB };
+}
+
+const state = sanitizeSensorState(loadAppParams(SENSOR_STATE_KEY, DEFAULT_STATE));
+
+function persistState() {
+  saveAppParams(SENSOR_STATE_KEY, state);
+}
 
 const SENSOR_PARAMS_KEY = "hvacr-params-sensor";
 const sensorParams = loadAppParams(SENSOR_PARAMS_KEY, {
@@ -353,6 +378,7 @@ function wireEvents() {
           state.inputValue = Math.round(prev.ohm * 100) / 100;
         }
         if (input) input.value = String(state.inputValue);
+        persistState();
         renderSensorResult(true);
       });
     });
@@ -377,6 +403,7 @@ function wireEvents() {
           if (input) input.value = String(state.inputValue);
         }
         renderSensorSelect();
+        persistState();
         renderSensorResult(true);
       });
     });
@@ -395,6 +422,7 @@ function wireEvents() {
         const input = document.getElementById("input-sensor-val");
         if (input) input.value = String(state.inputValue);
       }
+      persistState();
       renderSensorResult(true);
     });
   }
@@ -402,11 +430,11 @@ function wireEvents() {
   const valInput = document.getElementById("input-sensor-val");
   if (valInput) {
     valInput.addEventListener("input", () => {
-      const parsed = Number(valInput.value.replace(",", "."));
-      if (Number.isFinite(parsed)) {
-        state.inputValue = parsed;
-        renderSensorResult(true);
-      }
+      const minVal = state.direction === "ohmToTemp" ? 0.1 : -100;
+      const maxVal = state.direction === "ohmToTemp" ? 2000000 : 300;
+      state.inputValue = parseLocaleNumber(valInput.value, state.inputValue, minVal, maxVal);
+      persistState();
+      renderSensorResult(true);
     });
   }
 
@@ -420,6 +448,7 @@ function wireEvents() {
         ? clampNumber(next, 0.1, 500000, 1000)
         : clampNumber(next, -60, 200, 25);
     if (valInput) valInput.value = String(state.inputValue);
+    persistState();
     renderSensorResult(true);
   };
   if (minusBtn) minusBtn.addEventListener("click", () => handleStep(-1));
@@ -429,13 +458,15 @@ function wireEvents() {
   const bInput = document.getElementById("input-custom-b");
   if (r25Input) {
     r25Input.addEventListener("input", () => {
-      state.customR25 = clampNumber(r25Input.value, 100, 500000, 10000);
+      state.customR25 = parseLocaleNumber(r25Input.value, state.customR25, 100, 500000);
+      persistState();
       renderSensorResult(true);
     });
   }
   if (bInput) {
     bInput.addEventListener("input", () => {
-      state.customB = clampNumber(bInput.value, 1500, 6500, 3950);
+      state.customB = parseLocaleNumber(bInput.value, state.customB, 1500, 6500);
+      persistState();
       renderSensorResult(true);
     });
   }
@@ -458,15 +489,48 @@ function renderSettingsTheme() {
   });
 }
 
+function syncStateToUI() {
+  document.querySelectorAll("#sensor-dir-switcher .tab-btn").forEach((b) => {
+    b.setAttribute("aria-selected", String(b.dataset.dir === state.direction));
+  });
+  document.querySelectorAll("#sensor-family-switcher .tab-btn").forEach((b) => {
+    b.setAttribute("aria-selected", String(b.dataset.family === state.family));
+  });
+  const valInput = document.getElementById("input-sensor-val");
+  const r25Input = document.getElementById("input-custom-r25");
+  const bInput = document.getElementById("input-custom-b");
+  if (valInput) valInput.value = String(state.inputValue);
+  if (r25Input) r25Input.value = String(state.customR25);
+  if (bInput) bInput.value = String(state.customB);
+  renderSensorSelect();
+  updateAllPills();
+}
+
 function init() {
   wireEvents();
 
   const settingsBtn = document.getElementById("settings-toggle-btn");
+  const resetBtn = document.getElementById("reset-calc-btn");
   const backBtn = document.getElementById("nav-back-btn");
   const homeLink = document.getElementById("nav-home-link");
   const panelSensor = document.getElementById("panel-sensor");
   const viewSettings = document.getElementById("view-settings");
   const brandTitle = document.getElementById("brand-title");
+
+  resetBtn?.addEventListener("click", () => {
+    Object.assign(state, DEFAULT_STATE);
+    clearAppStorage(SENSOR_STATE_KEY);
+    syncStateToUI();
+    renderSensorResult(true);
+    showToast("Standardwerte wiederhergestellt");
+  });
+
+  wireCopyResultButton("copy-result-btn", () => {
+    const title = document.getElementById("sensor-result-title")?.textContent?.trim() || "";
+    const val = document.getElementById("sensor-result-val")?.textContent?.trim() || "";
+    const sub = document.getElementById("sensor-result-sub")?.textContent?.trim() || "";
+    return `${title}: ${val} (${sub})`;
+  });
 
   settingsBtn?.addEventListener("click", () => {
     if (panelSensor) panelSensor.hidden = true;
@@ -478,6 +542,7 @@ function init() {
     }
     if (homeLink) homeLink.hidden = true;
     if (backBtn) backBtn.hidden = false;
+    if (resetBtn) resetBtn.hidden = true;
     if (brandTitle) brandTitle.textContent = "Einstellungen";
     renderSettingsTheme();
   });
@@ -492,6 +557,7 @@ function init() {
     }
     if (backBtn) backBtn.hidden = true;
     if (homeLink) homeLink.hidden = false;
+    if (resetBtn) resetBtn.hidden = false;
     if (brandTitle) brandTitle.textContent = "PTC / NTC";
     updateAllPills();
   });
@@ -507,7 +573,7 @@ function init() {
   if (leadInput) {
     leadInput.value = String(sensorParams.leadOhm);
     leadInput.addEventListener("input", () => {
-      sensorParams.leadOhm = clampNumber(leadInput.value, 0, 20, 0);
+      sensorParams.leadOhm = parseLocaleNumber(leadInput.value, sensorParams.leadOhm, 0, 20);
       saveAppParams(SENSOR_PARAMS_KEY, sensorParams);
       renderSensorResult(true);
     });
@@ -538,7 +604,7 @@ function init() {
     });
   });
 
-  renderSensorSelect();
+  syncStateToUI();
   renderSensorResult(false);
 
   requestAnimationFrame(updateAllPills);

@@ -10,12 +10,16 @@
 
 import {
   applyThemeMode,
+  clearAppStorage,
   createNumberAnimator,
   getCurrentThemeMode,
   loadAppParams,
+  parseLocaleNumber,
   prefersReducedMotion,
   saveAppParams,
+  showToast,
   updateAllPills,
+  wireCopyResultButton,
 } from "../../assets/js/shared.js";
 
 const KAELTE_PARAMS_KEY = "hvacr-params-kaeltemittel";
@@ -36,23 +40,45 @@ const REFRIGERANTS = {
   R744: { label: "R744", meta: "GWP 1 · A1 (CO₂)", a: 4.685, b: 647.5, c: 246.0, tMin: -50, tMax: 30 },
 };
 
-const state = {
-  view: "calc",
+const KAELTE_STATE_KEY = "hvacr-state-kaeltemittel";
+const DEFAULT_STATE = {
   mode: "p2t",
   refrigerant: "R32",
-  pressureRef: "gauge", // 'gauge' | 'abs'
-  shscType: "sh", // 'sh' | 'sc'
+  pressureRef: "gauge",
+  shscType: "sh",
   p2tValue: 7.1,
   t2pValue: 0,
   shscPressure: 7.1,
   shscTemp: 6.5,
 };
 
+function sanitizeKaelteState(raw) {
+  const mode = ["p2t", "t2p", "shsc"].includes(raw.mode) ? raw.mode : "p2t";
+  const refrigerant = REFRIGERANTS[raw.refrigerant] ? raw.refrigerant : "R32";
+  const pressureRef = raw.pressureRef === "abs" ? "abs" : "gauge";
+  const shscType = raw.shscType === "sc" ? "sc" : "sh";
+  return {
+    view: "calc",
+    mode,
+    refrigerant,
+    pressureRef,
+    shscType,
+    p2tValue: parseLocaleNumber(raw.p2tValue, 7.1, -0.9, 120),
+    t2pValue: parseLocaleNumber(raw.t2pValue, 0, -50, 90),
+    shscPressure: parseLocaleNumber(raw.shscPressure, 7.1, -0.9, 120),
+    shscTemp: parseLocaleNumber(raw.shscTemp, 6.5, -50, 120),
+  };
+}
+
+const state = sanitizeKaelteState(loadAppParams(KAELTE_STATE_KEY, DEFAULT_STATE));
+
+function persistState() {
+  const { view: _view, ...toSave } = state;
+  saveAppParams(KAELTE_STATE_KEY, toSave);
+}
+
 function sanitizeNumber(raw, fallback, min = -100, max = 200) {
-  const normalized = typeof raw === "string" ? raw.replace(",", ".") : raw;
-  const num = Number.parseFloat(normalized);
-  if (!Number.isFinite(num)) return fallback;
-  return Math.min(max, Math.max(min, num));
+  return parseLocaleNumber(raw, fallback, min, max);
 }
 
 function formatDe(value, decimals = 1) {
@@ -109,6 +135,7 @@ function triggerResultPop() {
 }
 
 function calculateAndRender(animate = true) {
+  persistState();
   const spec = REFRIGERANTS[state.refrigerant] || REFRIGERANTS.R32;
   const labelEl = document.getElementById("result-label");
   const unitEl = document.getElementById("result-unit");
@@ -273,6 +300,8 @@ function openSettings() {
   sv.classList.add("is-entering");
   document.getElementById("nav-home-link").hidden = true;
   document.getElementById("nav-back-btn").hidden = false;
+  const resetBtn = document.getElementById("reset-calc-btn");
+  if (resetBtn) resetBtn.hidden = true;
   document.getElementById("brand-title").textContent = "Einstellungen";
   renderSettingsTheme();
 }
@@ -286,13 +315,70 @@ function openCalc() {
   cv.classList.add("is-entering");
   document.getElementById("nav-back-btn").hidden = true;
   document.getElementById("nav-home-link").hidden = false;
+  const resetBtn = document.getElementById("reset-calc-btn");
+  if (resetBtn) resetBtn.hidden = false;
   document.getElementById("brand-title").textContent = "Kältemittel";
+  updateAllPills();
+}
+
+function syncStateToUI() {
+  document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
+    btn.setAttribute("aria-selected", String(btn.dataset.mode === state.mode));
+  });
+  ["p2t", "t2p", "shsc"].forEach((m) => {
+    const panel = document.getElementById(`panel-${m}`);
+    if (panel) panel.hidden = m !== state.mode;
+  });
+
+  document.querySelectorAll("#refrigerant-group [data-ref]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.ref === state.refrigerant));
+  });
+  const hint = document.getElementById("ref-meta-hint");
+  if (hint && REFRIGERANTS[state.refrigerant]) {
+    hint.textContent = REFRIGERANTS[state.refrigerant].meta;
+  }
+
+  document.querySelectorAll("#pressure-ref-tabs [data-pref]").forEach((btn) => {
+    btn.setAttribute("aria-selected", String(btn.dataset.pref === state.pressureRef));
+  });
+  document.querySelectorAll("#shsc-type-tabs [data-shsc]").forEach((btn) => {
+    btn.setAttribute("aria-selected", String(btn.dataset.shsc === state.shscType));
+  });
+  const tLabel = document.getElementById("shsc-t-label");
+  if (tLabel) tLabel.textContent = state.shscType === "sh" ? "Sauggas-Temp" : "Flüssig-Temp";
+
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = String(val);
+  };
+  setVal("p2t-input", state.p2tValue);
+  setVal("t2p-input", state.t2pValue);
+  setVal("shsc-p-input", state.shscPressure);
+  setVal("shsc-t-input", state.shscTemp);
+
+  syncPressureUnitLabels();
   updateAllPills();
 }
 
 function init() {
   document.getElementById("settings-toggle-btn")?.addEventListener("click", openSettings);
   document.getElementById("nav-back-btn")?.addEventListener("click", openCalc);
+
+  document.getElementById("reset-calc-btn")?.addEventListener("click", () => {
+    Object.assign(state, DEFAULT_STATE, { view: "calc" });
+    clearAppStorage(KAELTE_STATE_KEY);
+    syncStateToUI();
+    calculateAndRender(true);
+    showToast("Standardwerte wiederhergestellt");
+  });
+
+  wireCopyResultButton("copy-result-btn", () => {
+    const label = document.getElementById("result-label")?.textContent?.trim() || "";
+    const num = document.getElementById("result-number")?.textContent?.trim() || "";
+    const unit = document.getElementById("result-unit")?.textContent?.trim() || "";
+    const sub = document.getElementById("result-sub")?.textContent?.trim() || "";
+    return `${label}: ${num} ${unit} (${sub})`;
+  });
 
   document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -382,8 +468,7 @@ function init() {
   });
 
   window.addEventListener("resize", updateAllPills);
-  syncPressureUnitLabels();
-  updateAllPills();
+  syncStateToUI();
   calculateAndRender(false);
 }
 

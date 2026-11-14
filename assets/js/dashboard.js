@@ -11,6 +11,7 @@ import {
   APP_VERSION,
   applyThemeMode,
   checkForAppUpdate,
+  forceCacheReset,
   getCurrentThemeMode,
   showToast,
 } from "./shared.js";
@@ -25,7 +26,7 @@ const MODULES = [
     live: true,
     href: "./apps/sensor/index.html",
     keywords: "ntc ptc pt100 pt1000 kty81 2k 5k 10k 12k 20k ohm fühler sensor temperatur",
-    icon: `<span class="ag-icon ag-icon--sm" aria-hidden="true">thermostat</span>`,
+    icon: `<span class="material-symbols-rounded" aria-hidden="true">thermostat</span>`,
   },
   {
     id: "waermeleistung",
@@ -36,7 +37,7 @@ const MODULES = [
     live: true,
     href: "./apps/waermeleistung/index.html",
     keywords: "wärmeleistung heizleistung leistung q volumenstrom spreizung heizlast wasser glykol kw",
-    icon: `<span class="ag-icon ag-icon--sm" aria-hidden="true">local_fire_department</span>`,
+    icon: `<span class="material-symbols-rounded" aria-hidden="true">local_fire_department</span>`,
   },
   {
     id: "rohrnetz",
@@ -47,7 +48,7 @@ const MODULES = [
     live: true,
     href: "./apps/rohrnetz/index.html",
     keywords: "rohrnetz rohr dimension dn kupfer verbund pex c-stahl gewinderohr druckverlust geschwindigkeit reibung",
-    icon: `<span class="ag-icon ag-icon--sm" aria-hidden="true">plumbing</span>`,
+    icon: `<span class="material-symbols-rounded" aria-hidden="true">plumbing</span>`,
   },
   {
     id: "kaeltemittel",
@@ -58,7 +59,7 @@ const MODULES = [
     live: true,
     href: "./apps/kaeltemittel/index.html",
     keywords: "kältemittel r32 r410a r290 r134a r404a r449a r1234yf r744 co2 druck temperatur überhitzung unterkühlung sh sc",
-    icon: `<span class="ag-icon ag-icon--sm" aria-hidden="true">ac_unit</span>`,
+    icon: `<span class="material-symbols-rounded" aria-hidden="true">ac_unit</span>`,
   },
   {
     id: "taupunkt",
@@ -69,7 +70,7 @@ const MODULES = [
     live: true,
     href: "./apps/taupunkt/index.html",
     keywords: "taupunkt luftfeuchte feuchte tauwasser kondensation enthalpie kühldecke schimmel magnus",
-    icon: `<span class="ag-icon ag-icon--sm" aria-hidden="true">water_drop</span>`,
+    icon: `<span class="material-symbols-rounded" aria-hidden="true">water_drop</span>`,
   },
   {
     id: "mag",
@@ -80,7 +81,7 @@ const MODULES = [
     live: true,
     href: "./apps/mag/index.html",
     keywords: "mag ausdehnungsgefäß vordruck fülldruck en 12828 sicherheitsventil statische höhe liter",
-    icon: `<span class="ag-icon ag-icon--sm" aria-hidden="true">compress</span>`,
+    icon: `<span class="material-symbols-rounded" aria-hidden="true">compress</span>`,
   },
   {
     id: "luftkanal",
@@ -91,7 +92,7 @@ const MODULES = [
     live: true,
     href: "./apps/luftkanal/index.html",
     keywords: "luftkanal rlt lüftung wickelfalzrohr rechteckkanal geschwindigkeit luftwechsel volumenstrom leistung",
-    icon: `<span class="ag-icon ag-icon--sm" aria-hidden="true">air</span>`,
+    icon: `<span class="material-symbols-rounded" aria-hidden="true">air</span>`,
   },
 ];
 
@@ -137,25 +138,25 @@ function renderHubGrid() {
     .map((mod, index) => {
       const inner = `
         <div class="hub-tile-main">
-          <span class="hub-tile-icon">${mod.icon}</span>
+          <span class="hub-tile-icon liquid-surface-inner">${mod.icon}</span>
           <div class="hub-tile-body">
             <div class="hub-tile-title-row">
               <span class="hub-tile-title">${mod.title}</span>
-              <span class="hub-tile-badge" data-live="${String(mod.live)}">
+              <span class="status-pill hub-tile-badge" data-live="${String(mod.live)}">
                 ${mod.live ? "Aktiv" : "Geplant"}
               </span>
             </div>
             <span class="hub-tile-sub">${mod.sub}</span>
           </div>
         </div>
-        <span class="ag-icon ag-icon--sm hub-tile-chevron" aria-hidden="true">chevron_right</span>
+        <span class="material-symbols-rounded hub-tile-chevron" aria-hidden="true">chevron_right</span>
       `;
 
       if (mod.live && mod.href) {
         return `
           <a
             href="${mod.href}"
-            class="hub-tile press-card"
+            class="liquid-glass hub-tile press-card"
             role="listitem"
             style="--stagger:${index}"
             data-module-id="${mod.id}"
@@ -168,7 +169,7 @@ function renderHubGrid() {
       return `
         <button
           type="button"
-          class="hub-tile press-card"
+          class="liquid-glass hub-tile press-card"
           role="listitem"
           style="--stagger:${index}"
           data-module-id="${mod.id}"
@@ -265,6 +266,15 @@ function wireEvents() {
       checkUpdateBtn.disabled = true;
       await checkForAppUpdate({ manual: true });
       checkUpdateBtn.disabled = false;
+    });
+  }
+
+  const forceCacheResetBtn = document.getElementById("force-cache-reset-btn");
+  if (forceCacheResetBtn) {
+    forceCacheResetBtn.addEventListener("click", async () => {
+      forceCacheResetBtn.disabled = true;
+      showToast("Cache wird geleert …");
+      await forceCacheReset();
     });
   }
 }

@@ -10,12 +10,16 @@
 
 import {
   applyThemeMode,
+  clearAppStorage,
   createNumberAnimator,
   getCurrentThemeMode,
   loadAppParams,
+  parseLocaleNumber,
   prefersReducedMotion,
   saveAppParams,
+  showToast,
   updateAllPills,
+  wireCopyResultButton,
 } from "../../assets/js/shared.js";
 
 const WAERME_PARAMS_KEY = "hvacr-params-waermeleistung";
@@ -80,8 +84,8 @@ const FLOW_UNIT_CONFIG = {
   lmin: { label: "l/min", factorToM3h: 0.06, step: 1, decimals: 1 },
 };
 
-const state = {
-  view: "calc",
+const WAERME_STATE_KEY = "hvacr-state-waermeleistung";
+const DEFAULT_STATE = {
   mode: "hydraulik",
   medium: "water",
   glycolPct: 30,
@@ -95,12 +99,35 @@ const state = {
   hlDt: 5,
 };
 
-function sanitizeNumber(raw, min = 0, max = 1_000_000) {
-  const normalized = String(raw ?? "").replace(",", ".").trim();
-  if (!normalized) return 0;
-  const num = Number.parseFloat(normalized);
-  if (!Number.isFinite(num)) return 0;
-  return Math.min(max, Math.max(min, num));
+function sanitizeWaermeState(raw) {
+  const mode = ["hydraulik", "volumenstrom", "heizlast"].includes(raw.mode) ? raw.mode : "hydraulik";
+  const medium = ["water", "glycol", "air"].includes(raw.medium) ? raw.medium : "water";
+  const flowUnit = FLOW_UNIT_CONFIG[raw.flowUnit] ? raw.flowUnit : "m3h";
+  return {
+    view: "calc",
+    mode,
+    medium,
+    glycolPct: parseLocaleNumber(raw.glycolPct, 30, 0, 60),
+    flowUnit,
+    flowM3h: parseLocaleNumber(raw.flowM3h, 1.5, 0, 100000),
+    hydDt: parseLocaleNumber(raw.hydDt, 10, 0, 150),
+    volPowerKw: parseLocaleNumber(raw.volPowerKw, 15, 0, 100000),
+    volDt: parseLocaleNumber(raw.volDt, 10, 0.1, 150),
+    hlArea: parseLocaleNumber(raw.hlArea, 140, 0, 100000),
+    hlSpec: parseLocaleNumber(raw.hlSpec, 40, 0, 500),
+    hlDt: parseLocaleNumber(raw.hlDt, 5, 0.1, 150),
+  };
+}
+
+const state = sanitizeWaermeState(loadAppParams(WAERME_STATE_KEY, DEFAULT_STATE));
+
+function persistState() {
+  const { view: _view, ...toSave } = state;
+  saveAppParams(WAERME_STATE_KEY, toSave);
+}
+
+function sanitizeNumber(raw, min = 0, max = 1_000_000, fallback = 0) {
+  return parseLocaleNumber(raw, fallback, min, max);
 }
 
 function formatDe(value, decimals = 2) {
@@ -143,6 +170,7 @@ function openSettings() {
   const settingsView = document.getElementById("view-settings");
   const homeLink = document.getElementById("nav-home-link");
   const backBtn = document.getElementById("nav-back-btn");
+  const resetBtn = document.getElementById("reset-calc-btn");
   const brandTitle = document.getElementById("brand-title");
 
   if (calcView) calcView.hidden = true;
@@ -154,6 +182,7 @@ function openSettings() {
   }
   if (homeLink) homeLink.hidden = true;
   if (backBtn) backBtn.hidden = false;
+  if (resetBtn) resetBtn.hidden = true;
   if (brandTitle) brandTitle.textContent = "Einstellungen";
 
   renderSettingsTheme();
@@ -165,6 +194,7 @@ function openCalc() {
   const settingsView = document.getElementById("view-settings");
   const homeLink = document.getElementById("nav-home-link");
   const backBtn = document.getElementById("nav-back-btn");
+  const resetBtn = document.getElementById("reset-calc-btn");
   const brandTitle = document.getElementById("brand-title");
 
   if (settingsView) settingsView.hidden = true;
@@ -176,6 +206,7 @@ function openCalc() {
   }
   if (backBtn) backBtn.hidden = true;
   if (homeLink) homeLink.hidden = false;
+  if (resetBtn) resetBtn.hidden = false;
   if (brandTitle) brandTitle.textContent = "Wärmeleistung";
 
   updateAllPills();
@@ -348,6 +379,7 @@ function calculateHeizlast() {
 }
 
 function renderActiveMode() {
+  persistState();
   if (state.mode === "hydraulik") calculateHydraulik();
   else if (state.mode === "volumenstrom") calculateVolumenstrom();
   else calculateHeizlast();
@@ -494,6 +526,7 @@ function wireEvents() {
     () => FLOW_UNIT_CONFIG[state.flowUnit].step,
     (val) => {
       state.flowM3h = val * FLOW_UNIT_CONFIG[state.flowUnit].factorToM3h;
+      persistState();
       calculateHydraulik();
     }
   );
@@ -501,6 +534,7 @@ function wireEvents() {
   wireStepper("hyd-dt-minus", "hyd-dt-plus", "hyd-dt-input", 0.5, (val) => {
     state.hydDt = val;
     syncPresetChips("#dt-preset-group", "data-dt", val);
+    persistState();
     calculateHydraulik();
   });
 
@@ -514,6 +548,7 @@ function wireEvents() {
       const input = document.getElementById("hyd-dt-input");
       if (input) input.value = String(dt);
       syncPresetChips("#dt-preset-group", "data-dt", dt);
+      persistState();
       calculateHydraulik();
     });
   }
@@ -521,12 +556,14 @@ function wireEvents() {
   // Volumenstrom-Stepper & Presets
   wireStepper("vol-power-minus", "vol-power-plus", "vol-power-input", 0.5, (val) => {
     state.volPowerKw = val;
+    persistState();
     calculateVolumenstrom();
   });
 
   wireStepper("vol-dt-minus", "vol-dt-plus", "vol-dt-input", 0.5, (val) => {
     state.volDt = Math.max(0.1, val);
     syncPresetChips("#vol-dt-preset-group", "data-dt", state.volDt);
+    persistState();
     calculateVolumenstrom();
   });
 
@@ -540,6 +577,7 @@ function wireEvents() {
       const input = document.getElementById("vol-dt-input");
       if (input) input.value = String(dt);
       syncPresetChips("#vol-dt-preset-group", "data-dt", dt);
+      persistState();
       calculateVolumenstrom();
     });
   }
@@ -547,12 +585,14 @@ function wireEvents() {
   // Heizlast-Stepper & Presets
   wireStepper("hl-area-minus", "hl-area-plus", "hl-area-input", 5, (val) => {
     state.hlArea = val;
+    persistState();
     calculateHeizlast();
   });
 
   wireStepper("hl-spec-minus", "hl-spec-plus", "hl-spec-input", 5, (val) => {
     state.hlSpec = val;
     syncPresetChips("#hl-preset-group", "data-q", val);
+    persistState();
     calculateHeizlast();
   });
 
@@ -566,6 +606,7 @@ function wireEvents() {
       const input = document.getElementById("hl-spec-input");
       if (input) input.value = String(q);
       syncPresetChips("#hl-preset-group", "data-q", q);
+      persistState();
       calculateHeizlast();
     });
   }
@@ -573,6 +614,7 @@ function wireEvents() {
   wireStepper("hl-dt-minus", "hl-dt-plus", "hl-dt-input", 0.5, (val) => {
     state.hlDt = Math.max(0.1, val);
     syncPresetChips("#hl-dt-preset-group", "data-dt", state.hlDt);
+    persistState();
     calculateHeizlast();
   });
 
@@ -586,6 +628,7 @@ function wireEvents() {
       const input = document.getElementById("hl-dt-input");
       if (input) input.value = String(dt);
       syncPresetChips("#hl-dt-preset-group", "data-dt", dt);
+      persistState();
       calculateHeizlast();
     });
   }
@@ -605,15 +648,70 @@ function wireEvents() {
   window.addEventListener("resize", updateAllPills);
 }
 
+function syncStateToUI() {
+  document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
+    btn.setAttribute("aria-selected", String(btn.dataset.mode === state.mode));
+  });
+  ["hydraulik", "volumenstrom", "heizlast"].forEach((m) => {
+    const panel = document.getElementById(`panel-${m}`);
+    if (panel) panel.hidden = m !== state.mode;
+  });
+
+  syncMediumChips();
+  syncGlycolInputs(state.glycolPct);
+
+  const cfg = FLOW_UNIT_CONFIG[state.flowUnit] || FLOW_UNIT_CONFIG.m3h;
+  document.querySelectorAll("#flow-unit-tabs [data-flow-unit]").forEach((btn) => {
+    btn.setAttribute("aria-selected", String(btn.dataset.flowUnit === state.flowUnit));
+  });
+  const flowInput = document.getElementById("hyd-flow-input");
+  const flowUnitLabel = document.getElementById("hyd-flow-unit-label");
+  if (flowInput) flowInput.value = formatInputVal(state.flowM3h / cfg.factorToM3h, cfg.decimals);
+  if (flowUnitLabel) flowUnitLabel.textContent = cfg.label;
+
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = String(val);
+  };
+  setVal("hyd-dt-input", state.hydDt);
+  setVal("vol-power-input", state.volPowerKw);
+  setVal("vol-dt-input", state.volDt);
+  setVal("hl-area-input", state.hlArea);
+  setVal("hl-spec-input", state.hlSpec);
+  setVal("hl-dt-input", state.hlDt);
+
+  syncPresetChips("#dt-preset-group", "data-dt", state.hydDt);
+  syncPresetChips("#vol-dt-preset-group", "data-dt", state.volDt);
+  syncPresetChips("#hl-preset-group", "data-q", state.hlSpec);
+  syncPresetChips("#hl-dt-preset-group", "data-dt", state.hlDt);
+  updateAllPills();
+}
+
 function init() {
   const rhoIn = document.getElementById("param-rho-input");
   const cpIn = document.getElementById("param-cp-input");
   if (rhoIn) rhoIn.value = String(waermeParams.waterRho);
   if (cpIn) cpIn.value = String(waermeParams.waterCp);
   renderSettingsTheme();
-  syncMediumChips();
   wireEvents();
-  updateAllPills();
+
+  document.getElementById("reset-calc-btn")?.addEventListener("click", () => {
+    Object.assign(state, DEFAULT_STATE, { view: "calc" });
+    clearAppStorage(WAERME_STATE_KEY);
+    syncStateToUI();
+    renderActiveMode();
+    showToast("Standardwerte wiederhergestellt");
+  });
+
+  wireCopyResultButton("copy-result-btn", () => {
+    const label = document.getElementById("result-label")?.textContent?.trim() || "";
+    const num = document.getElementById("result-number")?.textContent?.trim() || "";
+    const unit = document.getElementById("result-unit")?.textContent?.trim() || "";
+    const sub = document.getElementById("result-sub")?.textContent?.trim() || "";
+    return `${label}: ${num} ${unit} (${sub})`;
+  });
+
+  syncStateToUI();
   renderActiveMode();
 }
 

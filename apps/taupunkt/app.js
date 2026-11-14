@@ -9,12 +9,16 @@
 
 import {
   applyThemeMode,
+  clearAppStorage,
   createNumberAnimator,
   getCurrentThemeMode,
   loadAppParams,
+  parseLocaleNumber,
   prefersReducedMotion,
   saveAppParams,
+  showToast,
   updateAllPills,
+  wireCopyResultButton,
 } from "../../assets/js/shared.js";
 
 const TAUPUNKT_PARAMS_KEY = "hvacr-params-taupunkt";
@@ -23,18 +27,31 @@ const taupunktParams = loadAppParams(TAUPUNKT_PARAMS_KEY, {
   safetyMarginK: 2.0,
 });
 
-const state = {
-  mode: "dewpoint", // 'dewpoint' | 'condensation'
+const TAUPUNKT_STATE_KEY = "hvacr-state-taupunkt";
+const DEFAULT_STATE = {
+  mode: "dewpoint",
   tempC: 22,
   rhPct: 50,
   surfaceC: 16,
 };
 
+function sanitizeTaupunktState(raw) {
+  return {
+    mode: raw.mode === "condensation" ? "condensation" : "dewpoint",
+    tempC: parseLocaleNumber(raw.tempC, 22, -30, 60),
+    rhPct: parseLocaleNumber(raw.rhPct, 50, 1, 100),
+    surfaceC: parseLocaleNumber(raw.surfaceC, 16, -30, 60),
+  };
+}
+
+const state = sanitizeTaupunktState(loadAppParams(TAUPUNKT_STATE_KEY, DEFAULT_STATE));
+
+function persistState() {
+  saveAppParams(TAUPUNKT_STATE_KEY, state);
+}
+
 function sanitizeNumber(raw, fallback, min, max) {
-  const normalized = typeof raw === "string" ? raw.replace(",", ".") : raw;
-  const num = Number.parseFloat(normalized);
-  if (!Number.isFinite(num)) return fallback;
-  return Math.min(max, Math.max(min, num));
+  return parseLocaleNumber(raw, fallback, min, max);
 }
 
 function formatDe(value, decimals = 1) {
@@ -91,6 +108,7 @@ function calcMoistAir(tempC, rhPct) {
 }
 
 function calculateAndRender(animate = true) {
+  persistState();
   const air = calcMoistAir(state.tempC, state.rhPct);
   const labelEl = document.getElementById("result-label");
   const unitEl = document.getElementById("result-unit");
@@ -212,6 +230,8 @@ function openSettings() {
   sv.classList.add("is-entering");
   document.getElementById("nav-home-link").hidden = true;
   document.getElementById("nav-back-btn").hidden = false;
+  const resetBtn = document.getElementById("reset-calc-btn");
+  if (resetBtn) resetBtn.hidden = true;
   document.getElementById("brand-title").textContent = "Einstellungen";
   renderSettingsTheme();
 }
@@ -225,13 +245,56 @@ function openCalc() {
   cv.classList.add("is-entering");
   document.getElementById("nav-back-btn").hidden = true;
   document.getElementById("nav-home-link").hidden = false;
+  const resetBtn = document.getElementById("reset-calc-btn");
+  if (resetBtn) resetBtn.hidden = false;
   document.getElementById("brand-title").textContent = "Taupunkt";
+  updateAllPills();
+}
+
+function syncStateToUI() {
+  document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
+    btn.setAttribute("aria-selected", String(btn.dataset.mode === state.mode));
+  });
+  const surfaceWell = document.getElementById("surface-temp-well");
+  if (surfaceWell) surfaceWell.hidden = state.mode !== "condensation";
+
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = String(val);
+  };
+  setVal("tp-temp-input", state.tempC);
+  setVal("tp-rh-input", state.rhPct);
+  setVal("tp-surface-input", state.surfaceC);
+
+  document.querySelectorAll("#climate-preset-group [data-t]").forEach((btn) => {
+    const t = parseLocaleNumber(btn.dataset.t, 22, -30, 60);
+    const rh = parseLocaleNumber(btn.dataset.rh, 50, 1, 100);
+    const match = Math.abs(t - state.tempC) < 0.01 && Math.abs(rh - state.rhPct) < 0.01;
+    btn.setAttribute("aria-pressed", String(match));
+  });
+
   updateAllPills();
 }
 
 function init() {
   document.getElementById("settings-toggle-btn")?.addEventListener("click", openSettings);
   document.getElementById("nav-back-btn")?.addEventListener("click", openCalc);
+
+  document.getElementById("reset-calc-btn")?.addEventListener("click", () => {
+    Object.assign(state, DEFAULT_STATE);
+    clearAppStorage(TAUPUNKT_STATE_KEY);
+    syncStateToUI();
+    calculateAndRender(true);
+    showToast("Standardwerte wiederhergestellt");
+  });
+
+  wireCopyResultButton("copy-result-btn", () => {
+    const label = document.getElementById("result-label")?.textContent?.trim() || "";
+    const num = document.getElementById("result-number")?.textContent?.trim() || "";
+    const unit = document.getElementById("result-unit")?.textContent?.trim() || "";
+    const sub = document.getElementById("result-sub")?.textContent?.trim() || "";
+    return `${label}: ${num} ${unit} (${sub})`;
+  });
 
   document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -289,7 +352,7 @@ function init() {
   });
 
   window.addEventListener("resize", updateAllPills);
-  updateAllPills();
+  syncStateToUI();
   calculateAndRender(false);
 }
 

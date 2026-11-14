@@ -11,7 +11,7 @@
 export const APP_VERSION = "1.1.0";
 
 const THEME_STORAGE_KEY = "hvacr-theme-mode";
-const TOP_LIGHT = "#f2f2f7";
+const TOP_LIGHT = "#000000";
 const TOP_DARK = "#000000";
 const ROOT_URL = new URL("../../", import.meta.url);
 const SW_URL = new URL("sw.js", ROOT_URL).href;
@@ -127,6 +127,115 @@ export function saveAppParams(storageKey, params) {
   } catch {
     // Im iOS Safari Privatmodus wird nur der Arbeitsspeicher verwendet.
   }
+}
+
+export function clearAppStorage(storageKey) {
+  try {
+    window.localStorage.removeItem(storageKey);
+  } catch {
+    // Im iOS Safari Privatmodus wird nur der Arbeitsspeicher verwendet.
+  }
+}
+
+/**
+ * Zentraler Input-Parser für Baustellen-Zahleneingaben (DE Komma & EN Punkt).
+ * Verhindert zuverlässig NaN/Infinity bei leeren oder unvollständigen Eingaben.
+ */
+export function parseLocaleNumber(raw, fallback = 0, min = -Infinity, max = Infinity) {
+  if (typeof raw === "number") {
+    if (!Number.isFinite(raw)) return fallback;
+    return Math.min(max, Math.max(min, raw));
+  }
+  const str = String(raw ?? "").replace(/\s+/g, "").trim();
+  if (!str || str === "-" || str === "+" || str === "," || str === ".") {
+    return fallback;
+  }
+
+  let normalized = str;
+  const lastComma = str.lastIndexOf(",");
+  const lastDot = str.lastIndexOf(".");
+  if (lastComma !== -1 && lastDot !== -1) {
+    // Letztes Trennzeichen bestimmt das Dezimaltrennzeichen; das andere ist Tausenderpunkt/-komma.
+    if (lastComma > lastDot) {
+      normalized = str.replace(/\./g, "").replace(",", ".");
+    } else {
+      normalized = str.replace(/,/g, "");
+    }
+  } else if (lastComma !== -1) {
+    normalized = str.replace(",", ".");
+  }
+
+  const num = Number(normalized);
+  if (!Number.isFinite(num)) return fallback;
+  return Math.min(max, Math.max(min, num));
+}
+
+/**
+ * Kopiert Text in die Zwischenablage (mit Fallback für ältere Browser/WebViews)
+ * und zeigt eine kurze Rückmeldung im globalen Toast-Banner.
+ */
+export async function copyTextToClipboard(text) {
+  const value = String(text ?? "").trim();
+  if (!value) return false;
+
+  try {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      await navigator.clipboard.writeText(value);
+      showToast("In Zwischenablage kopiert");
+      return true;
+    }
+  } catch {
+    // Fallback über temporäres Textarea nutzen
+  }
+
+  try {
+    const area = document.createElement("textarea");
+    area.value = value;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    area.style.pointerEvents = "none";
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(area);
+    showToast(ok ? "In Zwischenablage kopiert" : "Kopieren fehlgeschlagen");
+    return ok;
+  } catch {
+    showToast("Kopieren fehlgeschlagen");
+    return false;
+  }
+}
+
+export function wireCopyResultButton(btnId, getTextFn) {
+  const btn = document.getElementById(btnId);
+  if (!btn || typeof getTextFn !== "function") return;
+  btn.addEventListener("click", () => {
+    void copyTextToClipboard(getTextFn());
+  });
+}
+
+/**
+ * Deregistriert aktive Service Worker, leert den gesamten Cache Storage und lädt die App neu.
+ */
+export async function forceCacheReset() {
+  if (isReloading) return;
+  isReloading = true;
+
+  try {
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map((reg) => reg.unregister()));
+    }
+    if ("caches" in window) {
+      const keys = await window.caches.keys();
+      await Promise.all(keys.map((key) => window.caches.delete(key)));
+    }
+  } catch {
+    // Auch falls Cache-Bereinigung blockiert ist, erzwingt reload() den Neustart.
+  }
+
+  window.location.reload();
 }
 
 /**
@@ -247,12 +356,12 @@ function showUpdateBanner(remoteVersion) {
   if (!banner) {
     banner = document.createElement("aside");
     banner.id = "app-update-banner";
-    banner.className = "update-banner";
+    banner.className = "liquid-glass update-banner";
     banner.setAttribute("role", "region");
     banner.setAttribute("aria-label", "App-Aktualisierung");
 
     const icon = document.createElement("span");
-    icon.className = "ag-icon ag-icon--sm update-banner-icon";
+    icon.className = "material-symbols-rounded update-banner-icon";
     icon.setAttribute("aria-hidden", "true");
     icon.textContent = "system_update";
 
@@ -286,7 +395,7 @@ function showUpdateBanner(remoteVersion) {
     closeBtn.className = "update-banner-close press-icon";
     closeBtn.setAttribute("aria-label", "Hinweis schließen");
     const closeIcon = document.createElement("span");
-    closeIcon.className = "ag-icon ag-icon--sm";
+    closeIcon.className = "material-symbols-rounded";
     closeIcon.setAttribute("aria-hidden", "true");
     closeIcon.textContent = "close";
     closeBtn.appendChild(closeIcon);
@@ -403,8 +512,61 @@ function initServiceWorkerAndUpdates() {
 }
 
 // Theme beim Laden sofort anwenden, um Flackern (FOUC) zu vermeiden
+export function initFloatingNav() {
+  const nav = document.querySelector(".floating-nav");
+  if (!nav) return;
+
+  const viewSettings = document.getElementById("view-settings");
+  const backBtn = document.getElementById("nav-back-btn");
+  const settingsBtn = document.getElementById("settings-toggle-btn");
+
+  const syncState = () => {
+    const inSettings = Boolean(viewSettings && !viewSettings.hidden);
+    const items = nav.querySelectorAll("[data-nav-action]");
+    items.forEach((btn) => {
+      const action = btn.dataset.navAction;
+      let isActive = false;
+      if (action === "settings") isActive = inSettings;
+      else if (action === "home" || action === "calc") isActive = !inSettings;
+      btn.classList.toggle("active", isActive);
+      const icon = btn.querySelector(".material-symbols-rounded");
+      if (icon) icon.classList.toggle("is-active", isActive);
+    });
+  };
+
+  nav.addEventListener("click", (event) => {
+    const btn = event.target.closest("[data-nav-action]");
+    if (!btn) return;
+    const action = btn.dataset.navAction;
+    if (action === "settings") {
+      if (viewSettings && viewSettings.hidden && settingsBtn) {
+        settingsBtn.click();
+      }
+    } else if (action === "home" || action === "calc") {
+      if (viewSettings && !viewSettings.hidden && backBtn) {
+        backBtn.click();
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } else if (action === "print") {
+      window.print();
+    }
+  });
+
+  if (viewSettings && typeof MutationObserver !== "undefined") {
+    const observer = new MutationObserver(syncState);
+    observer.observe(viewSettings, { attributes: true, attributeFilter: ["hidden"] });
+  }
+  syncState();
+}
+
 if (typeof document !== "undefined") {
   applyThemeMode(getStoredThemeMode());
   initNumInputSizingFallback();
   initServiceWorkerAndUpdates();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initFloatingNav, { once: true });
+  } else {
+    initFloatingNav();
+  }
 }

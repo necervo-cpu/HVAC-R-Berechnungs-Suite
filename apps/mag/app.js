@@ -10,12 +10,16 @@
 
 import {
   applyThemeMode,
+  clearAppStorage,
   createNumberAnimator,
   getCurrentThemeMode,
   loadAppParams,
+  parseLocaleNumber,
   prefersReducedMotion,
   saveAppParams,
+  showToast,
   updateAllPills,
+  wireCopyResultButton,
 } from "../../assets/js/shared.js";
 
 const MAG_PARAMS_KEY = "hvacr-params-mag";
@@ -34,8 +38,9 @@ const STANDARD_MAG_SIZES = [8, 12, 18, 25, 35, 50, 80, 100, 140, 200, 250, 300, 
 const EXPANSION_WATER = { 40: 0.78, 55: 1.45, 70: 2.27, 85: 3.24 };
 const EXPANSION_GLYCOL30 = { 40: 1.35, 55: 2.2, 70: 3.15, 85: 4.25 };
 
-const state = {
-  mode: "pressure", // 'pressure' | 'volume'
+const MAG_STATE_KEY = "hvacr-state-mag";
+const DEFAULT_STATE = {
+  mode: "pressure",
   heightM: 9,
   svBar: 3.0,
   volumeL: 250,
@@ -43,11 +48,29 @@ const state = {
   medium: "water",
 };
 
+function sanitizeMagState(raw) {
+  const validSv = [2.5, 3.0, 4.0, 6.0];
+  const svBar = parseLocaleNumber(raw.svBar, 3.0, 1.5, 10);
+  const validTmax = [40, 55, 70, 85];
+  const tMaxC = parseLocaleNumber(raw.tMaxC, 70, 30, 100);
+  return {
+    mode: raw.mode === "volume" ? "volume" : "pressure",
+    heightM: parseLocaleNumber(raw.heightM, 9, 0, 60),
+    svBar: validSv.includes(svBar) ? svBar : 3.0,
+    volumeL: parseLocaleNumber(raw.volumeL, 250, 10, 10000),
+    tMaxC: validTmax.includes(tMaxC) ? tMaxC : 70,
+    medium: raw.medium === "glycol" ? "glycol" : "water",
+  };
+}
+
+const state = sanitizeMagState(loadAppParams(MAG_STATE_KEY, DEFAULT_STATE));
+
+function persistState() {
+  saveAppParams(MAG_STATE_KEY, state);
+}
+
 function sanitizeNumber(raw, fallback, min, max) {
-  const normalized = typeof raw === "string" ? raw.replace(",", ".") : raw;
-  const num = Number.parseFloat(normalized);
-  if (!Number.isFinite(num)) return fallback;
-  return Math.min(max, Math.max(min, num));
+  return parseLocaleNumber(raw, fallback, min, max);
 }
 
 function formatDe(value, decimals = 2) {
@@ -80,6 +103,7 @@ function triggerResultPop() {
 }
 
 function calculateAndRender(animate = true) {
+  persistState();
   const pStat = state.heightM / 10;
   const safety = sanitizeNumber(magParams.safetyBar, 0.3, 0, 1.0);
   const p0 = Math.max(magParams.p0MinBar, Number((pStat + safety).toFixed(2)));
@@ -212,6 +236,8 @@ function openSettings() {
   sv.classList.add("is-entering");
   document.getElementById("nav-home-link").hidden = true;
   document.getElementById("nav-back-btn").hidden = false;
+  const resetBtn = document.getElementById("reset-calc-btn");
+  if (resetBtn) resetBtn.hidden = true;
   document.getElementById("brand-title").textContent = "Einstellungen";
   renderSettingsTheme();
 }
@@ -225,13 +251,60 @@ function openCalc() {
   cv.classList.add("is-entering");
   document.getElementById("nav-back-btn").hidden = true;
   document.getElementById("nav-home-link").hidden = false;
+  const resetBtn = document.getElementById("reset-calc-btn");
+  if (resetBtn) resetBtn.hidden = false;
   document.getElementById("brand-title").textContent = "MAG & Vordruck";
+  updateAllPills();
+}
+
+function syncStateToUI() {
+  document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
+    btn.setAttribute("aria-selected", String(btn.dataset.mode === state.mode));
+  });
+  const volPanel = document.getElementById("panel-volume");
+  if (volPanel) volPanel.hidden = state.mode !== "volume";
+
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = String(val);
+  };
+  setVal("mag-height-input", state.heightM);
+  setVal("mag-vol-input", state.volumeL);
+
+  document.querySelectorAll("#sv-group [data-sv]").forEach((btn) => {
+    const sv = parseLocaleNumber(btn.dataset.sv, 3.0, 1.5, 10);
+    btn.setAttribute("aria-pressed", String(Math.abs(sv - state.svBar) < 0.01));
+  });
+  document.querySelectorAll("#tmax-group [data-tmax]").forEach((btn) => {
+    const tmax = parseLocaleNumber(btn.dataset.tmax, 70, 30, 100);
+    btn.setAttribute("aria-pressed", String(Math.abs(tmax - state.tMaxC) < 0.01));
+  });
+  document.querySelectorAll("#mag-medium-group [data-med]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.med === state.medium));
+  });
+
   updateAllPills();
 }
 
 function init() {
   document.getElementById("settings-toggle-btn")?.addEventListener("click", openSettings);
   document.getElementById("nav-back-btn")?.addEventListener("click", openCalc);
+
+  document.getElementById("reset-calc-btn")?.addEventListener("click", () => {
+    Object.assign(state, DEFAULT_STATE);
+    clearAppStorage(MAG_STATE_KEY);
+    syncStateToUI();
+    calculateAndRender(true);
+    showToast("Standardwerte wiederhergestellt");
+  });
+
+  wireCopyResultButton("copy-result-btn", () => {
+    const label = document.getElementById("result-label")?.textContent?.trim() || "";
+    const num = document.getElementById("result-number")?.textContent?.trim() || "";
+    const unit = document.getElementById("result-unit")?.textContent?.trim() || "";
+    const sub = document.getElementById("result-sub")?.textContent?.trim() || "";
+    return `${label}: ${num} ${unit} (${sub})`;
+  });
 
   document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -301,7 +374,7 @@ function init() {
   });
 
   window.addEventListener("resize", updateAllPills);
-  updateAllPills();
+  syncStateToUI();
   calculateAndRender(false);
 }
 

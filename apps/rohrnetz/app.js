@@ -10,12 +10,16 @@
 
 import {
   applyThemeMode,
+  clearAppStorage,
   createNumberAnimator,
   getCurrentThemeMode,
   loadAppParams,
+  parseLocaleNumber,
   prefersReducedMotion,
   saveAppParams,
+  showToast,
   updateAllPills,
+  wireCopyResultButton,
 } from "../../assets/js/shared.js";
 
 const ROHR_PARAMS_KEY = "hvacr-params-rohrnetz";
@@ -163,8 +167,8 @@ const FLOW_UNIT_CONFIG = {
   lmin: { label: "l/min", factorToM3h: 0.06, step: 2, decimals: 1 },
 };
 
-const state = {
-  view: "calc",
+const ROHR_STATE_KEY = "hvacr-state-rohrnetz";
+const DEFAULT_STATE = {
   mode: "flow",
   material: "profipress",
   sizeId: "pp28",
@@ -176,11 +180,35 @@ const state = {
   dtK: 10,
 };
 
+function sanitizeRohrState(raw) {
+  const mode = raw.mode === "power" ? "power" : "flow";
+  const material = PIPE_MATERIALS[raw.material] ? raw.material : "profipress";
+  const sizes = PIPE_MATERIALS[material].sizes;
+  const sizeId = sizes.some((s) => s.id === raw.sizeId) ? raw.sizeId : sizes[0].id;
+  const flowUnit = FLOW_UNIT_CONFIG[raw.flowUnit] ? raw.flowUnit : "m3h";
+  return {
+    view: "calc",
+    mode,
+    material,
+    sizeId,
+    fluidTempC: parseLocaleNumber(raw.fluidTempC, 50, -35, 130),
+    glycolPct: parseLocaleNumber(raw.glycolPct, 0, 0, 60),
+    flowUnit,
+    flowM3h: parseLocaleNumber(raw.flowM3h, 1.5, 0, 100000),
+    powerKw: parseLocaleNumber(raw.powerKw, 15, 0, 100000),
+    dtK: parseLocaleNumber(raw.dtK, 10, 0.1, 100),
+  };
+}
+
+const state = sanitizeRohrState(loadAppParams(ROHR_STATE_KEY, DEFAULT_STATE));
+
+function persistState() {
+  const { view: _view, ...toSave } = state;
+  saveAppParams(ROHR_STATE_KEY, toSave);
+}
+
 function sanitizeNumber(raw, fallback, min = 0, max = 100000) {
-  const normalized = typeof raw === "string" ? raw.replace(",", ".") : raw;
-  const num = Number.parseFloat(normalized);
-  if (!Number.isFinite(num)) return fallback;
-  return Math.min(max, Math.max(min, num));
+  return parseLocaleNumber(raw, fallback, min, max);
 }
 
 function formatDe(value, decimals = 2) {
@@ -234,7 +262,7 @@ function calcFrictionFactor(re, relRoughness) {
 }
 
 function getActivePipeSpec() {
-  const mat = PIPE_MATERIALS[state.material] || PIPE_MATERIALS.copper;
+  const mat = PIPE_MATERIALS[state.material] || PIPE_MATERIALS.profipress;
   const size = mat.sizes.find((s) => s.id === state.sizeId) || mat.sizes[0];
   return { mat, size };
 }
@@ -256,6 +284,7 @@ function renderSizeChips() {
   container.querySelectorAll("[data-size-id]").forEach((btn) => {
     btn.addEventListener("click", () => {
       state.sizeId = btn.dataset.sizeId;
+      persistState();
       renderSizeChips();
       calculateAndRender();
     });
@@ -268,6 +297,7 @@ function renderSizeChips() {
 }
 
 function calculateAndRender(animate = true) {
+  persistState();
   const { mat, size } = getActivePipeSpec();
   const fluid = calcFluidProperties(state.fluidTempC, state.glycolPct);
 
@@ -361,6 +391,8 @@ function openSettings() {
   settingsView.classList.add("is-entering");
   document.getElementById("nav-home-link").hidden = true;
   document.getElementById("nav-back-btn").hidden = false;
+  const resetBtn = document.getElementById("reset-calc-btn");
+  if (resetBtn) resetBtn.hidden = true;
   document.getElementById("brand-title").textContent = "Einstellungen";
   renderSettingsTheme();
 }
@@ -375,6 +407,8 @@ function openCalc() {
   calcView.classList.add("is-entering");
   document.getElementById("nav-back-btn").hidden = true;
   document.getElementById("nav-home-link").hidden = false;
+  const resetBtn = document.getElementById("reset-calc-btn");
+  if (resetBtn) resetBtn.hidden = false;
   document.getElementById("brand-title").textContent = "Rohrnetz";
   updateAllPills();
 }
@@ -459,9 +493,61 @@ function syncDtPresetChips() {
   });
 }
 
+function syncStateToUI() {
+  document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
+    btn.setAttribute("aria-selected", String(btn.dataset.mode === state.mode));
+  });
+  ["flow", "power"].forEach((m) => {
+    const panel = document.getElementById(`panel-${m}`);
+    if (panel) panel.hidden = m !== state.mode;
+  });
+
+  document.querySelectorAll("#material-group [data-material]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.material === state.material));
+  });
+
+  const cfg = FLOW_UNIT_CONFIG[state.flowUnit] || FLOW_UNIT_CONFIG.m3h;
+  document.querySelectorAll("#flow-unit-tabs [data-flow-unit]").forEach((btn) => {
+    btn.setAttribute("aria-selected", String(btn.dataset.flowUnit === state.flowUnit));
+  });
+  const flowInput = document.getElementById("flow-input");
+  const flowUnitLabel = document.getElementById("flow-unit-label");
+  if (flowInput) flowInput.value = formatInputVal(state.flowM3h / cfg.factorToM3h, cfg.decimals);
+  if (flowUnitLabel) flowUnitLabel.textContent = cfg.label;
+
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = String(val);
+  };
+  setVal("fluid-temp-input", state.fluidTempC);
+  setVal("fluid-glycol-input", state.glycolPct);
+  setVal("power-input", state.powerKw);
+  setVal("dt-input", state.dtK);
+
+  syncDtPresetChips();
+  renderSizeChips();
+  updateAllPills();
+}
+
 function init() {
   document.getElementById("settings-toggle-btn")?.addEventListener("click", openSettings);
   document.getElementById("nav-back-btn")?.addEventListener("click", openCalc);
+
+  document.getElementById("reset-calc-btn")?.addEventListener("click", () => {
+    Object.assign(state, DEFAULT_STATE, { view: "calc" });
+    clearAppStorage(ROHR_STATE_KEY);
+    syncStateToUI();
+    calculateAndRender(true);
+    showToast("Standardwerte wiederhergestellt");
+  });
+
+  wireCopyResultButton("copy-result-btn", () => {
+    const label = document.getElementById("result-label")?.textContent?.trim() || "";
+    const num = document.getElementById("result-number")?.textContent?.trim() || "";
+    const unit = document.getElementById("result-unit")?.textContent?.trim() || "";
+    const sub = document.getElementById("result-sub")?.textContent?.trim() || "";
+    return `${label}: ${num} ${unit} (${sub})`;
+  });
 
   document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -590,8 +676,7 @@ function init() {
   );
 
   window.addEventListener("resize", updateAllPills);
-  renderSizeChips();
-  updateAllPills();
+  syncStateToUI();
   calculateAndRender(false);
 }
 
