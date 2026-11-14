@@ -125,13 +125,37 @@ const PIPE_MATERIALS = {
   },
 };
 
-// Stoffwerte: Dichte rho [kg/m³], kinematische Viskosität nu [m²/s], spez. Wärmekapazität cp [kJ/(kg·K)]
-const FLUIDS = {
-  water_50: { label: "Heizung 50 °C", rho: 988.1, nu: 0.553e-6, cp: 4.181 },
-  water_35: { label: "WP 35 °C", rho: 994.0, nu: 0.724e-6, cp: 4.178 },
-  water_10: { label: "Kalt 10 °C", rho: 999.7, nu: 1.307e-6, cp: 4.192 },
-  glycol_30: { label: "Glykol 30 %", rho: 1038.0, nu: 2.35e-6, cp: 3.75 },
-};
+/**
+ * Berechnet Dichte rho [kg/m³], kinematische Viskosität nu [m²/s] und spez. Wärmekapazität cp [kJ/(kg·K)]
+ * kontinuierlich aus Mediumtemperatur (°C) und Ethylenglykol-Anteil (0–60 %).
+ */
+function calcFluidProperties(tempC, glycolPct) {
+  const t = Math.min(130, Math.max(-35, Number.isFinite(tempC) ? tempC : 50));
+  const w = Math.min(0.6, Math.max(0, Number.isFinite(glycolPct) ? glycolPct / 100 : 0));
+  const tWater = w === 0 ? Math.max(0.1, t) : t;
+
+  const rhoWater =
+    999.84 +
+    0.06794 * tWater -
+    0.009095 * tWater * tWater +
+    1.0017e-4 * Math.pow(tWater, 3) -
+    1.1201e-6 * Math.pow(tWater, 4) +
+    6.536e-9 * Math.pow(tWater, 5);
+
+  const muWater = 2.414e-5 * Math.pow(10, 247.8 / Math.max(40, tWater + 133.15));
+  const nuWater = muWater / rhoWater;
+  const cpWater =
+    4.217 -
+    0.0029 * tWater +
+    4.8e-5 * tWater * tWater -
+    1.5e-7 * Math.pow(tWater, 3);
+
+  const rho = rhoWater * (1 + 0.145 * w - 0.03 * w * w);
+  const nu = nuWater * Math.exp(w * (2.85 + 0.028 * (40 - t)));
+  const cp = Math.max(2.5, cpWater * (1 - 0.42 * w) + 0.0018 * w * t);
+
+  return { rho, nu, cp };
+}
 
 const FLOW_UNIT_CONFIG = {
   m3h: { label: "m³/h", factorToM3h: 1, step: 0.1, decimals: 2 },
@@ -144,7 +168,8 @@ const state = {
   mode: "flow",
   material: "profipress",
   sizeId: "pp28",
-  fluid: "water_50",
+  fluidTempC: 50,
+  glycolPct: 0,
   flowUnit: "m3h",
   flowM3h: 1.5,
   powerKw: 15,
@@ -244,7 +269,13 @@ function renderSizeChips() {
 
 function calculateAndRender(animate = true) {
   const { mat, size } = getActivePipeSpec();
-  const fluid = FLUIDS[state.fluid] || FLUIDS.water_50;
+  const fluid = calcFluidProperties(state.fluidTempC, state.glycolPct);
+
+  const fluidHint = document.getElementById("fluid-props-hint");
+  if (fluidHint) {
+    const mediumName = state.glycolPct > 0 ? `Glykol ${formatDe(state.glycolPct, 0)} %` : "Wasser";
+    fluidHint.textContent = `${mediumName} · ρ ${formatDe(fluid.rho, 1)} kg/m³ · ν ${formatDe(fluid.nu * 1e6, 2)} mm²/s`;
+  }
 
   let flowM3h = state.flowM3h;
   if (state.mode === "power") {
@@ -462,17 +493,27 @@ function init() {
     });
   });
 
-  document.querySelectorAll("#medium-group [data-fluid]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const nextFluid = btn.dataset.fluid;
-      if (!FLUIDS[nextFluid]) return;
-      state.fluid = nextFluid;
-      document.querySelectorAll("#medium-group [data-fluid]").forEach((b) => {
-        b.setAttribute("aria-pressed", String(b.dataset.fluid === nextFluid));
-      });
+  wireStepper(
+    "fluid-temp-minus",
+    "fluid-temp-plus",
+    "fluid-temp-input",
+    () => 5,
+    (val) => {
+      state.fluidTempC = val;
       calculateAndRender(true);
-    });
-  });
+    }
+  );
+
+  wireStepper(
+    "fluid-glycol-minus",
+    "fluid-glycol-plus",
+    "fluid-glycol-input",
+    () => 5,
+    (val) => {
+      state.glycolPct = val;
+      calculateAndRender(true);
+    }
+  );
 
   wireStepper(
     "flow-minus",

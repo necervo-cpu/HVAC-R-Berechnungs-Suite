@@ -235,16 +235,60 @@
             </div>
           </div>
 
-          <!-- Medium & Temperatur -->
+          <!-- Medium & Temperatur (frei eingebbar) -->
           <div class="well">
             <div class="well-header">
               <span class="well-label">Medium &amp; Temperatur</span>
+              <span id="fluid-props-hint" class="well-hint">Wasser · ρ 988,0 kg/m³</span>
             </div>
-            <div class="chip-group" id="medium-group" role="group" aria-label="Medium und Temperatur">
-              <button type="button" class="chip-btn press-btn" data-fluid="water_50" aria-pressed="true">Heizung 50 °C</button>
-              <button type="button" class="chip-btn press-btn" data-fluid="water_35" aria-pressed="false">WP 35 °C</button>
-              <button type="button" class="chip-btn press-btn" data-fluid="water_10" aria-pressed="false">Kalt 10 °C</button>
-              <button type="button" class="chip-btn press-btn" data-fluid="glycol_30" aria-pressed="false">Glykol 30 %</button>
+            <div class="field-grid field-grid--2">
+              <div class="well">
+                <div class="well-header">
+                  <label class="well-label" for="fluid-temp-input">Temperatur</label>
+                </div>
+                <div class="stepper-row">
+                  <button type="button" class="step-btn press-btn" id="fluid-temp-minus" aria-label="Temperatur verringern">−</button>
+                  <div class="num-value-wrap">
+                    <input
+                      id="fluid-temp-input"
+                      class="num-input"
+                      type="number"
+                      inputmode="decimal"
+                      step="1"
+                      min="-35"
+                      max="130"
+                      value="50"
+                      aria-label="Mediumtemperatur in Grad Celsius"
+                    />
+                    <span class="num-unit">°C</span>
+                  </div>
+                  <button type="button" class="step-btn press-btn" id="fluid-temp-plus" aria-label="Temperatur erhöhen">+</button>
+                </div>
+              </div>
+
+              <div class="well">
+                <div class="well-header">
+                  <label class="well-label" for="fluid-glycol-input">Glykol-Anteil</label>
+                </div>
+                <div class="stepper-row">
+                  <button type="button" class="step-btn press-btn" id="fluid-glycol-minus" aria-label="Glykol-Anteil verringern">−</button>
+                  <div class="num-value-wrap">
+                    <input
+                      id="fluid-glycol-input"
+                      class="num-input"
+                      type="number"
+                      inputmode="decimal"
+                      step="5"
+                      min="0"
+                      max="60"
+                      value="0"
+                      aria-label="Ethylenglykol-Anteil in Prozent"
+                    />
+                    <span class="num-unit">%</span>
+                  </div>
+                  <button type="button" class="step-btn press-btn" id="fluid-glycol-plus" aria-label="Glykol-Anteil erhöhen">+</button>
+                </div>
+              </div>
             </div>
           </div>
 
