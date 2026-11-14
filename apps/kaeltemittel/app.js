@@ -12,11 +12,17 @@ import {
   applyThemeMode,
   createNumberAnimator,
   getCurrentThemeMode,
+  loadAppParams,
   prefersReducedMotion,
+  saveAppParams,
   updateAllPills,
 } from "../../assets/js/shared.js";
 
-const ATM_BAR = 1.01325;
+const KAELTE_PARAMS_KEY = "hvacr-params-kaeltemittel";
+const kaelteParams = loadAppParams(KAELTE_PARAMS_KEY, {
+  atmBar: 1.013,
+  shMaxK: 8.0,
+});
 
 // Antoine-Gleichung: log10(p_bar_abs) = A - B / (T_C + C)
 const REFRIGERANTS = {
@@ -58,12 +64,12 @@ function formatDe(value, decimals = 1) {
 }
 
 function toAbsBar(inputBar) {
-  const pAbs = state.pressureRef === "gauge" ? inputBar + ATM_BAR : inputBar;
+  const pAbs = state.pressureRef === "gauge" ? inputBar + kaelteParams.atmBar : inputBar;
   return Math.max(0.05, pAbs);
 }
 
 function fromAbsBar(pAbs) {
-  return state.pressureRef === "gauge" ? pAbs - ATM_BAR : pAbs;
+  return state.pressureRef === "gauge" ? pAbs - kaelteParams.atmBar : pAbs;
 }
 
 function calcSatTempC(refKey, pAbsBar) {
@@ -125,7 +131,7 @@ function calculateAndRender(animate = true) {
     numericValue = satT;
     unit = "°C";
     label = "Sättigungstemperatur";
-    sub = `${spec.label} · p_abs = ${formatDe(pAbs, 2)} bar · p_ü = ${formatDe(pAbs - ATM_BAR, 2)} bar`;
+    sub = `${spec.label} · p_abs = ${formatDe(pAbs, 2)} bar · p_ü = ${formatDe(pAbs - kaelteParams.atmBar, 2)} bar`;
     meterPct = ((satT + 40) / 110) * 100;
 
     if (satT < spec.tMin || satT > spec.tMax) {
@@ -169,8 +175,8 @@ function calculateAndRender(animate = true) {
     } else if (diff < 3) {
       badgeText = state.shscType === "sh" ? "Zu gering (Flüssigkeitsschlag)" : "Sehr gering (Dampfblasen)";
       badgeState = "warn";
-    } else if (diff <= 8) {
-      badgeText = "Optimal (5–8 K Ziel)";
+    } else if (diff <= kaelteParams.shMaxK) {
+      badgeText = `Optimal (3–${formatDe(kaelteParams.shMaxK, 0)} K Ziel)`;
       badgeState = "ok";
     } else if (diff <= 14) {
       badgeText = "Erhöht";
@@ -356,6 +362,22 @@ function init() {
   });
   wireStepper("shsc-t-minus", "shsc-t-plus", "shsc-t-input", 0.5, -50, 120, (v) => {
     state.shscTemp = v;
+    calculateAndRender(true);
+  });
+
+  const pAtmIn = document.getElementById("param-patm-input");
+  const shMaxIn = document.getElementById("param-shmax-input");
+  if (pAtmIn) pAtmIn.value = String(kaelteParams.atmBar);
+  if (shMaxIn) shMaxIn.value = String(kaelteParams.shMaxK);
+
+  wireStepper("param-patm-minus", "param-patm-plus", "param-patm-input", 0.01, 0.7, 1.1, (v) => {
+    kaelteParams.atmBar = v;
+    saveAppParams(KAELTE_PARAMS_KEY, kaelteParams);
+    calculateAndRender(true);
+  });
+  wireStepper("param-shmax-minus", "param-shmax-plus", "param-shmax-input", 0.5, 4, 15, (v) => {
+    kaelteParams.shMaxK = v;
+    saveAppParams(KAELTE_PARAMS_KEY, kaelteParams);
     calculateAndRender(true);
   });
 

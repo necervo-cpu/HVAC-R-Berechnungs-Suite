@@ -12,15 +12,27 @@ import {
   applyThemeMode,
   createNumberAnimator,
   getCurrentThemeMode,
+  loadAppParams,
   prefersReducedMotion,
+  saveAppParams,
   updateAllPills,
 } from "../../assets/js/shared.js";
+
+const WAERME_PARAMS_KEY = "hvacr-params-waermeleistung";
+const waermeParams = loadAppParams(WAERME_PARAMS_KEY, {
+  waterRho: 992,
+  waterCp: 4.184,
+});
 
 const MEDIA = {
   water: {
     label: "Wasser",
-    rho: 992, // kg/m³ bei ca. 40 °C Heizwasser
-    cp: 4.184, // kJ/(kg·K)
+    get rho() {
+      return waermeParams.waterRho;
+    },
+    get cp() {
+      return waermeParams.waterCp;
+    },
   },
   air: {
     label: "Luft",
@@ -578,10 +590,26 @@ function wireEvents() {
     });
   }
 
+  wireStepper("param-rho-minus", "param-rho-plus", "param-rho-input", 1, (val) => {
+    waermeParams.waterRho = Math.min(1050, Math.max(900, val));
+    saveAppParams(WAERME_PARAMS_KEY, waermeParams);
+    renderActiveMode();
+  });
+
+  wireStepper("param-cp-minus", "param-cp-plus", "param-cp-input", 0.01, (val) => {
+    waermeParams.waterCp = Math.min(5, Math.max(2, val));
+    saveAppParams(WAERME_PARAMS_KEY, waermeParams);
+    renderActiveMode();
+  });
+
   window.addEventListener("resize", updateAllPills);
 }
 
 function init() {
+  const rhoIn = document.getElementById("param-rho-input");
+  const cpIn = document.getElementById("param-cp-input");
+  if (rhoIn) rhoIn.value = String(waermeParams.waterRho);
+  if (cpIn) cpIn.value = String(waermeParams.waterCp);
   renderSettingsTheme();
   syncMediumChips();
   wireEvents();

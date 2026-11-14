@@ -20,6 +20,7 @@
       })();
     </script>
     <script type="module" src="../../assets/js/shared.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="../../assets/css/global.css" />
     <link rel="stylesheet" href="./style.css" />
   </head>
@@ -27,14 +28,21 @@
     <main class="app-shell">
       <header class="top-bar">
         <div class="brand-mark">
-          <a href="../../index.html" class="back-btn press-btn" aria-label="Zurück zum Dashboard">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-            <span>Zurück zum Dashboard</span>
+          <a href="../../index.html" id="nav-home-link" class="back-btn press-btn" aria-label="Zurück zum Dashboard">
+            <span class="ag-icon ag-icon--xs" aria-hidden="true">arrow_back_ios_new</span>
+            <span>Übersicht</span>
           </a>
+          <button type="button" id="nav-back-btn" class="back-btn press-btn" aria-label="Zurück zum Rechner" hidden>
+            <span class="ag-icon ag-icon--xs" aria-hidden="true">arrow_back_ios_new</span>
+            <span>Zurück</span>
+          </button>
+          <span id="brand-title" class="brand-title">PTC / NTC</span>
         </div>
-        <span class="brand-title">PTC / NTC</span>
+        <div class="top-actions">
+          <button type="button" id="settings-toggle-btn" class="settings-btn press-icon" aria-label="Einstellungen öffnen">
+            <span class="ag-icon" aria-hidden="true">settings</span>
+          </button>
+        </div>
       </header>
 
       <section id="panel-sensor" class="liquid-glass-card calc-panel is-entering" aria-label="PTC und NTC Sensor-Rechner">
@@ -140,6 +148,44 @@
         <div id="ref-acc-panel" class="t-acc-panel" data-open="false">
           <div class="t-acc-panel-inner">
             <div id="sensor-ref-grid" class="ref-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-settings" class="liquid-glass-card calc-panel" aria-label="Einstellungen" hidden>
+        <div class="well">
+          <div class="well-header">
+            <span class="well-label">Darstellung</span>
+          </div>
+          <div id="theme-mode-group" class="settings-segmented" role="radiogroup" aria-label="Darstellungsmodus">
+            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="auto" aria-checked="true">Auto</button>
+            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="light" aria-checked="false">Hell</button>
+            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="dark" aria-checked="false">Dunkel</button>
+          </div>
+        </div>
+
+        <div class="well">
+          <div class="well-header">
+            <label class="well-label" for="param-lead-ohm">Leitungswiderstand (2-Leiter)</label>
+            <span class="well-hint">Standard 0,0 Ω</span>
+          </div>
+          <div class="stepper-row">
+            <button type="button" class="step-btn press-btn" id="param-lead-minus" aria-label="Leitungswiderstand verringern">−</button>
+            <div class="num-value-wrap">
+              <input id="param-lead-ohm" class="num-input" type="number" inputmode="decimal" step="0.2" min="0" max="20" value="0" aria-label="Leitungswiderstand in Ohm" />
+              <span class="num-unit">Ω</span>
+            </div>
+            <button type="button" class="step-btn press-btn" id="param-lead-plus" aria-label="Leitungswiderstand erhöhen">+</button>
+          </div>
+        </div>
+
+        <div class="well">
+          <div class="well-header">
+            <span class="well-label">Nachkommastellen (°C)</span>
+          </div>
+          <div class="chip-group" id="param-decimals-group" role="group" aria-label="Nachkommastellen für Temperatur">
+            <button type="button" class="chip-btn press-btn" data-dec="1" aria-pressed="true">1 Stelle (0,1 °C)</button>
+            <button type="button" class="chip-btn press-btn" data-dec="2" aria-pressed="false">2 Stellen (0,01 °C)</button>
           </div>
         </div>
       </section>

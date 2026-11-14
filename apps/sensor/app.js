@@ -9,7 +9,11 @@
  */
 
 import {
+  applyThemeMode,
   createNumberAnimator,
+  getCurrentThemeMode,
+  loadAppParams,
+  saveAppParams,
   updateAllPills,
   updateSegmentedPill,
 } from "../../assets/js/shared.js";
@@ -51,6 +55,12 @@ const state = {
   customB: 3950,
 };
 
+const SENSOR_PARAMS_KEY = "hvacr-params-sensor";
+const sensorParams = loadAppParams(SENSOR_PARAMS_KEY, {
+  leadOhm: 0,
+  tempDecimals: 1,
+});
+
 const resultNumberAnimator = createNumberAnimator({
   duration: 220,
   epsilon: 0.01,
@@ -58,7 +68,7 @@ const resultNumberAnimator = createNumberAnimator({
     const valEl = document.getElementById("sensor-result-val");
     if (!valEl) return;
     if (direction === "ohmToTemp") {
-      valEl.innerHTML = `${formatDE(val, 1)}<span class="result-unit">°C</span>`;
+      valEl.innerHTML = `${formatDE(val, sensorParams.tempDecimals)}<span class="result-unit">°C</span>`;
     } else {
       const f = formatOhm(val);
       valEl.innerHTML = `${f.num}<span class="result-unit">${f.unit}</span>`;
@@ -163,33 +173,37 @@ function calculateSensorConversion({
     return ktyTempToOhm(t);
   };
 
+  const leadOhm = clampNumber(sensorParams.leadOhm, 0, 20, 0);
+
   if (isNtc) {
     const spec = NTC_SENSORS[sensorId] || NTC_SENSORS.ntc10k_3435;
     const useR25 = sensorId === "ntc_custom" ? r25 : spec.r25;
     const useB = sensorId === "ntc_custom" ? bVal : spec.b;
     sensorName = spec.fullLabel;
-    sensorMeta = `R₂₅ = ${useR25.toLocaleString("de-DE")} Ω · B = ${useB} K`;
+    sensorMeta = `R₂₅ = ${useR25.toLocaleString("de-DE")} Ω · B = ${useB} K${leadOhm > 0 ? ` · −${formatDE(leadOhm, 1)} Ω Leitung` : ""}`;
 
     if (direction === "ohmToTemp") {
-      ohm = clampNumber(inputValue, 0.1, 2000000, useR25);
+      const measuredOhm = clampNumber(inputValue, 0.1, 2000000, useR25);
+      ohm = Math.max(0.1, measuredOhm - leadOhm);
       tempC = ntcOhmToTemp(ohm, useR25, useB);
     } else {
       tempC = clampNumber(inputValue, -60, 180, 25);
-      ohm = ntcTempToOhm(tempC, useR25, useB);
+      ohm = ntcTempToOhm(tempC, useR25, useB) + leadOhm;
     }
   } else {
     const spec = PTC_SENSORS[sensorId] || PTC_SENSORS.pt1000;
     sensorName = spec.fullLabel;
-    sensorMeta = spec.note;
+    sensorMeta = `${spec.note}${leadOhm > 0 ? ` · −${formatDE(leadOhm, 1)} Ω Leitung` : ""}`;
 
     if (direction === "ohmToTemp") {
-      ohm = clampNumber(inputValue, 1, 50000, sensorId === "pt100" ? 100 : 1000);
+      const measuredOhm = clampNumber(inputValue, 1, 50000, sensorId === "pt100" ? 100 : 1000);
+      ohm = Math.max(1, measuredOhm - leadOhm);
       if (sensorId === "pt100") tempC = ptOhmToTemp(ohm, 100);
       else if (sensorId === "pt1000") tempC = ptOhmToTemp(ohm, 1000);
       else tempC = ktyOhmToTemp(ohm);
     } else {
       tempC = clampNumber(inputValue, -100, 300, 25);
-      ohm = convertTtoR(tempC);
+      ohm = convertTtoR(tempC) + leadOhm;
     }
   }
 
@@ -437,8 +451,93 @@ function wireEvents() {
   }
 }
 
+function renderSettingsTheme() {
+  const mode = getCurrentThemeMode();
+  document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
+    btn.setAttribute("aria-checked", String(btn.getAttribute("data-theme-mode") === mode));
+  });
+}
+
 function init() {
   wireEvents();
+
+  const settingsBtn = document.getElementById("settings-toggle-btn");
+  const backBtn = document.getElementById("nav-back-btn");
+  const homeLink = document.getElementById("nav-home-link");
+  const panelSensor = document.getElementById("panel-sensor");
+  const viewSettings = document.getElementById("view-settings");
+  const brandTitle = document.getElementById("brand-title");
+
+  settingsBtn?.addEventListener("click", () => {
+    if (panelSensor) panelSensor.hidden = true;
+    if (viewSettings) {
+      viewSettings.hidden = false;
+      viewSettings.classList.remove("is-entering");
+      void viewSettings.offsetWidth;
+      viewSettings.classList.add("is-entering");
+    }
+    if (homeLink) homeLink.hidden = true;
+    if (backBtn) backBtn.hidden = false;
+    if (brandTitle) brandTitle.textContent = "Einstellungen";
+    renderSettingsTheme();
+  });
+
+  backBtn?.addEventListener("click", () => {
+    if (viewSettings) viewSettings.hidden = true;
+    if (panelSensor) {
+      panelSensor.hidden = false;
+      panelSensor.classList.remove("is-entering");
+      void panelSensor.offsetWidth;
+      panelSensor.classList.add("is-entering");
+    }
+    if (backBtn) backBtn.hidden = true;
+    if (homeLink) homeLink.hidden = false;
+    if (brandTitle) brandTitle.textContent = "PTC / NTC";
+    updateAllPills();
+  });
+
+  document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      applyThemeMode(btn.getAttribute("data-theme-mode"));
+      renderSettingsTheme();
+    });
+  });
+
+  const leadInput = document.getElementById("param-lead-ohm");
+  if (leadInput) {
+    leadInput.value = String(sensorParams.leadOhm);
+    leadInput.addEventListener("input", () => {
+      sensorParams.leadOhm = clampNumber(leadInput.value, 0, 20, 0);
+      saveAppParams(SENSOR_PARAMS_KEY, sensorParams);
+      renderSensorResult(true);
+    });
+  }
+  document.getElementById("param-lead-minus")?.addEventListener("click", () => {
+    sensorParams.leadOhm = Math.max(0, Number((sensorParams.leadOhm - 0.2).toFixed(1)));
+    if (leadInput) leadInput.value = String(sensorParams.leadOhm);
+    saveAppParams(SENSOR_PARAMS_KEY, sensorParams);
+    renderSensorResult(true);
+  });
+  document.getElementById("param-lead-plus")?.addEventListener("click", () => {
+    sensorParams.leadOhm = Math.min(20, Number((sensorParams.leadOhm + 0.2).toFixed(1)));
+    if (leadInput) leadInput.value = String(sensorParams.leadOhm);
+    saveAppParams(SENSOR_PARAMS_KEY, sensorParams);
+    renderSensorResult(true);
+  });
+
+  document.querySelectorAll("#param-decimals-group [data-dec]").forEach((btn) => {
+    const dec = Number(btn.dataset.dec) === 2 ? 2 : 1;
+    btn.setAttribute("aria-pressed", String(sensorParams.tempDecimals === dec));
+    btn.addEventListener("click", () => {
+      sensorParams.tempDecimals = dec;
+      saveAppParams(SENSOR_PARAMS_KEY, sensorParams);
+      document.querySelectorAll("#param-decimals-group [data-dec]").forEach((b) => {
+        b.setAttribute("aria-pressed", String(Number(b.dataset.dec) === dec));
+      });
+      renderSensorResult(false);
+    });
+  });
+
   renderSensorSelect();
   renderSensorResult(false);
 

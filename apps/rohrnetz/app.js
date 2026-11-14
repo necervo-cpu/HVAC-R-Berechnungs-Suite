@@ -12,9 +12,17 @@ import {
   applyThemeMode,
   createNumberAnimator,
   getCurrentThemeMode,
+  loadAppParams,
   prefersReducedMotion,
+  saveAppParams,
   updateAllPills,
 } from "../../assets/js/shared.js";
+
+const ROHR_PARAMS_KEY = "hvacr-params-rohrnetz";
+const rohrParams = loadAppParams(ROHR_PARAMS_KEY, {
+  vOptMax: 0.8,
+  fittingPct: 0,
+});
 
 // Rohrmaterialien mit absoluter Wandrauhigkeit k [mm] und gängigen Nennweiten (Innendurchmesser di [mm])
 const PIPE_MATERIALS = {
@@ -208,8 +216,9 @@ function calculateAndRender(animate = true) {
   const relRoughness = mat.roughnessMm / size.diMm;
   const lambda = calcFrictionFactor(re, relRoughness);
 
-  // Druckverlust R [Pa/m] = lambda * (1 / d_i) * (rho / 2) * v²
-  const rPaM = diM > 0 && velocity > 0 ? (lambda / diM) * (fluid.rho / 2) * velocity * velocity : 0;
+  // Druckverlust R [Pa/m] = lambda * (1 / d_i) * (rho / 2) * v² (inkl. Formteil-Zuschlag)
+  const rBasePaM = diM > 0 && velocity > 0 ? (lambda / diM) * (fluid.rho / 2) * velocity * velocity : 0;
+  const rPaM = rBasePaM * (1 + rohrParams.fittingPct / 100);
   const rMbarM = rPaM / 100;
   const flowLh = flowM3h * 1000;
 
@@ -221,7 +230,7 @@ function calculateAndRender(animate = true) {
   } else if (velocity < 0.2) {
     badgeText = "Sehr langsam (< 0,2 m/s)";
     badgeState = "warn";
-  } else if (velocity <= 0.8) {
+  } else if (velocity <= rohrParams.vOptMax) {
     badgeText = "Optimal (leise)";
     badgeState = "ok";
   } else if (velocity <= 1.2) {
@@ -464,6 +473,35 @@ function init() {
       calculateAndRender(true);
     });
   });
+
+  const voptIn = document.getElementById("param-vopt-input");
+  const fitIn = document.getElementById("param-fitting-input");
+  if (voptIn) voptIn.value = String(rohrParams.vOptMax);
+  if (fitIn) fitIn.value = String(rohrParams.fittingPct);
+
+  wireStepper(
+    "param-vopt-minus",
+    "param-vopt-plus",
+    "param-vopt-input",
+    () => 0.1,
+    (val) => {
+      rohrParams.vOptMax = Math.min(1.5, Math.max(0.3, val));
+      saveAppParams(ROHR_PARAMS_KEY, rohrParams);
+      calculateAndRender(true);
+    }
+  );
+
+  wireStepper(
+    "param-fitting-minus",
+    "param-fitting-plus",
+    "param-fitting-input",
+    () => 5,
+    (val) => {
+      rohrParams.fittingPct = Math.min(100, Math.max(0, val));
+      saveAppParams(ROHR_PARAMS_KEY, rohrParams);
+      calculateAndRender(true);
+    }
+  );
 
   window.addEventListener("resize", updateAllPills);
   renderSizeChips();

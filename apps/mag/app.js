@@ -12,9 +12,17 @@ import {
   applyThemeMode,
   createNumberAnimator,
   getCurrentThemeMode,
+  loadAppParams,
   prefersReducedMotion,
+  saveAppParams,
   updateAllPills,
 } from "../../assets/js/shared.js";
+
+const MAG_PARAMS_KEY = "hvacr-params-mag";
+const magParams = loadAppParams(MAG_PARAMS_KEY, {
+  reserveBar: 0.3,
+  p0MinBar: 0.8,
+});
 
 const STANDARD_MAG_SIZES = [8, 12, 18, 25, 35, 50, 80, 100, 140, 200, 250, 300, 400, 500, 600, 800, 1000];
 
@@ -68,9 +76,8 @@ function triggerResultPop() {
 }
 
 function calculateAndRender(animate = true) {
-  // p0 = statische Höhe [bar] + 0,3 bar Dampfdruck-/Entlüftungsreserve (mind. 0,8 bar)
   const pStat = state.heightM / 10;
-  const p0 = Math.max(0.8, Number((pStat + 0.3).toFixed(2)));
+  const p0 = Math.max(magParams.p0MinBar, Number((pStat + magParams.reserveBar).toFixed(2)));
   const pa = Number((p0 + 0.3).toFixed(2));
   const pe = state.svBar <= 3.0 ? Number((state.svBar - 0.5).toFixed(2)) : Number((state.svBar * 0.9).toFixed(2));
 
@@ -270,6 +277,22 @@ function init() {
       });
       calculateAndRender(true);
     });
+  });
+
+  const resIn = document.getElementById("param-reserve-input");
+  const p0In = document.getElementById("param-p0min-input");
+  if (resIn) resIn.value = String(magParams.reserveBar);
+  if (p0In) p0In.value = String(magParams.p0MinBar);
+
+  wireStepper("param-reserve-minus", "param-reserve-plus", "param-reserve-input", 0.05, 0.1, 0.8, (v) => {
+    magParams.reserveBar = v;
+    saveAppParams(MAG_PARAMS_KEY, magParams);
+    calculateAndRender(true);
+  });
+  wireStepper("param-p0min-minus", "param-p0min-plus", "param-p0min-input", 0.1, 0.5, 1.5, (v) => {
+    magParams.p0MinBar = v;
+    saveAppParams(MAG_PARAMS_KEY, magParams);
+    calculateAndRender(true);
   });
 
   window.addEventListener("resize", updateAllPills);

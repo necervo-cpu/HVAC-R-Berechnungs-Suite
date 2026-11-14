@@ -191,6 +191,36 @@
             <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="dark" aria-checked="false">Dunkel</button>
           </div>
         </div>
+
+        <div class="field-grid field-grid--2">
+          <div class="well">
+            <div class="well-header">
+              <label class="well-label" for="param-patm-input">Luftdruck p_atm</label>
+            </div>
+            <div class="stepper-row">
+              <button type="button" class="step-btn press-btn" id="param-patm-minus" aria-label="Luftdruck verringern">−</button>
+              <div class="num-value-wrap">
+                <input id="param-patm-input" class="num-input" type="number" inputmode="decimal" step="0.01" min="0.7" max="1.1" value="1.013" aria-label="Atmosphärendruck in bar" />
+                <span class="num-unit">bar</span>
+              </div>
+              <button type="button" class="step-btn press-btn" id="param-patm-plus" aria-label="Luftdruck erhöhen">+</button>
+            </div>
+          </div>
+
+          <div class="well">
+            <div class="well-header">
+              <label class="well-label" for="param-shmax-input">SH/SC Ziel max.</label>
+            </div>
+            <div class="stepper-row">
+              <button type="button" class="step-btn press-btn" id="param-shmax-minus" aria-label="Zielwert verringern">−</button>
+              <div class="num-value-wrap">
+                <input id="param-shmax-input" class="num-input" type="number" inputmode="decimal" step="0.5" min="4" max="15" value="8" aria-label="Maximale Ziel-Überhitzung in Kelvin" />
+                <span class="num-unit">K</span>
+              </div>
+              <button type="button" class="step-btn press-btn" id="param-shmax-plus" aria-label="Zielwert erhöhen">+</button>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
 

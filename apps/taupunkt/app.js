@@ -11,9 +11,17 @@ import {
   applyThemeMode,
   createNumberAnimator,
   getCurrentThemeMode,
+  loadAppParams,
   prefersReducedMotion,
+  saveAppParams,
   updateAllPills,
 } from "../../assets/js/shared.js";
+
+const TAUPUNKT_PARAMS_KEY = "hvacr-params-taupunkt";
+const taupunktParams = loadAppParams(TAUPUNKT_PARAMS_KEY, {
+  pAtmHpa: 1013,
+  safetyMarginK: 2.0,
+});
 
 const state = {
   mode: "dewpoint", // 'dewpoint' | 'condensation'
@@ -71,8 +79,8 @@ function calcMoistAir(tempC, rhPct) {
   // Absolute Feuchte [g/m³] über ideale Gasgleichung für Wasserdampf
   const absHumidityGm3 = (216.7 * eHpa) / (tempC + 273.15);
 
-  // Feuchtegrad x [g/kg] bei Standarddruck 1013,25 hPa
-  const pAtmHpa = 1013.25;
+  // Feuchtegrad x [g/kg] bei einstellbarem Luftdruck
+  const pAtmHpa = taupunktParams.pAtmHpa || 1013;
   const xGKg = 622 * (eHpa / Math.max(1, pAtmHpa - eHpa));
 
   // Spezifische Enthalpie h [kJ/kg]
@@ -126,11 +134,11 @@ function calculateAndRender(animate = true) {
     if (marginK <= 0) {
       badgeText = "Tauwasserbildung!";
       badgeState = "bad";
-    } else if (marginK < 2) {
-      badgeText = "Kritisch (< 2 K Reserve)";
+    } else if (marginK < taupunktParams.safetyMarginK) {
+      badgeText = `Kritisch (< ${formatDe(taupunktParams.safetyMarginK, 1)} K Reserve)`;
       badgeState = "warn";
     } else {
-      badgeText = "Sicher (≥ 2 K Reserve)";
+      badgeText = `Sicher (≥ ${formatDe(taupunktParams.safetyMarginK, 1)} K Reserve)`;
       badgeState = "ok";
     }
   }
@@ -262,6 +270,22 @@ function init() {
       });
       calculateAndRender(true);
     });
+  });
+
+  const pAtmIn = document.getElementById("param-patm-hpa-input");
+  const marginIn = document.getElementById("param-margin-input");
+  if (pAtmIn) pAtmIn.value = String(taupunktParams.pAtmHpa);
+  if (marginIn) marginIn.value = String(taupunktParams.safetyMarginK);
+
+  wireStepper("param-patm-hpa-minus", "param-patm-hpa-plus", "param-patm-hpa-input", 5, 700, 1100, (v) => {
+    taupunktParams.pAtmHpa = v;
+    saveAppParams(TAUPUNKT_PARAMS_KEY, taupunktParams);
+    calculateAndRender(true);
+  });
+  wireStepper("param-margin-minus", "param-margin-plus", "param-margin-input", 0.5, 0.5, 6, (v) => {
+    taupunktParams.safetyMarginK = v;
+    saveAppParams(TAUPUNKT_PARAMS_KEY, taupunktParams);
+    calculateAndRender(true);
   });
 
   window.addEventListener("resize", updateAllPills);

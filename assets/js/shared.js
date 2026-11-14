@@ -100,6 +100,26 @@ export function updateAllPills() {
   document.querySelectorAll(".segmented").forEach((seg) => updateSegmentedPill(seg));
 }
 
+export function loadAppParams(storageKey, defaults) {
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return { ...defaults };
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return { ...defaults };
+    return { ...defaults, ...parsed };
+  } catch {
+    return { ...defaults };
+  }
+}
+
+export function saveAppParams(storageKey, params) {
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(params));
+  } catch {
+    // Im iOS Safari Privatmodus wird nur der Arbeitsspeicher verwendet.
+  }
+}
+
 /**
  * Erzeugt einen wiederverwendbaren Zahlen-Animator (Count-Up / Count-Down) für Live-Ergebnisse.
  * Respektiert prefers-reduced-motion und springt bei Kontext-/Einheitenwechsel direkt.
@@ -161,4 +181,54 @@ export function createNumberAnimator({ duration = 220, epsilon = 0.001, render }
 // Theme beim Laden sofort anwenden, um Flackern (FOUC) zu vermeiden
 if (typeof document !== "undefined") {
   applyThemeMode(getStoredThemeMode());
+}
+
+/**
+ * Rendert die zentrale untere Navigationsleiste (Liquid Glass Tab-Bar) auf allen Seiten.
+ */
+function renderBottomNav() {
+  if (typeof document === "undefined" || !document.body) return;
+  if (document.getElementById("bottom-nav")) return;
+
+  const path = window.location.pathname;
+  const isSubApp = path.includes("/apps/");
+  const base = isSubApp ? "../../" : "./";
+
+  const items = [
+    { id: "home", label: "Übersicht", icon: "grid_view", href: `${base}index.html`, match: !isSubApp },
+    { id: "sensor", label: "Sensoren", icon: "thermostat", href: `${base}apps/sensor/index.html`, match: path.includes("/apps/sensor/") },
+    { id: "waerme", label: "Leistung", icon: "local_fire_department", href: `${base}apps/waermeleistung/index.html`, match: path.includes("/apps/waermeleistung/") },
+    { id: "rohrnetz", label: "Rohrnetz", icon: "plumbing", href: `${base}apps/rohrnetz/index.html`, match: path.includes("/apps/rohrnetz/") },
+    { id: "kaelte", label: "Kälte", icon: "ac_unit", href: `${base}apps/kaeltemittel/index.html`, match: path.includes("/apps/kaeltemittel/") },
+  ];
+
+  const nav = document.createElement("nav");
+  nav.id = "bottom-nav";
+  nav.className = "bottom-nav";
+  nav.setAttribute("aria-label", "Schnellnavigation");
+
+  nav.innerHTML = items
+    .map(
+      (item) => `
+        <a
+          href="${item.href}"
+          class="bottom-nav-item press-btn"
+          ${item.match ? 'aria-current="page"' : ""}
+        >
+          <span class="ag-icon ag-icon--sm" aria-hidden="true">${item.icon}</span>
+          <span class="bottom-nav-label">${item.label}</span>
+        </a>
+      `
+    )
+    .join("");
+
+  document.body.appendChild(nav);
+}
+
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", renderBottomNav, { once: true });
+  } else {
+    renderBottomNav();
+  }
 }

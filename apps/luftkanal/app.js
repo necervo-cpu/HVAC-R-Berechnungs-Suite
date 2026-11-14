@@ -11,9 +11,17 @@ import {
   applyThemeMode,
   createNumberAnimator,
   getCurrentThemeMode,
+  loadAppParams,
   prefersReducedMotion,
+  saveAppParams,
   updateAllPills,
 } from "../../assets/js/shared.js";
+
+const LUFT_PARAMS_KEY = "hvacr-params-luftkanal";
+const luftParams = loadAppParams(LUFT_PARAMS_KEY, {
+  airRho: 1.204,
+  vQuietMax: 4.0,
+});
 
 const AIR_RHO = 1.204; // kg/m³ bei 20 °C
 const AIR_CP = 1.005; // kJ/(kg·K)
@@ -106,11 +114,11 @@ function calculateAndRender(animate = true) {
     if (v <= 0) {
       badgeText = "Kein Luftstrom";
       badgeState = "warn";
-    } else if (v <= 4.0) {
-      badgeText = "Leise (≤ 4 m/s)";
+    } else if (v <= luftParams.vQuietMax) {
+      badgeText = `Leise (≤ ${formatDe(luftParams.vQuietMax, 1)} m/s)`;
       badgeState = "ok";
     } else if (v <= 6.0) {
-      badgeText = "Verteilkanal (4–6 m/s)";
+      badgeText = `Verteilkanal (${formatDe(luftParams.vQuietMax, 1)}–6 m/s)`;
       badgeState = "warn";
     } else {
       badgeText = "Zu schnell / laut (> 6 m/s)";
@@ -118,7 +126,7 @@ function calculateAndRender(animate = true) {
     }
   } else {
     const nRate = state.roomVolM3 > 0 ? state.flowM3h / state.roomVolM3 : 0;
-    const qKw = flowM3s * AIR_RHO * AIR_CP * state.airDtK;
+    const qKw = flowM3s * luftParams.airRho * AIR_CP * state.airDtK;
     numericValue = nRate;
     label = "Luftwechselrate n";
     unit = "1/h";
@@ -294,6 +302,22 @@ function init() {
   });
   wireStepper("air-dt-minus", "air-dt-plus", "air-dt-input", 1, 0, 60, (v) => {
     state.airDtK = v;
+    calculateAndRender(true);
+  });
+
+  const rhoIn = document.getElementById("param-air-rho-input");
+  const vqIn = document.getElementById("param-vquiet-input");
+  if (rhoIn) rhoIn.value = String(luftParams.airRho);
+  if (vqIn) vqIn.value = String(luftParams.vQuietMax);
+
+  wireStepper("param-air-rho-minus", "param-air-rho-plus", "param-air-rho-input", 0.01, 0.9, 1.4, (v) => {
+    luftParams.airRho = v;
+    saveAppParams(LUFT_PARAMS_KEY, luftParams);
+    calculateAndRender(true);
+  });
+  wireStepper("param-vquiet-minus", "param-vquiet-plus", "param-vquiet-input", 0.5, 2, 8, (v) => {
+    luftParams.vQuietMax = v;
+    saveAppParams(LUFT_PARAMS_KEY, luftParams);
     calculateAndRender(true);
   });
 
