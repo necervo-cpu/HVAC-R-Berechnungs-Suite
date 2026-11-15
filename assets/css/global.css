@@ -40,11 +40,11 @@
   --segmented-active-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   
   /* Dezenter Ambient-Hintergrund (Dark Mode: Edler Tiefenschimmer auf #000000) */
-  --ambient-bg: radial-gradient(circle at 50% 20%, rgba(10, 132, 255, 0.08) 0%, transparent 60%);
-  --ambient-canvas-opacity: 0.8;
-  --ambient-opacity: 0.04;
-  --ambient-purple-blob: rgba(10, 132, 255, 0.45);
-  --ambient-purple-opacity: 0.03;
+  --ambient-bg: radial-gradient(circle at 50% 20%, rgba(10, 132, 255, 0.15) 0%, transparent 65%);
+  --ambient-canvas-opacity: 0.85;
+  --ambient-opacity: 0.06;
+  --ambient-purple-blob: rgba(10, 132, 255, 0.50);
+  --ambient-purple-opacity: 0.05;
   --glass-saturate: 125%;
   --chart-grid: rgba(255, 255, 255, 0.06);
   --metric-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
@@ -107,10 +107,10 @@
   --segmented-active-bg: #FFFFFF;
   --segmented-active-shadow: 0 2px 10px rgba(15, 23, 42, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.90);
   
-  /* Dezenter Ambient-Hintergrund (Light Mode: Weicher, heller Pastellverlauf) */
-  --ambient-bg: radial-gradient(circle at 50% 18%, rgba(0, 113, 227, 0.08) 0%, rgba(229, 229, 234, 0.45) 50%, transparent 80%);
-  --ambient-canvas-opacity: 0.8;
-  --ambient-opacity: 0.12;
+  /* Dezenter Ambient-Hintergrund (Light Mode: Weicher, tieferer Pastellverlauf) */
+  --ambient-bg: radial-gradient(circle at 50% 18%, rgba(0, 113, 227, 0.14) 0%, rgba(229, 229, 234, 0.55) 50%, transparent 85%);
+  --ambient-canvas-opacity: 0.85;
+  --ambient-opacity: 0.16;
   --ambient-purple-blob: var(--system-purple);
   --ambient-purple-opacity: var(--ambient-opacity);
   --glass-saturate: 180%;
