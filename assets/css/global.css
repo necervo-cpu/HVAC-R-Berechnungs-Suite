@@ -36,8 +36,9 @@
   --surface-inner-bg: rgba(54, 54, 58, 0.65);
   --surface-inner-hover: rgba(72, 72, 78, 0.75);
   --surface-inner-border: rgba(255, 255, 255, 0.08);
-  --segmented-active-bg: rgba(90, 90, 96, 0.85);
-  --segmented-active-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  --segmented-active-bg: rgba(90, 90, 96, 0.90);
+  --segmented-active-border: rgba(255, 255, 255, 0.20);
+  --segmented-active-shadow: none;
   
   /* Dezenter Ambient-Hintergrund (Dark Mode: Edler Tiefenschimmer auf #000000) */
   --ambient-bg: radial-gradient(circle at 50% 20%, rgba(10, 132, 255, 0.15) 0%, transparent 65%);
@@ -105,7 +106,8 @@
   --surface-inner-hover: rgba(118, 118, 128, 0.18);
   --surface-inner-border: rgba(60, 60, 67, 0.12);
   --segmented-active-bg: #FFFFFF;
-  --segmented-active-shadow: 0 2px 10px rgba(15, 23, 42, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.90);
+  --segmented-active-border: rgba(60, 60, 67, 0.18);
+  --segmented-active-shadow: none;
   
   /* Dezenter Ambient-Hintergrund (Light Mode: Weicher, tieferer Pastellverlauf) */
   --ambient-bg: radial-gradient(circle at 50% 18%, rgba(0, 113, 227, 0.14) 0%, rgba(229, 229, 234, 0.55) 50%, transparent 85%);
@@ -477,19 +479,20 @@ body:not(:has(.ambient-canvas))::before {
   justify-content: center;
   background: var(--surface-inner-bg);
   border: 1px solid var(--surface-inner-border);
-  transition: transform 0.2s var(--ease-spring), background 0.2s ease, border-color 0.2s ease;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
 }
 
 .icon-btn:hover,
 .settings-btn:hover {
   background: var(--surface-inner-hover);
   border-color: var(--system-cyan-border);
-  transform: scale(1.04);
 }
 
 .icon-btn:active,
 .settings-btn:active {
-  transform: scale(0.96);
+  background: var(--surface-inner-hover);
+  filter: brightness(0.92);
 }
 
 .back-btn {
@@ -878,7 +881,8 @@ body:not(:has(.ambient-canvas))::before {
 
 .copy-result-btn:active,
 .step-btn:active {
-  transform: scale(0.95);
+  background: var(--surface-inner-hover);
+  filter: brightness(0.92);
 }
 
 /* Apple HIG Segmented Controls (Blaupause + gleitende Pill) */
@@ -894,7 +898,7 @@ body:not(:has(.ambient-canvas))::before {
 .segmented-option {
   min-height: 44px;
   min-width: 44px;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--text-secondary);
   font-family: var(--font-sans);
@@ -906,13 +910,14 @@ body:not(:has(.ambient-canvas))::before {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  transition: background 0.25s var(--ease-spring), color 0.2s ease, box-shadow 0.25s var(--ease-spring);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .segmented-option.active {
   background: var(--segmented-active-bg);
   color: var(--text-primary);
-  box-shadow: var(--segmented-active-shadow);
+  border-color: var(--segmented-active-border);
+  box-shadow: none;
 }
 
 .segmented {
@@ -939,7 +944,8 @@ body:not(:has(.ambient-canvas))::before {
   bottom: 3px;
   border-radius: var(--radius-pill);
   background: var(--segmented-active-bg);
-  box-shadow: var(--segmented-active-shadow);
+  border: 1px solid var(--segmented-active-border);
+  box-shadow: none;
   transition: transform 0.25s var(--ease-spring), width 0.25s var(--ease-spring);
   pointer-events: none;
   z-index: 0;
@@ -989,7 +995,7 @@ body:not(:has(.ambient-canvas))::before {
   min-height: 44px;
   min-width: 44px;
   padding: 0.25rem 0.5rem;
-  border: 0;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--text-secondary);
   font-family: var(--font-sans);
@@ -997,13 +1003,14 @@ body:not(:has(.ambient-canvas))::before {
   font-weight: 600;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: background 0.25s var(--ease-spring), color 0.2s ease, box-shadow 0.25s var(--ease-spring);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .settings-seg-btn[aria-checked="true"] {
   background: var(--segmented-active-bg);
   color: var(--text-primary);
-  box-shadow: var(--segmented-active-shadow);
+  border-color: var(--segmented-active-border);
+  box-shadow: none;
 }
 
 /* Chips (80/15/5-Regel: Cyan Glass-Tint statt vollflächig gesättigter Box) */
@@ -1262,8 +1269,8 @@ body:not(:has(.ambient-canvas))::before {
   width: 100%;
   padding: 0 1.25rem;
   border-radius: var(--radius-control);
-  border: 1px solid var(--system-blue-border);
-  background: linear-gradient(135deg, var(--system-blue) 0%, color-mix(in srgb, var(--system-blue) 82%, #000000) 100%);
+  border: 1px solid var(--system-blue);
+  background: var(--system-blue);
   color: #FFFFFF;
   font-family: var(--font-sans);
   font-size: var(--text-body);
@@ -1273,19 +1280,18 @@ body:not(:has(.ambient-canvas))::before {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 8px 20px var(--system-blue-border), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  transition: transform 0.2s var(--ease-spring), filter 0.2s ease;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
 }
 
 .btn-primary:hover,
 .update-check-btn:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
+  filter: brightness(1.08);
 }
 
 .btn-primary:active,
 .update-check-btn:active {
-  transform: scale(0.98);
+  filter: brightness(0.92);
 }
 
 .update-check-btn--secondary {
