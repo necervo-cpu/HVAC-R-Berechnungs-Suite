@@ -234,21 +234,7 @@ body {
   text-rendering: optimizeLegibility;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   padding-bottom: calc(32px + env(safe-area-inset-bottom));
-  animation: page-fade-in 0.15s ease both;
-  transition: background-color 0.35s var(--ease-spring), color 0.25s ease, opacity 0.15s ease;
-}
-
-@keyframes page-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-html.page-leaving body {
-  opacity: 0;
+  transition: background-color 0.35s var(--ease-spring), color 0.25s ease;
 }
 
 .numeric,
@@ -301,27 +287,33 @@ textarea {
 .ambient-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(140px);
   opacity: var(--ambient-opacity);
-  transition: opacity 0.35s ease, background-color 0.35s ease;
-  will-change: transform;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
 }
 
 .ambient-blob--cyan {
-  width: 420px;
-  height: 420px;
-  background: var(--system-cyan);
-  top: -80px;
-  left: -100px;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, var(--system-cyan) 0%, transparent 70%);
+  top: -120px;
+  left: -140px;
 }
 
 .ambient-blob--purple {
-  width: 480px;
-  height: 480px;
-  background: var(--ambient-purple-blob, rgba(10, 132, 255, 0.45));
+  width: 560px;
+  height: 560px;
+  background: radial-gradient(circle, var(--ambient-purple-blob, rgba(10, 132, 255, 0.45)) 0%, transparent 70%);
   opacity: var(--ambient-purple-opacity, 0.04);
-  bottom: 8%;
-  right: -120px;
+  bottom: 4%;
+  right: -140px;
+}
+
+@media (max-width: 767px) {
+  .liquid-glass {
+    backdrop-filter: blur(16px) saturate(var(--glass-saturate, 125%));
+    -webkit-backdrop-filter: blur(16px) saturate(var(--glass-saturate, 125%));
+  }
 }
 
 /* ==========================================================================

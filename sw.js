@@ -8,7 +8,7 @@
  *   bei Offline-Betrieb dient der Cache als sicherer Fallback.
  */
 
-const CACHE_NAME = "hvacr-cache-v1.2.5";
+const CACHE_NAME = "hvacr-cache-v1.2.6";
 
 const CORE_ASSETS = [
   "./",
@@ -38,7 +38,6 @@ const SUB_APP_ASSETS = [
   "./apps/luftkanal/app.js",
 ];
 
-const ALL_ASSETS = [...CORE_ASSETS, ...SUB_APP_ASSETS];
 let subAppsPrefetched = false;
 
 async function prefetchSubAppsInBackground() {
@@ -47,16 +46,20 @@ async function prefetchSubAppsInBackground() {
 
   try {
     const cache = await caches.open(CACHE_NAME);
-    await Promise.allSettled(
-      SUB_APP_ASSETS.map(async (asset) => {
-        const existing = await cache.match(asset);
-        if (existing) return;
-        const response = await fetch(asset, { cache: "no-cache" });
-        if (response.ok) {
-          await cache.put(asset, response);
+    // Sequenziell im Leerlauf nachladen, damit auf iOS niemals die 6-Connection-Grenze blockiert wird.
+    for (const asset of SUB_APP_ASSETS) {
+      const existing = await cache.match(asset);
+      if (!existing) {
+        try {
+          const response = await fetch(asset);
+          if (response.ok) {
+            await cache.put(asset, response);
+          }
+        } catch {
+          // Einzelne Fehler beim Hintergrund-Prefetch ignorieren
         }
-      })
-    );
+      }
+    }
   } catch {
     subAppsPrefetched = false;
   }
@@ -66,10 +69,10 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      // Cache-Busting beim Pre-Cache, damit keine veralteten HTTP-Cache-Kopien gespeichert werden.
+      // Nur die 7 kleinen Core-Dateien beim Installieren vorab cachen (kein 22-Request-Stau auf iOS).
       await Promise.allSettled(
-        ALL_ASSETS.map(async (asset) => {
-          const response = await fetch(asset, { cache: "reload" });
+        CORE_ASSETS.map(async (asset) => {
+          const response = await fetch(asset);
           if (response.ok) {
             await cache.put(asset, response);
           }
@@ -97,6 +100,8 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
+  } else if (event.data && event.data.type === "PREFETCH_SUB_APPS") {
+    event.waitUntil(prefetchSubAppsInBackground());
   }
 });
 
@@ -132,15 +137,6 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.endsWith("/version.json")) {
     event.respondWith(fetch(request, { cache: "no-store" }));
     return;
-  }
-
-  // Beim Start der Hauptseite (index.html) alle Unterseiten im Hintergrund in den Cache ziehen.
-  if (
-    request.mode === "navigate" &&
-    (url.pathname.endsWith("/") || url.pathname.endsWith("/index.html")) &&
-    !url.pathname.includes("/apps/")
-  ) {
-    event.waitUntil(prefetchSubAppsInBackground());
   }
 
   // Stale-While-Revalidate: Sofortige Auslieferung aus dem Cache (0 ms Wartezeit auf iOS),

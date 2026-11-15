@@ -9,7 +9,7 @@
  *   try/catch-Kapselung von localStorage für den iOS Safari Privatmodus.
  */
 
-export const APP_VERSION = "1.2.5";
+export const APP_VERSION = "1.2.6";
 export const BUILD_DATE = "2026-11-15";
 
 export const THEME_STORAGE_KEY = "ag-theme";
@@ -612,49 +612,59 @@ export async function checkForAppUpdate({ manual = false } = {}) {
 }
 
 function initServiceWorkerAndUpdates() {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker
-      .register(SW_URL, { scope: ROOT_URL.href, updateViaCache: "none" })
-      .then((reg) => {
-        swRegistration = reg;
-        if (reg.waiting) {
-          showUpdateBanner("");
-        }
-        reg.addEventListener("updatefound", () => {
-          const installing = reg.installing;
-          if (!installing) return;
-          installing.addEventListener("statechange", () => {
-            if (installing.state === "installed" && navigator.serviceWorker.controller) {
-              showUpdateBanner("");
-            }
+  const startBackgroundTasks = () => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register(SW_URL, { scope: ROOT_URL.href, updateViaCache: "none" })
+        .then((reg) => {
+          swRegistration = reg;
+          if (reg.waiting) {
+            showUpdateBanner("");
+          }
+          reg.addEventListener("updatefound", () => {
+            const installing = reg.installing;
+            if (!installing) return;
+            installing.addEventListener("statechange", () => {
+              if (installing.state === "installed" && navigator.serviceWorker.controller) {
+                showUpdateBanner("");
+              }
+            });
           });
+
+          // Unterseiten erst 3 Sekunden nach komplettem Seitenaufbau gedrosselt im Hintergrund vorcachen
+          window.setTimeout(() => {
+            const activeWorker = reg.active || navigator.serviceWorker.controller;
+            if (activeWorker) {
+              activeWorker.postMessage({ type: "PREFETCH_SUB_APPS" });
+            }
+          }, 3000);
+        })
+        .catch(() => {
+          // Fallback: Versionsprüfung über version.json funktioniert auch ohne Service Worker.
         });
-      })
-      .catch(() => {
-        // Fallback: Versionsprüfung über version.json funktioniert auch ohne Service Worker.
+
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!isReloading) {
+          isReloading = true;
+          window.location.reload();
+        }
       });
+    }
 
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (!isReloading) {
-        isReloading = true;
-        window.location.reload();
-      }
-    });
-  }
-
-  const runCheck = () => {
-    void checkForAppUpdate();
+    window.setTimeout(() => {
+      void checkForAppUpdate();
+    }, 1500);
   };
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", runCheck, { once: true });
+  if (document.readyState === "complete") {
+    startBackgroundTasks();
   } else {
-    runCheck();
+    window.addEventListener("load", startBackgroundTasks, { once: true });
   }
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-      runCheck();
+      void checkForAppUpdate();
     }
   });
 }
@@ -693,41 +703,6 @@ export function initThemeControls() {
   }
 }
 
-function initPageTransitions() {
-  window.addEventListener("pageshow", () => {
-    document.documentElement.classList.remove("page-leaving");
-  });
-
-  document.addEventListener("click", (event) => {
-    if (event.defaultPrevented || event.button !== 0) return;
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-    const link = event.target.closest("a[href]");
-    if (!link) return;
-    if (link.target === "_blank" || link.hasAttribute("download")) return;
-
-    const rawHref = link.getAttribute("href");
-    if (!rawHref || rawHref.startsWith("#")) return;
-
-    let targetUrl;
-    try {
-      targetUrl = new URL(link.href, window.location.href);
-    } catch {
-      return;
-    }
-
-    if (targetUrl.origin !== window.location.origin) return;
-    if (targetUrl.href === window.location.href) return;
-    if (prefersReducedMotion()) return;
-
-    event.preventDefault();
-    document.documentElement.classList.add("page-leaving");
-    window.setTimeout(() => {
-      window.location.href = targetUrl.href;
-    }, 120);
-  });
-}
-
 if (typeof document !== "undefined") {
   applyThemeMode(getStoredThemeMode());
   initNumInputSizingFallback();
@@ -735,7 +710,6 @@ if (typeof document !== "undefined") {
   const initDomFeatures = () => {
     initThemeControls();
     initInputErgonomics();
-    initPageTransitions();
   };
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initDomFeatures, { once: true });

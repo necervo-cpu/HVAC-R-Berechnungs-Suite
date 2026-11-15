@@ -115,6 +115,16 @@ function prefetchAppHref(href) {
   document.head.appendChild(link);
 }
 
+function wireTilePrefetch(container) {
+  if (!container) return;
+  container.querySelectorAll("a.hub-tile[href]").forEach((tile) => {
+    if (tile.dataset.prefetchBound) return;
+    tile.dataset.prefetchBound = "true";
+    const href = tile.getAttribute("href");
+    const triggerPrefetch = () => prefetchAppHref(href);
+    tile.addEventListener("pointerenter", triggerPrefetch, { passive: true });
+  });
+}
 function renderSettingsTheme() {
   const mode = getCurrentThemeMode();
   const group = document.getElementById("theme-mode-group");
@@ -194,12 +204,7 @@ function renderHubGrid() {
     })
     .join("");
 
-  grid.querySelectorAll("a.hub-tile[href]").forEach((tile) => {
-    const href = tile.getAttribute("href");
-    const triggerPrefetch = () => prefetchAppHref(href);
-    tile.addEventListener("pointerenter", triggerPrefetch, { passive: true });
-    tile.addEventListener("touchstart", triggerPrefetch, { passive: true });
-  });
+  wireTilePrefetch(grid);
 
   grid.querySelectorAll('button.hub-tile[data-planned="true"]').forEach((tile) => {
     tile.addEventListener("click", () => {
@@ -307,7 +312,12 @@ function init() {
   if (buildDateLabel) buildDateLabel.textContent = BUILD_DATE;
   wireEvents();
   renderSettingsTheme();
-  renderHubGrid();
+  const grid = document.getElementById("hub-grid");
+  if (grid && grid.children.length > 0 && !state.query) {
+    wireTilePrefetch(grid);
+  } else {
+    renderHubGrid();
+  }
 }
 
 if (document.readyState === "loading") {

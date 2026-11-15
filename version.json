@@ -1,5 +1,5 @@
 {
-  "version": "1.2.5",
+  "version": "1.2.6",
   "buildDate": "2026-11-15",
-  "changelog": "Restlose Entfernung der .floating-nav aus dem gesamten Projekt & sauberer Safe-Area-Seitenabschluss"
+  "changelog": "iOS-Startseiten-Turbo: Statisches Dashboard-HTML, radial-gradient statt blur(140px), verzögertes Service-Worker-Idle-Pre-Caching"
 }
