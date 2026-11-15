@@ -8,7 +8,7 @@
  *   bei Offline-Betrieb dient der Cache als sicherer Fallback.
  */
 
-const CACHE_NAME = "hvacr-cache-v1.2.1";
+const CACHE_NAME = "hvacr-cache-v1.2.2";
 
 const CORE_ASSETS = [
   "./",
@@ -106,28 +106,37 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Network-First mit no-cache: Bei Empfang immer aktuelle Dateien, offline Cache-Fallback.
+  // Stale-While-Revalidate: Sofortige Auslieferung aus dem Cache (0 ms Wartezeit auf iOS),
+  // während im Hintergrund still auf neue Dateien geprüft und der Cache aktualisiert wird.
   event.respondWith(
-    fetch(request, { cache: "no-cache" })
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.ok && networkResponse.type === "basic") {
-          const copy = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        }
-        return networkResponse;
-      })
-      .catch(async () => {
-        const cached = await caches.match(request);
-        if (cached) return cached;
-        if (request.mode === "navigate") {
-          const fallback = await caches.match("./index.html");
-          if (fallback) return fallback;
-        }
-        return new Response("Offline – Inhalt nicht im Cache.", {
-          status: 503,
-          statusText: "Service Unavailable",
-          headers: { "Content-Type": "text/plain; charset=utf-8" },
+    caches.match(request).then((cached) => {
+      const networkFetch = fetch(request, { cache: "no-cache" })
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.ok && networkResponse.type === "basic") {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          if (cached) return cached;
+          if (request.mode === "navigate") {
+            const fallback = await caches.match("./index.html");
+            if (fallback) return fallback;
+          }
+          return new Response("Offline – Inhalt nicht im Cache.", {
+            status: 503,
+            statusText: "Service Unavailable",
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
+          });
         });
-      })
+
+      if (cached) {
+        event.waitUntil(networkFetch.catch(() => {}));
+        return cached;
+      }
+
+      return networkFetch;
+    })
   );
 });

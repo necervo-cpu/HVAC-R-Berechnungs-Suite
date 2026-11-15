@@ -17,7 +17,15 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0..200&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0..200&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <script>
       (function () {
         var root = document.documentElement;
@@ -29,14 +37,10 @@
         var activeTheme =
           savedTheme === "light" || savedTheme === "dark" ? savedTheme : systemPrefersLight ? "light" : "dark";
         root.setAttribute("data-theme", activeTheme);
-        root.style.transform = "translateZ(0)";
-        void root.offsetHeight;
-        root.style.transform = "";
-        window.scrollTo(0, 0);
       })();
     </script>
-    <script type="module" src="../../assets/js/shared.js" blocking="render"></script>
     <link rel="stylesheet" href="../../assets/css/global.css" />
+    <script type="module" src="../../assets/js/shared.js"></script>
   </head>
   <body>
     <div class="ambient-canvas" aria-hidden="true">
@@ -259,25 +263,6 @@
         </div>
       </section>
     </main>
-
-    <nav class="liquid-glass floating-nav no-print" aria-label="App-Navigation">
-      <a href="../../index.html" class="nav-item" aria-label="Dashboard">
-        <span class="material-symbols-rounded" aria-hidden="true">grid_view</span>
-        <span class="nav-label">Dashboard</span>
-      </a>
-      <button type="button" class="nav-item active" data-nav-action="calc" aria-label="Rechner">
-        <span class="material-symbols-rounded is-active" aria-hidden="true">ac_unit</span>
-        <span class="nav-label">Rechner</span>
-      </button>
-      <button type="button" class="nav-item" data-nav-action="settings" aria-label="Parameter">
-        <span class="material-symbols-rounded" aria-hidden="true">tune</span>
-        <span class="nav-label">Parameter</span>
-      </button>
-      <button type="button" class="nav-item" data-nav-action="print" aria-label="Drucken">
-        <span class="material-symbols-rounded" aria-hidden="true">print</span>
-        <span class="nav-label">PDF / Druck</span>
-      </button>
-    </nav>
 
     <div id="toast-pill" class="toast-pill" role="status" aria-live="polite" data-visible="false"></div>
     <script type="module" src="./app.js"></script>

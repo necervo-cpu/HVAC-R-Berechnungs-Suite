@@ -18,7 +18,15 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0..200&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0..200&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <script>
       (function () {
         var root = document.documentElement;
@@ -30,15 +38,11 @@
         var activeTheme =
           savedTheme === "light" || savedTheme === "dark" ? savedTheme : systemPrefersLight ? "light" : "dark";
         root.setAttribute("data-theme", activeTheme);
-        root.style.transform = "translateZ(0)";
-        void root.offsetHeight;
-        root.style.transform = "";
-        window.scrollTo(0, 0);
       })();
     </script>
-    <script type="module" src="./assets/js/shared.js" blocking="render"></script>
     <link rel="stylesheet" href="./assets/css/global.css" />
-    <script type="module" src="./assets/js/dashboard.js" blocking="render"></script>
+    <script type="module" src="./assets/js/shared.js"></script>
+    <script type="module" src="./assets/js/dashboard.js"></script>
   </head>
   <body>
     <div class="ambient-canvas" aria-hidden="true">
@@ -148,7 +152,7 @@
           <div style="display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; font-size: var(--text-sub);">
             <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
               <span>Installierte Version:</span>
-              <strong id="app-version-label" class="numeric" style="font-family: var(--font-mono); color: var(--text-primary);">v1.2.1</strong>
+              <strong id="app-version-label" class="numeric" style="font-family: var(--font-mono); color: var(--text-primary);">v1.2.2</strong>
             </div>
             <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
               <span>Build-Datum:</span>
