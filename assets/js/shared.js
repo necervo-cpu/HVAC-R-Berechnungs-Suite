@@ -1,17 +1,18 @@
 /**
  * Modul: Globale Hilfsfunktionen & 3-Stufen-Theme-Steuerung (assets/js/shared.js)
- * Zweck: Stellt allen Seiten (Dashboard & Einzel-Apps) die FOUC-freie Theme-Initialisierung,
- *   UI-Helfer für Segmented-Pills, Toast-Meldungen und Reduced-Motion-Abfrage bereit.
- * Verantwortlichkeit: Theme-Persistenz ('auto' | 'light' | 'dark'), Statusbar-Meta-Sync
- *   und gemeinsame DOM-Interaktionshelfer.
+ * Zweck: Stellt allen Seiten (Dashboard & Einzel-Apps) die FOUC-freie Dual-Theme-Initialisierung
+ *   ('dark' #000000 | 'light' #F2F2F7 via ag-theme & prefers-color-scheme), UI-Helfer für
+ *   Segmented-Pills, Toast-Meldungen und Reduced-Motion-Abfrage bereit.
+ * Verantwortlichkeit: Dual-Theme-Persistenz ('ag-theme'), Header-Umschalter (#themeToggleBtn),
+ *   Statusbar-Meta-Sync und gemeinsame DOM-Interaktionshelfer.
  * Sicherheits- & Stabilitätsrelevanz: Whitelist-Validierung für Theme-Werte und
  *   try/catch-Kapselung von localStorage für den iOS Safari Privatmodus.
  */
 
 export const APP_VERSION = "1.1.0";
 
-const THEME_STORAGE_KEY = "hvacr-theme-mode";
-const TOP_LIGHT = "#000000";
+export const THEME_STORAGE_KEY = "ag-theme";
+const TOP_LIGHT = "#F2F2F7";
 const TOP_DARK = "#000000";
 const ROOT_URL = new URL("../../", import.meta.url);
 const SW_URL = new URL("sw.js", ROOT_URL).href;
@@ -22,55 +23,96 @@ let swRegistration = null;
 let updateDismissed = false;
 let isReloading = false;
 let lastCheckTimestamp = 0;
+let memoryThemeOverride = null;
 
 export function isValidThemeMode(value) {
   return value === "auto" || value === "light" || value === "dark";
 }
 
+export function resolveEffectiveTheme(mode) {
+  if (mode === "light" || mode === "dark") return mode;
+  if (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-color-scheme: light)").matches
+  ) {
+    return "light";
+  }
+  return "dark";
+}
+
 export function getStoredThemeMode() {
   try {
     const raw = window.localStorage.getItem(THEME_STORAGE_KEY);
-    return isValidThemeMode(raw) ? raw : "auto";
-  } catch {
+    if (raw === "light" || raw === "dark") {
+      return raw;
+    }
     return "auto";
+  } catch {
+    return memoryThemeOverride || "auto";
   }
 }
 
-function syncStatusBarMeta(mode) {
-  const prefersDark =
-    typeof window !== "undefined" &&
-    window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const isDark = mode === "dark" || (mode === "auto" && prefersDark);
-  const targetColor = isDark ? TOP_DARK : TOP_LIGHT;
+function syncStatusBarMeta(effectiveTheme) {
+  const effective = resolveEffectiveTheme(effectiveTheme);
+  const targetColor = effective === "dark" ? TOP_DARK : TOP_LIGHT;
 
   document.querySelectorAll('meta[name="theme-color"]').forEach((tag) => {
     tag.setAttribute("content", targetColor);
   });
 }
 
+function syncThemeUI(safeMode, effective) {
+  if (typeof document === "undefined") return;
+  const toggleIcon = document.getElementById("themeToggleIcon");
+  if (toggleIcon) {
+    toggleIcon.textContent = effective === "dark" ? "light_mode" : "dark_mode";
+  }
+  const toggleBtn = document.getElementById("themeToggleBtn");
+  if (toggleBtn) {
+    const label = effective === "dark" ? "Hellmodus aktivieren" : "Dunkelmodus aktivieren";
+    toggleBtn.setAttribute("aria-label", label);
+    toggleBtn.setAttribute("title", label);
+  }
+  const modeGroup = document.getElementById("theme-mode-group");
+  if (modeGroup) {
+    modeGroup.querySelectorAll("[data-theme-mode]").forEach((btn) => {
+      btn.setAttribute("aria-checked", String(btn.dataset.themeMode === safeMode));
+    });
+  }
+}
+
 export function applyThemeMode(mode) {
   const safeMode = isValidThemeMode(mode) ? mode : "auto";
+  const effective = resolveEffectiveTheme(safeMode);
   const root = document.documentElement;
-  if (safeMode === "auto") {
-    root.removeAttribute("data-theme");
-  } else {
-    root.setAttribute("data-theme", safeMode);
-  }
+  root.setAttribute("data-theme", effective);
+  memoryThemeOverride = safeMode;
 
   try {
-    window.localStorage.setItem(THEME_STORAGE_KEY, safeMode);
+    if (safeMode === "auto") {
+      window.localStorage.removeItem(THEME_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(THEME_STORAGE_KEY, safeMode);
+    }
   } catch {
-    // Im iOS Safari Privatmodus wird nur der DOM-Zustand verwendet.
+    // Im iOS Safari Privatmodus wird nur der Arbeitsspeicher-/DOM-Zustand verwendet.
   }
 
-  syncStatusBarMeta(safeMode);
+  syncStatusBarMeta(effective);
+  syncThemeUI(safeMode, effective);
   return safeMode;
 }
 
+export function toggleTheme() {
+  const root = typeof document !== "undefined" ? document.documentElement : null;
+  const current = root && root.getAttribute("data-theme") === "light" ? "light" : "dark";
+  const next = current === "dark" ? "light" : "dark";
+  return applyThemeMode(next);
+}
+
 export function getCurrentThemeMode() {
-  const attr = document.documentElement.getAttribute("data-theme");
-  return isValidThemeMode(attr) ? attr : "auto";
+  return getStoredThemeMode();
 }
 
 export function prefersReducedMotion() {
@@ -560,13 +602,51 @@ export function initFloatingNav() {
   syncState();
 }
 
+/**
+ * Initialisiert Header-Theme-Button (#themeToggleBtn) und System-Preference-Listener.
+ */
+export function initThemeControls() {
+  const mode = getStoredThemeMode();
+  syncThemeUI(mode, resolveEffectiveTheme(mode));
+
+  const toggleBtn = document.getElementById("themeToggleBtn");
+  if (toggleBtn && !toggleBtn.dataset.themeBound) {
+    toggleBtn.dataset.themeBound = "true";
+    toggleBtn.addEventListener("click", () => {
+      toggleTheme();
+    });
+  }
+
+  if (typeof window !== "undefined") {
+    window.toggleTheme = toggleTheme;
+    if (window.matchMedia && !window.__agThemeMediaBound) {
+      window.__agThemeMediaBound = true;
+      const mq = window.matchMedia("(prefers-color-scheme: light)");
+      const onSystemThemeChange = () => {
+        if (getStoredThemeMode() === "auto") {
+          applyThemeMode("auto");
+        }
+      };
+      if (typeof mq.addEventListener === "function") {
+        mq.addEventListener("change", onSystemThemeChange);
+      } else if (typeof mq.addListener === "function") {
+        mq.addListener(onSystemThemeChange);
+      }
+    }
+  }
+}
+
 if (typeof document !== "undefined") {
   applyThemeMode(getStoredThemeMode());
   initNumInputSizingFallback();
   initServiceWorkerAndUpdates();
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initFloatingNav, { once: true });
-  } else {
+  const initDomFeatures = () => {
+    initThemeControls();
     initFloatingNav();
+  };
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initDomFeatures, { once: true });
+  } else {
+    initDomFeatures();
   }
 }
