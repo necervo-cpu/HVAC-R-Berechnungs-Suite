@@ -54,16 +54,3 @@
   font-size: var(--text-body);
   min-height: 44px;
 }
-
-@media print {
-  .ref-cell {
-    background: #FFFFFF !important;
-    border: 1px solid #CCCCCC !important;
-  }
-  .ref-temp {
-    color: #444444 !important;
-  }
-  .ref-ohm {
-    color: #000000 !important;
-  }
-}

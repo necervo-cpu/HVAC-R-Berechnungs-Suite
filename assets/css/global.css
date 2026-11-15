@@ -5,8 +5,7 @@
  *   Ambient Glow, „Kein Glas auf Glas“, Semantic Apple System Colors, Fluid Typography und
  *   Google Material Symbols Rounded.
  * Verantwortlichkeit: Stellt Dual-Theme Design-Tokens, adaptive Navigation (Mobile Bottom-Pill ->
- *   Desktop Sidebar), 44x44px Touch-Targets, Anti-Truncation-Regeln, Rechner-Komponenten und
- *   @media print Weiß-Fallback bereit.
+ *   Desktop Sidebar), 44x44px Touch-Targets, Anti-Truncation-Regeln und Rechner-Komponenten bereit.
  * Sicherheits- & A11y-Relevanz: Respektiert prefers-reduced-transparency, prefers-contrast und
  *   prefers-reduced-motion; verhindert iOS-Auto-Zoom durch min. 16px Input-Schriftgröße.
  */
@@ -1563,7 +1562,7 @@ body:not(:has(.ambient-canvas))::before {
 }
 
 /* ==========================================================================
-   8. ACCESSIBILITY & PRINT / PDF EXPORT FALLBACK
+   8. ACCESSIBILITY (REDUCED MOTION / TRANSPARENCY / CONTRAST)
    ========================================================================== */
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   .liquid-glass,
@@ -1584,53 +1583,5 @@ body:not(:has(.ambient-canvas))::before {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-}
-
-@media print {
-  body {
-    background: #FFFFFF !important;
-    color: #000000 !important;
-    padding: 0 !important;
-  }
-  .liquid-glass,
-  .liquid-glass-card,
-  .liquid-surface-inner,
-  .well,
-  .result-hero,
-  .glass-select-face {
-    background: #FFFFFF !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: none !important;
-    border: 1px solid #CCCCCC !important;
-    color: #000000 !important;
-  }
-  .result-main,
-  .num-input,
-  .brand-title,
-  .hub-tile-title,
-  .info-row-value {
-    color: #000000 !important;
-  }
-  .card-title,
-  .metric-unit,
-  .result-unit,
-  .result-label,
-  .result-sub,
-  .well-label,
-  .well-hint,
-  .hero-sub,
-  .hub-tile-sub,
-  .form-label,
-  .info-row-label,
-  .num-unit {
-    color: #444444 !important;
-  }
-  .ambient-canvas,
-  .toast-pill,
-  .update-banner,
-  .no-print {
-    display: none !important;
   }
 }

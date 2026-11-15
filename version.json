@@ -1,5 +1,5 @@
 {
-  "version": "1.3.1",
+  "version": "1.3.2",
   "buildDate": "2026-11-15",
-  "changelog": "Globaler Flat UI Standard: Flache Buttons & Segmente, rahmenbasierte Active States, Entfernung schwerer 3D-Schatten"
+  "changelog": "Digital-First Workflow: Entfernung aller Druck-/Print-Buttons und Bereinigung von @media print"
 }
