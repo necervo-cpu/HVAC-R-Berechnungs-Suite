@@ -9,7 +9,8 @@
  *   try/catch-Kapselung von localStorage für den iOS Safari Privatmodus.
  */
 
-export const APP_VERSION = "1.2.0";
+export const APP_VERSION = "1.2.1";
+export const BUILD_DATE = "2026-11-15";
 
 export const THEME_STORAGE_KEY = "ag-theme";
 const TOP_LIGHT = "#F2F2F7";
@@ -372,9 +373,10 @@ function initNumInputSizingFallback() {
   });
 }
 
-async function applyAppUpdate() {
+export async function applyAppUpdate(targetVersion = "") {
   if (isReloading) return;
   isReloading = true;
+  showToast(targetVersion ? `Update auf v${targetVersion} wird geladen...` : "Update wird geladen...");
 
   try {
     if (swRegistration?.waiting) {
@@ -384,10 +386,14 @@ async function applyAppUpdate() {
       const keys = await window.caches.keys();
       await Promise.all(keys.map((key) => window.caches.delete(key)));
     }
+    if (swRegistration) {
+      await swRegistration.update();
+    }
   } catch {
     // Auch falls Cache-Bereinigung blockiert ist, erzwingt reload() den Neustart.
   }
 
+  // Wichtig: localStorage (ag-theme und Rechnerdaten) wird NIEMALS gelöscht!
   window.location.reload();
 }
 
@@ -463,6 +469,31 @@ function showUpdateBanner(remoteVersion) {
   });
 }
 
+export function setSettingsUpdateIndicator(visible) {
+  const settingsBtn = document.getElementById("settings-toggle-btn") || document.querySelector(".settings-btn");
+  if (!settingsBtn) return;
+  let dot = settingsBtn.querySelector(".settings-update-dot");
+  if (visible) {
+    if (!dot) {
+      dot = document.createElement("span");
+      dot.className = "status-dot settings-update-dot";
+      dot.style.position = "absolute";
+      dot.style.top = "7px";
+      dot.style.right = "7px";
+      dot.style.width = "8px";
+      dot.style.height = "8px";
+      dot.style.borderRadius = "50%";
+      dot.style.background = "var(--system-cyan)";
+      dot.style.boxShadow = "0 0 8px var(--system-cyan)";
+      dot.setAttribute("aria-label", "Update verfügbar");
+      settingsBtn.style.position = "relative";
+      settingsBtn.appendChild(dot);
+    }
+  } else if (dot) {
+    dot.remove();
+  }
+}
+
 export async function checkForAppUpdate({ manual = false } = {}) {
   const now = Date.now();
   if (!manual && now - lastCheckTimestamp < 15000) return false;
@@ -472,8 +503,12 @@ export async function checkForAppUpdate({ manual = false } = {}) {
     if (swRegistration) {
       await swRegistration.update();
       if (swRegistration.waiting) {
+        setSettingsUpdateIndicator(true);
         if (manual) updateDismissed = false;
         showUpdateBanner("");
+        if (manual) {
+          await applyAppUpdate();
+        }
         return true;
       }
     }
@@ -488,13 +523,19 @@ export async function checkForAppUpdate({ manual = false } = {}) {
     const remoteVersion = typeof data?.version === "string" ? data.version.trim() : "";
 
     if (remoteVersion && remoteVersion !== APP_VERSION) {
-      if (manual) updateDismissed = false;
-      showUpdateBanner(remoteVersion);
+      setSettingsUpdateIndicator(true);
+      if (manual) {
+        updateDismissed = false;
+        await applyAppUpdate(remoteVersion);
+      } else {
+        showUpdateBanner(remoteVersion);
+      }
       return true;
     }
 
+    setSettingsUpdateIndicator(false);
     if (manual) {
-      showToast(`Aktuell (v${APP_VERSION})`);
+      showToast(`Aktuellste Version v${APP_VERSION} ist installiert`);
     }
     return false;
   } catch {

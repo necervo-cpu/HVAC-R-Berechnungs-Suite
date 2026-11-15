@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
-  "releasedAt": "2026-11-15",
-  "notes": "Dual-Theme Apple Liquid Glass (Dark & Light) nach Master-Guideline"
+  "version": "1.2.1",
+  "buildDate": "2026-11-15",
+  "changelog": "Smoked Liquid Glass Oberflächen, optimierte Ambient-Blobs und standardisierter Update-Mechanismus"
 }

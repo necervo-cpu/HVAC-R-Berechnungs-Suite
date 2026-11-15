@@ -9,6 +9,7 @@
 
 import {
   APP_VERSION,
+  BUILD_DATE,
   applyThemeMode,
   checkForAppUpdate,
   forceCacheReset,
@@ -282,6 +283,8 @@ function wireEvents() {
 function init() {
   const versionLabel = document.getElementById("app-version-label");
   if (versionLabel) versionLabel.textContent = `v${APP_VERSION}`;
+  const buildDateLabel = document.getElementById("app-build-date");
+  if (buildDateLabel) buildDateLabel.textContent = BUILD_DATE;
   wireEvents();
   renderSettingsTheme();
   renderHubGrid();
