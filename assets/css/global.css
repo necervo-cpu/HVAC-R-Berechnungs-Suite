@@ -234,7 +234,21 @@ body {
   text-rendering: optimizeLegibility;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   padding-bottom: calc(32px + env(safe-area-inset-bottom));
-  transition: background-color 0.35s var(--ease-spring), color 0.25s ease;
+  animation: page-fade-in 0.15s ease both;
+  transition: background-color 0.35s var(--ease-spring), color 0.25s ease, opacity 0.15s ease;
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+html.page-leaving body {
+  opacity: 0;
 }
 
 body:has(.floating-nav) {

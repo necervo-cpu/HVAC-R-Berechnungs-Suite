@@ -8,7 +8,7 @@
  *   bei Offline-Betrieb dient der Cache als sicherer Fallback.
  */
 
-const CACHE_NAME = "hvacr-cache-v1.2.2";
+const CACHE_NAME = "hvacr-cache-v1.2.3";
 
 const CORE_ASSETS = [
   "./",
@@ -18,6 +18,9 @@ const CORE_ASSETS = [
   "./assets/css/global.css",
   "./assets/js/shared.js",
   "./assets/js/dashboard.js",
+];
+
+const SUB_APP_ASSETS = [
   "./apps/sensor/index.html",
   "./apps/sensor/style.css",
   "./apps/sensor/app.js",
@@ -35,12 +38,37 @@ const CORE_ASSETS = [
   "./apps/luftkanal/app.js",
 ];
 
+const ALL_ASSETS = [...CORE_ASSETS, ...SUB_APP_ASSETS];
+let subAppsPrefetched = false;
+
+async function prefetchSubAppsInBackground() {
+  if (subAppsPrefetched) return;
+  subAppsPrefetched = true;
+
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    await Promise.allSettled(
+      SUB_APP_ASSETS.map(async (asset) => {
+        const existing = await cache.match(asset);
+        if (existing) return;
+        const response = await fetch(asset, { cache: "no-cache" });
+        if (response.ok) {
+          await cache.put(asset, response);
+        }
+      })
+    );
+  } catch {
+    subAppsPrefetched = false;
+  }
+}
+
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
       // Cache-Busting beim Pre-Cache, damit keine veralteten HTTP-Cache-Kopien gespeichert werden.
       await Promise.allSettled(
-        CORE_ASSETS.map(async (asset) => {
+        ALL_ASSETS.map(async (asset) => {
           const response = await fetch(asset, { cache: "reload" });
           if (response.ok) {
             await cache.put(asset, response);
@@ -104,6 +132,15 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.endsWith("/version.json")) {
     event.respondWith(fetch(request, { cache: "no-store" }));
     return;
+  }
+
+  // Beim Start der Hauptseite (index.html) alle Unterseiten im Hintergrund in den Cache ziehen.
+  if (
+    request.mode === "navigate" &&
+    (url.pathname.endsWith("/") || url.pathname.endsWith("/index.html")) &&
+    !url.pathname.includes("/apps/")
+  ) {
+    event.waitUntil(prefetchSubAppsInBackground());
   }
 
   // Stale-While-Revalidate: Sofortige Auslieferung aus dem Cache (0 ms Wartezeit auf iOS),

@@ -9,7 +9,7 @@
  *   try/catch-Kapselung von localStorage für den iOS Safari Privatmodus.
  */
 
-export const APP_VERSION = "1.2.2";
+export const APP_VERSION = "1.2.3";
 export const BUILD_DATE = "2026-11-15";
 
 export const THEME_STORAGE_KEY = "ag-theme";
@@ -742,6 +742,41 @@ export function initThemeControls() {
   }
 }
 
+function initPageTransitions() {
+  window.addEventListener("pageshow", () => {
+    document.documentElement.classList.remove("page-leaving");
+  });
+
+  document.addEventListener("click", (event) => {
+    if (event.defaultPrevented || event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    const link = event.target.closest("a[href]");
+    if (!link) return;
+    if (link.target === "_blank" || link.hasAttribute("download")) return;
+
+    const rawHref = link.getAttribute("href");
+    if (!rawHref || rawHref.startsWith("#")) return;
+
+    let targetUrl;
+    try {
+      targetUrl = new URL(link.href, window.location.href);
+    } catch {
+      return;
+    }
+
+    if (targetUrl.origin !== window.location.origin) return;
+    if (targetUrl.href === window.location.href) return;
+    if (prefersReducedMotion()) return;
+
+    event.preventDefault();
+    document.documentElement.classList.add("page-leaving");
+    window.setTimeout(() => {
+      window.location.href = targetUrl.href;
+    }, 120);
+  });
+}
+
 if (typeof document !== "undefined") {
   applyThemeMode(getStoredThemeMode());
   initNumInputSizingFallback();
@@ -750,6 +785,7 @@ if (typeof document !== "undefined") {
     initThemeControls();
     initFloatingNav();
     initInputErgonomics();
+    initPageTransitions();
   };
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initDomFeatures, { once: true });

@@ -102,6 +102,19 @@ const state = {
   query: "",
 };
 
+const prefetchedUrls = new Set();
+
+function prefetchAppHref(href) {
+  if (!href || prefetchedUrls.has(href) || typeof document === "undefined") return;
+  prefetchedUrls.add(href);
+
+  const link = document.createElement("link");
+  link.rel = "prefetch";
+  link.as = "document";
+  link.href = href;
+  document.head.appendChild(link);
+}
+
 function renderSettingsTheme() {
   const mode = getCurrentThemeMode();
   const group = document.getElementById("theme-mode-group");
@@ -180,6 +193,13 @@ function renderHubGrid() {
       `;
     })
     .join("");
+
+  grid.querySelectorAll("a.hub-tile[href]").forEach((tile) => {
+    const href = tile.getAttribute("href");
+    const triggerPrefetch = () => prefetchAppHref(href);
+    tile.addEventListener("pointerenter", triggerPrefetch, { passive: true });
+    tile.addEventListener("touchstart", triggerPrefetch, { passive: true });
+  });
 
   grid.querySelectorAll('button.hub-tile[data-planned="true"]').forEach((tile) => {
     tile.addEventListener("click", () => {

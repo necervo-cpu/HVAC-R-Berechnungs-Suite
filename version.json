@@ -1,5 +1,5 @@
 {
-  "version": "1.2.2",
+  "version": "1.2.3",
   "buildDate": "2026-11-15",
-  "changelog": "Entfernung der Floating-Nav in Unterseiten, optimierter mobiler Innenabstand & Navigation"
+  "changelog": "Instant-Loading: Dashboard-Prefetching (pointerenter/touchstart), Seitenwechsel-Fade & Service-Worker-Sub-App-Prefetch"
 }
