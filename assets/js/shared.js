@@ -224,7 +224,7 @@ export async function copyTextToClipboard(text) {
   try {
     if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
       await navigator.clipboard.writeText(value);
-      showToast("In Zwischenablage kopiert");
+      showToast("Rapport in Zwischenablage kopiert");
       return true;
     }
   } catch {
@@ -242,7 +242,7 @@ export async function copyTextToClipboard(text) {
     area.select();
     const ok = document.execCommand("copy");
     document.body.removeChild(area);
-    showToast(ok ? "In Zwischenablage kopiert" : "Kopieren fehlgeschlagen");
+    showToast(ok ? "Rapport in Zwischenablage kopiert" : "Kopieren fehlgeschlagen");
     return ok;
   } catch {
     showToast("Kopieren fehlgeschlagen");
@@ -253,8 +253,22 @@ export async function copyTextToClipboard(text) {
 export function wireCopyResultButton(btnId, getTextFn) {
   const btn = document.getElementById(btnId);
   if (!btn || typeof getTextFn !== "function") return;
-  btn.addEventListener("click", () => {
-    void copyTextToClipboard(getTextFn());
+  btn.addEventListener("click", async () => {
+    const text = getTextFn();
+    const ok = await copyTextToClipboard(text);
+    if (ok) {
+      const icon = btn.querySelector(".material-symbols-rounded");
+      if (icon) {
+        const prevIcon = icon.textContent;
+        const prevColor = icon.style.color;
+        icon.textContent = "check";
+        icon.style.color = "var(--system-green)";
+        setTimeout(() => {
+          icon.textContent = prevIcon;
+          icon.style.color = prevColor;
+        }, 1800);
+      }
+    }
   });
 }
 
@@ -370,6 +384,57 @@ function initNumInputSizingFallback() {
   // Synchronisiert Breite auch nach JS-Wertänderungen durch Stepper-Buttons oder Chips
   document.addEventListener("click", () => {
     window.requestAnimationFrame(syncAll);
+  });
+}
+
+/**
+ * Baustellen-Ergonomie für Zahleneingaben:
+ * 1. Automatisches .select() bei focus/click, damit Werte sofort überschrieben werden können.
+ * 2. Automatische Komma-zu-Punkt-Konvertierung beim Tippen oder Einfügen.
+ */
+function initInputErgonomics() {
+  const isNumericField = (el) =>
+    el instanceof HTMLInputElement &&
+    (el.type === "number" ||
+      el.inputMode === "decimal" ||
+      el.inputMode === "numeric" ||
+      el.classList.contains("num-input") ||
+      el.classList.contains("glass-input"));
+
+  // Auto-Select bei Fokus / Klick (für sofortiges Überschreiben ohne Backspace)
+  document.addEventListener("focusin", (e) => {
+    if (isNumericField(e.target)) {
+      setTimeout(() => {
+        try {
+          e.target.select();
+        } catch {}
+      }, 0);
+    }
+  });
+
+  document.addEventListener("click", (e) => {
+    if (isNumericField(e.target) && document.activeElement === e.target) {
+      try {
+        e.target.select();
+      } catch {}
+    }
+  });
+
+  // Komma (,) automatisch in Punkt (.) umwandeln
+  document.addEventListener("input", (e) => {
+    const target = e.target;
+    if (isNumericField(target) && target.type !== "number") {
+      if (typeof target.value === "string" && target.value.includes(",")) {
+        const start = target.selectionStart;
+        const end = target.selectionEnd;
+        target.value = target.value.replace(/,/g, ".");
+        if (start !== null && end !== null) {
+          try {
+            target.setSelectionRange(start, end);
+          } catch {}
+        }
+      }
+    }
   });
 }
 
@@ -684,6 +749,7 @@ if (typeof document !== "undefined") {
   const initDomFeatures = () => {
     initThemeControls();
     initFloatingNav();
+    initInputErgonomics();
   };
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initDomFeatures, { once: true });

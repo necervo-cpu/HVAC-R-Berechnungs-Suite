@@ -77,7 +77,28 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
+  const isGoogleFont =
+    url.origin === "https://fonts.googleapis.com" ||
+    url.origin === "https://fonts.gstatic.com";
+
+  if (url.origin !== self.location.origin && !isGoogleFont) return;
+
+  // Google Fonts & Icons (.woff2): Cache-First mit Network-Fallback für 100 % Offline-Betrieb
+  if (isGoogleFont) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request).then((networkResponse) => {
+          if (networkResponse && (networkResponse.ok || networkResponse.type === "opaque")) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
 
   // Versionsdatei niemals cachen, damit Update-Prüfungen immer den Serverstand sehen.
   if (url.pathname.endsWith("/version.json")) {
