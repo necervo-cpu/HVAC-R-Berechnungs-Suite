@@ -409,6 +409,8 @@ textarea {
 .main-content {
   position: relative;
   z-index: 1;
+  width: 100%;
+  min-width: 0;
   max-width: 1180px;
   margin: 0 auto;
   padding: max(1.25rem, env(safe-area-inset-top)) 1.25rem max(2rem, calc(32px + env(safe-area-inset-bottom)));
@@ -633,6 +635,8 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 1.15rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .card-header {
@@ -1192,6 +1196,8 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .well-header {
