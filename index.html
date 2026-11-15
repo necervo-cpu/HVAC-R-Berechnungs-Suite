@@ -82,22 +82,19 @@
         </header>
         <p class="hero-sub">Berechnung, Kennlinien und Auslegung – alles an einem Ort.</p>
 
-        <div class="liquid-glass glass-card" style="padding: 0.75rem;">
-          <label class="liquid-surface-inner input-wrapper" for="hub-search">
-            <span class="material-symbols-rounded" style="color: var(--system-cyan);" aria-hidden="true">search</span>
-            <input
-              id="hub-search"
-              class="glass-input"
-              type="search"
-              placeholder="App suchen …"
-              aria-label="Rechner durchsuchen"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck="false"
-              enterkeyhint="search"
-            />
-          </label>
-        </div>
+        <label class="search" for="hub-search">
+          <span class="material-symbols-rounded" aria-hidden="true">search</span>
+          <input
+            id="hub-search"
+            type="search"
+            placeholder="App suchen …"
+            aria-label="Rechner durchsuchen"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            enterkeyhint="search"
+          />
+        </label>
       </section>
 
       <!-- Kompakte Top-Leiste (nur in der Einstellungen-Ansicht sichtbar) -->
@@ -119,100 +116,82 @@
         </div>
       </header>
 
-      <!-- DASHBOARD / APP-LAUNCHER (statisch vorgerendert für 0 ms First Paint auf iOS) -->
+      <!-- DASHBOARD / APP-LAUNCHER (statisch vorgerendert als gruppierte Listen für 0 ms First Paint auf iOS) -->
       <section id="view-home" class="view-stack calc-panel" aria-label="Rechner-Übersicht">
-        <div id="hub-grid" class="dashboard-grid hub-grid" role="list">
-          <a href="./apps/sensor/index.html" class="liquid-glass hub-tile press-card" role="listitem" style="--stagger:0" data-module-id="sensor" data-tone="cool" data-planned="false">
-            <div class="hub-tile-main">
-              <span class="hub-tile-icon liquid-surface-inner"><span class="material-symbols-rounded" aria-hidden="true">thermostat</span></span>
-              <div class="hub-tile-body">
-                <div class="hub-tile-title-row">
-                  <span class="hub-tile-title">PTC / NTC Sensoren</span>
-                  <span class="status-pill hub-tile-badge" data-live="true">Aktiv</span>
-                </div>
-                <span class="hub-tile-sub">Ohm ↔ °C · NTC 2k–20k, PT100/1000, KTY81</span>
-              </div>
+        <div id="hub-grid" class="hub-grid">
+          <section class="hub-section" data-section="heizung">
+            <h2 class="section-title">Heizung &amp; Hydraulik <span class="section-count">3</span></h2>
+            <div class="liquid-glass group" role="list">
+              <a href="./apps/waermeleistung/index.html" class="row" role="listitem" data-module-id="waermeleistung">
+                <span class="row-icon row-icon--orange"><span class="material-symbols-rounded" aria-hidden="true">local_fire_department</span></span>
+                <span class="row-text">
+                  <span class="row-title">Wärmeleistung (Q̇)</span>
+                  <span class="row-sub">Hydraulik (V̇·ΔT), Volumenstrom &amp; Heizlast</span>
+                </span>
+                <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
+              </a>
+              <a href="./apps/rohrnetz/index.html" class="row" role="listitem" data-module-id="rohrnetz">
+                <span class="row-icon row-icon--orange"><span class="material-symbols-rounded" aria-hidden="true">plumbing</span></span>
+                <span class="row-text">
+                  <span class="row-title">Rohrnetz &amp; Druckverlust</span>
+                  <span class="row-sub">Fließgeschwindigkeit v (m/s) &amp; R (mbar/m)</span>
+                </span>
+                <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
+              </a>
+              <a href="./apps/mag/index.html" class="row" role="listitem" data-module-id="mag">
+                <span class="row-icon row-icon--orange"><span class="material-symbols-rounded" aria-hidden="true">compress</span></span>
+                <span class="row-text">
+                  <span class="row-title">MAG &amp; Vordruck</span>
+                  <span class="row-sub">Stickstoff-Vordruck p₀, pₐ &amp; Gefäßgröße (l)</span>
+                </span>
+                <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
+              </a>
             </div>
-            <span class="material-symbols-rounded hub-tile-chevron" aria-hidden="true">chevron_right</span>
-          </a>
-          <a href="./apps/waermeleistung/index.html" class="liquid-glass hub-tile press-card" role="listitem" style="--stagger:1" data-module-id="waermeleistung" data-tone="warm" data-planned="false">
-            <div class="hub-tile-main">
-              <span class="hub-tile-icon liquid-surface-inner"><span class="material-symbols-rounded" aria-hidden="true">local_fire_department</span></span>
-              <div class="hub-tile-body">
-                <div class="hub-tile-title-row">
-                  <span class="hub-tile-title">Wärmeleistung (Q̇)</span>
-                  <span class="status-pill hub-tile-badge" data-live="true">Aktiv</span>
-                </div>
-                <span class="hub-tile-sub">Hydraulik (V̇·ΔT), Volumenstrom &amp; Heizlast</span>
-              </div>
+          </section>
+
+          <section class="hub-section" data-section="kaelte">
+            <h2 class="section-title">Kälte &amp; Sensorik <span class="section-count">2</span></h2>
+            <div class="liquid-glass group" role="list">
+              <a href="./apps/sensor/index.html" class="row" role="listitem" data-module-id="sensor">
+                <span class="row-icon row-icon--blue"><span class="material-symbols-rounded" aria-hidden="true">thermostat</span></span>
+                <span class="row-text">
+                  <span class="row-title">PTC / NTC Sensoren</span>
+                  <span class="row-sub">Ohm ↔ °C · NTC 2k–20k, PT100/1000, KTY81</span>
+                </span>
+                <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
+              </a>
+              <a href="./apps/kaeltemittel/index.html" class="row" role="listitem" data-module-id="kaeltemittel">
+                <span class="row-icon row-icon--blue"><span class="material-symbols-rounded" aria-hidden="true">ac_unit</span></span>
+                <span class="row-text">
+                  <span class="row-title">Kältemittel &amp; SH / SC</span>
+                  <span class="row-sub">Druck ↔ °C · Überhitzung &amp; Unterkühlung</span>
+                </span>
+                <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
+              </a>
             </div>
-            <span class="material-symbols-rounded hub-tile-chevron" aria-hidden="true">chevron_right</span>
-          </a>
-          <a href="./apps/rohrnetz/index.html" class="liquid-glass hub-tile press-card" role="listitem" style="--stagger:2" data-module-id="rohrnetz" data-tone="cool" data-planned="false">
-            <div class="hub-tile-main">
-              <span class="hub-tile-icon liquid-surface-inner"><span class="material-symbols-rounded" aria-hidden="true">plumbing</span></span>
-              <div class="hub-tile-body">
-                <div class="hub-tile-title-row">
-                  <span class="hub-tile-title">Rohrnetz &amp; Druckverlust</span>
-                  <span class="status-pill hub-tile-badge" data-live="true">Aktiv</span>
-                </div>
-                <span class="hub-tile-sub">Fließgeschwindigkeit v (m/s) &amp; R (mbar/m)</span>
-              </div>
+          </section>
+
+          <section class="hub-section" data-section="lueftung">
+            <h2 class="section-title">Lüftung &amp; Feuchte <span class="section-count">2</span></h2>
+            <div class="liquid-glass group" role="list">
+              <a href="./apps/taupunkt/index.html" class="row" role="listitem" data-module-id="taupunkt">
+                <span class="row-icon row-icon--green"><span class="material-symbols-rounded" aria-hidden="true">water_drop</span></span>
+                <span class="row-text">
+                  <span class="row-title">Taupunkt &amp; Feuchte</span>
+                  <span class="row-sub">Taupunkt °C, g/m³, Enthalpie &amp; Tauwasser</span>
+                </span>
+                <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
+              </a>
+              <a href="./apps/luftkanal/index.html" class="row" role="listitem" data-module-id="luftkanal">
+                <span class="row-icon row-icon--green"><span class="material-symbols-rounded" aria-hidden="true">air</span></span>
+                <span class="row-text">
+                  <span class="row-title">Luftkanal &amp; RLT</span>
+                  <span class="row-sub">Geschwindigkeit v (m/s), DN &amp; Luftwechsel</span>
+                </span>
+                <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
+              </a>
             </div>
-            <span class="material-symbols-rounded hub-tile-chevron" aria-hidden="true">chevron_right</span>
-          </a>
-          <a href="./apps/kaeltemittel/index.html" class="liquid-glass hub-tile press-card" role="listitem" style="--stagger:3" data-module-id="kaeltemittel" data-tone="cool" data-planned="false">
-            <div class="hub-tile-main">
-              <span class="hub-tile-icon liquid-surface-inner"><span class="material-symbols-rounded" aria-hidden="true">ac_unit</span></span>
-              <div class="hub-tile-body">
-                <div class="hub-tile-title-row">
-                  <span class="hub-tile-title">Kältemittel &amp; SH / SC</span>
-                  <span class="status-pill hub-tile-badge" data-live="true">Aktiv</span>
-                </div>
-                <span class="hub-tile-sub">Druck ↔ °C · Überhitzung &amp; Unterkühlung</span>
-              </div>
-            </div>
-            <span class="material-symbols-rounded hub-tile-chevron" aria-hidden="true">chevron_right</span>
-          </a>
-          <a href="./apps/taupunkt/index.html" class="liquid-glass hub-tile press-card" role="listitem" style="--stagger:4" data-module-id="taupunkt" data-tone="cool" data-planned="false">
-            <div class="hub-tile-main">
-              <span class="hub-tile-icon liquid-surface-inner"><span class="material-symbols-rounded" aria-hidden="true">water_drop</span></span>
-              <div class="hub-tile-body">
-                <div class="hub-tile-title-row">
-                  <span class="hub-tile-title">Taupunkt &amp; Feuchte</span>
-                  <span class="status-pill hub-tile-badge" data-live="true">Aktiv</span>
-                </div>
-                <span class="hub-tile-sub">Taupunkt °C, g/m³, Enthalpie &amp; Tauwasser</span>
-              </div>
-            </div>
-            <span class="material-symbols-rounded hub-tile-chevron" aria-hidden="true">chevron_right</span>
-          </a>
-          <a href="./apps/mag/index.html" class="liquid-glass hub-tile press-card" role="listitem" style="--stagger:5" data-module-id="mag" data-tone="warm" data-planned="false">
-            <div class="hub-tile-main">
-              <span class="hub-tile-icon liquid-surface-inner"><span class="material-symbols-rounded" aria-hidden="true">compress</span></span>
-              <div class="hub-tile-body">
-                <div class="hub-tile-title-row">
-                  <span class="hub-tile-title">MAG &amp; Vordruck</span>
-                  <span class="status-pill hub-tile-badge" data-live="true">Aktiv</span>
-                </div>
-                <span class="hub-tile-sub">Stickstoff-Vordruck p₀, pₐ &amp; Gefäßgröße (l)</span>
-              </div>
-            </div>
-            <span class="material-symbols-rounded hub-tile-chevron" aria-hidden="true">chevron_right</span>
-          </a>
-          <a href="./apps/luftkanal/index.html" class="liquid-glass hub-tile press-card" role="listitem" style="--stagger:6" data-module-id="luftkanal" data-tone="cool" data-planned="false">
-            <div class="hub-tile-main">
-              <span class="hub-tile-icon liquid-surface-inner"><span class="material-symbols-rounded" aria-hidden="true">air</span></span>
-              <div class="hub-tile-body">
-                <div class="hub-tile-title-row">
-                  <span class="hub-tile-title">Luftkanal &amp; RLT</span>
-                  <span class="status-pill hub-tile-badge" data-live="true">Aktiv</span>
-                </div>
-                <span class="hub-tile-sub">Geschwindigkeit v (m/s), DN &amp; Luftwechsel</span>
-              </div>
-            </div>
-            <span class="material-symbols-rounded hub-tile-chevron" aria-hidden="true">chevron_right</span>
-          </a>
+          </section>
         </div>
         <div id="hub-empty" class="liquid-glass glass-card empty-state" hidden>
           Kein passender Rechner gefunden.
@@ -244,7 +223,7 @@
           <div style="display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; font-size: var(--text-sub);">
             <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
               <span>Installierte Version:</span>
-              <strong id="app-version-label" class="numeric" style="font-family: var(--font-mono); color: var(--text-primary);">v1.3.3</strong>
+              <strong id="app-version-label" class="numeric" style="font-family: var(--font-mono); color: var(--text-primary);">v1.3.4</strong>
             </div>
             <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
               <span>Build-Datum:</span>

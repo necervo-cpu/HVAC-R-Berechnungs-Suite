@@ -117,7 +117,7 @@ function prefetchAppHref(href) {
 
 function wireTilePrefetch(container) {
   if (!container) return;
-  container.querySelectorAll("a.hub-tile[href]").forEach((tile) => {
+  container.querySelectorAll("a.row[href], a.hub-tile[href]").forEach((tile) => {
     if (tile.dataset.prefetchBound) return;
     tile.dataset.prefetchBound = "true";
     const href = tile.getAttribute("href");
@@ -142,76 +142,41 @@ function renderHubGrid() {
   if (!grid || !empty) return;
 
   const q = state.query.trim().toLowerCase();
-  const filtered = MODULES.filter((mod) => {
-    return (
-      !q ||
-      mod.title.toLowerCase().includes(q) ||
-      mod.sub.toLowerCase().includes(q) ||
-      mod.keywords.includes(q)
-    );
-  });
+  const moduleMap = new Map(MODULES.map((m) => [m.id, m]));
+  let totalVisible = 0;
 
-  if (filtered.length === 0) {
-    grid.innerHTML = "";
-    empty.hidden = false;
-    return;
-  }
+  grid.querySelectorAll(".hub-section").forEach((section) => {
+    let sectionVisible = 0;
+    let firstVisibleSeen = false;
 
-  empty.hidden = true;
-  grid.innerHTML = filtered
-    .map((mod, index) => {
-      const inner = `
-        <div class="hub-tile-main">
-          <span class="hub-tile-icon liquid-surface-inner">${mod.icon}</span>
-          <div class="hub-tile-body">
-            <div class="hub-tile-title-row">
-              <span class="hub-tile-title">${mod.title}</span>
-              <span class="status-pill hub-tile-badge" data-live="${String(mod.live)}">
-                ${mod.live ? "Aktiv" : "Geplant"}
-              </span>
-            </div>
-            <span class="hub-tile-sub">${mod.sub}</span>
-          </div>
-        </div>
-        <span class="material-symbols-rounded hub-tile-chevron" aria-hidden="true">chevron_right</span>
-      `;
+    section.querySelectorAll(".row[data-module-id]").forEach((row) => {
+      const mod = moduleMap.get(row.dataset.moduleId);
+      const matches =
+        !q ||
+        (mod &&
+          (mod.title.toLowerCase().includes(q) ||
+            mod.sub.toLowerCase().includes(q) ||
+            mod.keywords.includes(q)));
 
-      if (mod.live && mod.href) {
-        return `
-          <a
-            href="${mod.href}"
-            class="liquid-glass hub-tile press-card"
-            role="listitem"
-            style="--stagger:${index}"
-            data-module-id="${mod.id}"
-            data-tone="${mod.tone}"
-            data-planned="false"
-          >${inner}</a>
-        `;
+      row.hidden = !matches;
+      row.classList.remove("row--visible-after-hidden");
+      if (matches) {
+        if (!firstVisibleSeen) {
+          row.classList.add("row--visible-after-hidden");
+          firstVisibleSeen = true;
+        }
+        sectionVisible += 1;
+        totalVisible += 1;
       }
-
-      return `
-        <button
-          type="button"
-          class="liquid-glass hub-tile press-card"
-          role="listitem"
-          style="--stagger:${index}"
-          data-module-id="${mod.id}"
-          data-tone="${mod.tone}"
-          data-planned="true"
-        >${inner}</button>
-      `;
-    })
-    .join("");
-
-  wireTilePrefetch(grid);
-
-  grid.querySelectorAll('button.hub-tile[data-planned="true"]').forEach((tile) => {
-    tile.addEventListener("click", () => {
-      const mod = MODULES.find((m) => m.id === tile.dataset.moduleId);
-      if (mod) showToast(`${mod.title}: Modul folgt als Nächstes`);
     });
+
+    const countEl = section.querySelector(".section-count");
+    if (countEl) countEl.textContent = String(sectionVisible);
+    section.hidden = sectionVisible === 0;
   });
+
+  empty.hidden = totalVisible > 0;
+  wireTilePrefetch(grid);
 }
 
 function openSettings() {

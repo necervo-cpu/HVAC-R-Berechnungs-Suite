@@ -1,5 +1,5 @@
 {
-  "version": "1.3.3",
+  "version": "1.3.4",
   "buildDate": "2026-11-15",
-  "changelog": "EGM-Abgleich auf globale Richtlinien: Bereinigung veralteter no-print-Klassen, Aktualisierung von DESIGN.md, AGENTS.md und global.css"
+  "changelog": "Migration auf Design-Stand 2026-11-15: Dual-Theme Liquid-Glass-Tokens, gruppierte Listen und Pill-Suche"
 }
