@@ -251,10 +251,6 @@ html.page-leaving body {
   opacity: 0;
 }
 
-body:has(.floating-nav) {
-  padding-bottom: calc(96px + env(safe-area-inset-bottom));
-}
-
 .numeric,
 table,
 code,
@@ -271,7 +267,6 @@ button,
 a,
 label,
 .segmented-option,
-.nav-item,
 .tab-btn,
 .chip-btn,
 .back-btn {
@@ -533,62 +528,11 @@ textarea {
   min-width: 0;
 }
 
-/* Schwebende Navigation (Mobile First: Floating Bottom Glass Pill) */
-.floating-nav {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem;
-  border-radius: var(--radius-pill);
-  width: min(92vw, 380px);
-  justify-content: space-around;
-}
-
-.nav-item {
-  min-height: 44px;
-  min-width: 44px;
-  flex: 1 1 0;
-  padding: 0 0.65rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-secondary);
-  font-family: var(--font-sans);
-  font-size: var(--text-caption);
-  font-weight: 500;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: background 0.25s var(--ease-spring), color 0.2s ease, border-color 0.2s ease;
-}
-
-.nav-item .nav-label {
-  display: none;
-}
-
-.nav-item.active {
-  background: var(--system-cyan-tint);
-  border: 1px solid var(--system-cyan-border);
-  color: var(--text-primary);
-}
-
-/* Tablet & Desktop (>= 768px): Schwebende Sidebar links + 2-Spalten-Grid */
+/* Tablet & Desktop (>= 768px): 2-Spalten-Grid */
 @media (min-width: 768px) {
   body {
-    padding-bottom: 2rem;
+    padding-bottom: max(2rem, calc(32px + env(safe-area-inset-bottom)));
     padding-left: 0;
-  }
-
-  body:has(.floating-nav) {
-    padding-left: 240px;
   }
 
   .dashboard-grid,
@@ -599,30 +543,6 @@ textarea {
 
   .card-span-full {
     grid-column: 1 / -1;
-  }
-
-  .floating-nav {
-    left: 1.25rem;
-    top: 1.25rem;
-    bottom: 1.25rem;
-    transform: none;
-    width: 204px;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    padding: 1rem 0.75rem;
-    border-radius: var(--radius-card);
-  }
-
-  .nav-item {
-    flex: 0 0 auto;
-    justify-content: flex-start;
-    padding: 0 1rem;
-    font-size: var(--text-sub);
-  }
-
-  .nav-item .nav-label {
-    display: inline;
   }
 }
 
@@ -1693,7 +1613,6 @@ textarea {
   .num-unit {
     color: #444444 !important;
   }
-  .floating-nav,
   .ambient-canvas,
   .toast-pill,
   .update-banner,

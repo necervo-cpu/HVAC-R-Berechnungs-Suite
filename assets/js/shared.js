@@ -9,7 +9,7 @@
  *   try/catch-Kapselung von localStorage für den iOS Safari Privatmodus.
  */
 
-export const APP_VERSION = "1.2.3";
+export const APP_VERSION = "1.2.5";
 export const BUILD_DATE = "2026-11-15";
 
 export const THEME_STORAGE_KEY = "ag-theme";
@@ -659,55 +659,6 @@ function initServiceWorkerAndUpdates() {
   });
 }
 
-// Theme beim Laden sofort anwenden, um Flackern (FOUC) zu vermeiden
-export function initFloatingNav() {
-  const nav = document.querySelector(".floating-nav");
-  if (!nav) return;
-
-  const viewSettings = document.getElementById("view-settings");
-  const backBtn = document.getElementById("nav-back-btn");
-  const settingsBtn = document.getElementById("settings-toggle-btn");
-
-  const syncState = () => {
-    const inSettings = Boolean(viewSettings && !viewSettings.hidden);
-    const items = nav.querySelectorAll("[data-nav-action]");
-    items.forEach((btn) => {
-      const action = btn.dataset.navAction;
-      let isActive = false;
-      if (action === "settings") isActive = inSettings;
-      else if (action === "home" || action === "calc") isActive = !inSettings;
-      btn.classList.toggle("active", isActive);
-      const icon = btn.querySelector(".material-symbols-rounded");
-      if (icon) icon.classList.toggle("is-active", isActive);
-    });
-  };
-
-  nav.addEventListener("click", (event) => {
-    const btn = event.target.closest("[data-nav-action]");
-    if (!btn) return;
-    const action = btn.dataset.navAction;
-    if (action === "settings") {
-      if (viewSettings && viewSettings.hidden && settingsBtn) {
-        settingsBtn.click();
-      }
-    } else if (action === "home" || action === "calc") {
-      if (viewSettings && !viewSettings.hidden && backBtn) {
-        backBtn.click();
-      } else {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    } else if (action === "print") {
-      window.print();
-    }
-  });
-
-  if (viewSettings && typeof MutationObserver !== "undefined") {
-    const observer = new MutationObserver(syncState);
-    observer.observe(viewSettings, { attributes: true, attributeFilter: ["hidden"] });
-  }
-  syncState();
-}
-
 /**
  * Initialisiert Header-Theme-Button (#themeToggleBtn) und System-Preference-Listener.
  */
@@ -783,7 +734,6 @@ if (typeof document !== "undefined") {
   initServiceWorkerAndUpdates();
   const initDomFeatures = () => {
     initThemeControls();
-    initFloatingNav();
     initInputErgonomics();
     initPageTransitions();
   };
