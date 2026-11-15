@@ -1,5 +1,5 @@
 {
-  "version": "1.3.2",
+  "version": "1.3.3",
   "buildDate": "2026-11-15",
-  "changelog": "Digital-First Workflow: Entfernung aller Druck-/Print-Buttons und Bereinigung von @media print"
+  "changelog": "EGM-Abgleich auf globale Richtlinien: Bereinigung veralteter no-print-Klassen, Aktualisierung von DESIGN.md, AGENTS.md und global.css"
 }

@@ -8,7 +8,7 @@
  *   bei Offline-Betrieb dient der Cache als sicherer Fallback.
  */
 
-const CACHE_NAME = "hvacr-cache-v1.3.2";
+const CACHE_NAME = "hvacr-cache-v1.3.3";
 
 const CORE_ASSETS = [
   "./",

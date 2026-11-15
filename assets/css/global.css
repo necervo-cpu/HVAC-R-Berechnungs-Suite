@@ -4,8 +4,8 @@
  *   auf Basis von Dual-Theme Liquid Glass (Dark Mode #000000 & Light Mode #F2F2F7 Frosted Daylight),
  *   Ambient Glow, „Kein Glas auf Glas“, Semantic Apple System Colors, Fluid Typography und
  *   Google Material Symbols Rounded.
- * Verantwortlichkeit: Stellt Dual-Theme Design-Tokens, adaptive Navigation (Mobile Bottom-Pill ->
- *   Desktop Sidebar), 44x44px Touch-Targets, Anti-Truncation-Regeln und Rechner-Komponenten bereit.
+ * Verantwortlichkeit: Stellt Dual-Theme Design-Tokens, Header-Navigation mit Safe-Area-Abstand,
+ *   44x44px Touch-Targets, Anti-Truncation-Regeln und Flat-UI Rechner-Komponenten bereit.
  * Sicherheits- & A11y-Relevanz: Respektiert prefers-reduced-transparency, prefers-contrast und
  *   prefers-reduced-motion; verhindert iOS-Auto-Zoom durch min. 16px Input-Schriftgröße.
  */
