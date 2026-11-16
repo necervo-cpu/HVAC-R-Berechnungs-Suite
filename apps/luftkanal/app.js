@@ -11,14 +11,12 @@ import {
   applyThemeMode,
   clearAppStorage,
   createNumberAnimator,
+  fadeThrough,
   getCurrentThemeMode,
   loadAppParams,
   parseLocaleNumber,
-  prefersReducedMotion,
   saveAppParams,
   showToast,
-  updateAllPills,
-  wireCopyResultButton,
 } from "../../assets/js/shared.js";
 
 const LUFT_PARAMS_KEY = "hvacr-params-luftkanal";
@@ -84,23 +82,13 @@ const resultNumberAnimator = createNumberAnimator({
   },
 });
 
-function triggerResultPop() {
-  if (prefersReducedMotion()) return;
-  const main = document.getElementById("result-main");
-  if (!main) return;
-  main.classList.remove("is-popping");
-  void main.offsetWidth;
-  main.classList.add("is-popping");
-  window.setTimeout(() => main.classList.remove("is-popping"), 180);
-}
-
 function calculateAndRender(animate = true) {
   persistState();
   const labelEl = document.getElementById("result-label");
   const unitEl = document.getElementById("result-unit");
-  const subEl = document.getElementById("result-sub");
+  const rowsEl = document.getElementById("result-rows");
   const badgeEl = document.getElementById("result-badge");
-  const meterEl = document.getElementById("result-meter-fill");
+  const badgeTextEl = document.getElementById("result-badge-text");
 
   const flowM3s = state.flowM3h / 3600;
   const flowLs = flowM3s * 1000;
@@ -110,8 +98,8 @@ function calculateAndRender(animate = true) {
   let unit = "m/s";
   let badgeText = "Leise";
   let badgeState = "ok";
-  let meterPct = 40;
   let sub = "";
+  let rows = [];
 
   if (state.mode === "duct") {
     let areaM2 = 0;
@@ -132,8 +120,12 @@ function calculateAndRender(animate = true) {
     const v = areaM2 > 0 ? flowM3s / areaM2 : 0;
     const areaCm2 = areaM2 * 10000;
     numericValue = v;
-    meterPct = (v / 8) * 100;
     sub = `${infoLabel} · Querschnitt ${formatDe(areaCm2, 0)} cm² · ${formatDe(flowLs, 0)} l/s`;
+    rows = [
+      ["Kanal", infoLabel],
+      ["Querschnitt", `${formatDe(areaCm2, 0)} cm²`],
+      ["Volumenstrom", `${formatDe(flowLs, 0)} l/s`],
+    ];
 
     if (v <= 0) {
       badgeText = "Kein Luftstrom";
@@ -154,8 +146,11 @@ function calculateAndRender(animate = true) {
     numericValue = nRate;
     label = "Luftwechselrate n";
     unit = "1/h";
-    meterPct = (nRate / 10) * 100;
     sub = `Sensible Leistung Q̇ = ${formatDe(qKw, 2)} kW · ${formatDe(flowLs, 0)} l/s`;
+    rows = [
+      ["Sensible Leistung Q̇", `${formatDe(qKw, 2)} kW`],
+      ["Volumenstrom", `${formatDe(flowLs, 0)} l/s`],
+    ];
 
     if (nRate <= 0) {
       badgeText = "Nullwert";
@@ -174,50 +169,67 @@ function calculateAndRender(animate = true) {
 
   if (labelEl) labelEl.textContent = label;
   if (unitEl) unitEl.textContent = unit;
-  if (subEl) subEl.textContent = sub;
+  if (rowsEl) {
+    rowsEl.replaceChildren();
+    rows.forEach(([name, value]) => {
+      const row = document.createElement("div");
+      row.className = "info-row";
+      const l = document.createElement("span");
+      l.className = "info-row-label";
+      l.textContent = name;
+      const v = document.createElement("span");
+      v.className = "info-row-value numeric";
+      v.textContent = value;
+      row.append(l, v);
+      rowsEl.appendChild(row);
+    });
+  }
   if (badgeEl) {
-    badgeEl.textContent = badgeText;
     badgeEl.setAttribute("data-state", badgeState);
+    badgeEl.classList.remove("status-pill--green", "status-pill--orange", "status-pill--red");
+    badgeEl.classList.add(
+      badgeState === "ok" ? "status-pill--green" : badgeState === "warn" ? "status-pill--orange" : "status-pill--red",
+    );
   }
-  if (meterEl) {
-    meterEl.style.width = `${Math.min(100, Math.max(6, meterPct))}%`;
-    meterEl.setAttribute("data-state", badgeState);
-  }
+  if (badgeTextEl) badgeTextEl.textContent = badgeText;
 
   resultNumberAnimator.update(numericValue, state.mode, animate);
-  triggerResultPop();
+}
+
+function setPressed(selector, attr, value) {
+  document.querySelectorAll(selector).forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset[attr] === value));
+  });
 }
 
 function switchMode(newMode) {
   if (newMode !== "duct" && newMode !== "room") return;
+  const oldMode = state.mode;
   state.mode = newMode;
-  document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.mode === newMode));
-  });
-  ["duct", "room"].forEach((m) => {
-    const panel = document.getElementById(`panel-${m}`);
-    if (!panel) return;
-    const isTarget = m === newMode;
-    panel.hidden = !isTarget;
-    if (isTarget) {
-      panel.classList.remove("is-entering");
-      void panel.offsetWidth;
-      panel.classList.add("is-entering");
-    }
-  });
-  updateAllPills();
+  setPressed("#mode-tabs [data-mode]", "mode", newMode);
+  const from = document.getElementById(`panel-${oldMode}`);
+  const to = document.getElementById(`panel-${newMode}`);
+  if (from && to && from !== to && !from.hidden) {
+    fadeThrough(from, to);
+  } else if (to) {
+    ["duct", "room"].forEach((m) => {
+      const panel = document.getElementById(`panel-${m}`);
+      if (panel) panel.hidden = m !== newMode;
+    });
+  }
   calculateAndRender(true);
 }
 
 function switchShape(newShape) {
   if (newShape !== "round" && newShape !== "rect") return;
+  const oldShape = state.shape;
   state.shape = newShape;
-  document.querySelectorAll("#duct-shape-tabs [data-shape]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.shape === newShape));
-  });
-  document.getElementById("duct-round-well").hidden = newShape !== "round";
-  document.getElementById("duct-rect-well").hidden = newShape !== "rect";
-  updateAllPills();
+  setPressed("#duct-shape-tabs [data-shape]", "shape", newShape);
+  const roundWell = document.getElementById("duct-round-well");
+  const rectWell = document.getElementById("duct-rect-well");
+  if (oldShape !== newShape) {
+    fadeThrough(newShape === "round" ? rectWell : roundWell, newShape === "round" ? roundWell : rectWell);
+  }
   calculateAndRender(true);
 }
 
@@ -225,12 +237,18 @@ function wireStepper(minusId, plusId, inputId, step, min, max, onUpdate) {
   const minus = document.getElementById(minusId);
   const plus = document.getElementById(plusId);
   const input = document.getElementById(inputId);
+  const range = document.getElementById(`${inputId}-range`);
   if (!minus || !plus || !input) return;
+
+  const syncRange = (v) => {
+    if (range) range.value = String(v);
+  };
 
   minus.addEventListener("click", () => {
     const cur = sanitizeNumber(input.value, min, min, max);
     const next = Math.max(min, Number((cur - step).toFixed(1)));
     input.value = String(next);
+    syncRange(next);
     onUpdate(next);
   });
 
@@ -238,63 +256,47 @@ function wireStepper(minusId, plusId, inputId, step, min, max, onUpdate) {
     const cur = sanitizeNumber(input.value, min, min, max);
     const next = Math.min(max, Number((cur + step).toFixed(1)));
     input.value = String(next);
+    syncRange(next);
     onUpdate(next);
   });
 
   input.addEventListener("input", () => {
-    onUpdate(sanitizeNumber(input.value, min, min, max));
+    const v = sanitizeNumber(input.value, min, min, max);
+    syncRange(v);
+    onUpdate(v);
   });
+
+  if (range) {
+    range.addEventListener("input", () => {
+      const v = sanitizeNumber(range.value, min, min, max);
+      input.value = String(v);
+      onUpdate(v);
+    });
+  }
 }
 
 function renderSettingsTheme() {
   const mode = getCurrentThemeMode();
   document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
-    btn.setAttribute("aria-checked", String(btn.getAttribute("data-theme-mode") === mode));
+    btn.setAttribute("aria-pressed", String(btn.getAttribute("data-theme-mode") === mode));
   });
 }
 
-function openSettings() {
-  document.getElementById("view-calc").hidden = true;
-  const sv = document.getElementById("view-settings");
-  sv.hidden = false;
-  sv.classList.remove("is-entering");
-  void sv.offsetWidth;
-  sv.classList.add("is-entering");
-  document.getElementById("nav-home-link").hidden = true;
-  document.getElementById("nav-back-btn").hidden = false;
-  const resetBtn = document.getElementById("reset-calc-btn");
-  if (resetBtn) resetBtn.hidden = true;
-  document.getElementById("brand-title").textContent = "Einstellungen";
-  renderSettingsTheme();
-}
-
-function openCalc() {
-  document.getElementById("view-settings").hidden = true;
-  const cv = document.getElementById("view-calc");
-  cv.hidden = false;
-  cv.classList.remove("is-entering");
-  void cv.offsetWidth;
-  cv.classList.add("is-entering");
-  document.getElementById("nav-back-btn").hidden = true;
-  document.getElementById("nav-home-link").hidden = false;
-  const resetBtn = document.getElementById("reset-calc-btn");
-  if (resetBtn) resetBtn.hidden = false;
-  document.getElementById("brand-title").textContent = "Luftkanal";
-  updateAllPills();
+function setSettingsOpen(open) {
+  const modal = document.getElementById("settingsModal");
+  if (!modal) return;
+  modal.classList.toggle("is-open", open);
+  if (open) renderSettingsTheme();
 }
 
 function syncStateToUI() {
-  document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.mode === state.mode));
-  });
+  setPressed("#mode-tabs [data-mode]", "mode", state.mode);
   ["duct", "room"].forEach((m) => {
     const panel = document.getElementById(`panel-${m}`);
     if (panel) panel.hidden = m !== state.mode;
   });
 
-  document.querySelectorAll("#duct-shape-tabs [data-shape]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.shape === state.shape));
-  });
+  setPressed("#duct-shape-tabs [data-shape]", "shape", state.shape);
   const roundWell = document.getElementById("duct-round-well");
   const rectWell = document.getElementById("duct-rect-well");
   if (roundWell) roundWell.hidden = state.shape !== "round";
@@ -302,25 +304,31 @@ function syncStateToUI() {
 
   document.querySelectorAll("#dn-group [data-dn]").forEach((btn) => {
     const dn = parseLocaleNumber(btn.dataset.dn, 200, 50, 1500);
-    btn.setAttribute("aria-pressed", String(dn === state.dnMm));
+    btn.setAttribute("aria-selected", String(dn === state.dnMm));
   });
 
   const setVal = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.value = String(val);
+    const range = document.getElementById(`${id}-range`);
+    if (range) range.value = String(val);
   };
   setVal("air-flow-input", state.flowM3h);
   setVal("rect-w-input", state.rectWmm);
   setVal("rect-h-input", state.rectHmm);
   setVal("room-vol-input", state.roomVolM3);
   setVal("air-dt-input", state.airDtK);
-
-  updateAllPills();
 }
 
 function init() {
-  document.getElementById("settings-toggle-btn")?.addEventListener("click", openSettings);
-  document.getElementById("nav-back-btn")?.addEventListener("click", openCalc);
+  document.getElementById("settings-toggle-btn")?.addEventListener("click", () => setSettingsOpen(true));
+  document.getElementById("settingsCloseBtn")?.addEventListener("click", () => setSettingsOpen(false));
+  document.getElementById("settingsModal")?.addEventListener("click", (e) => {
+    if (e.target.id === "settingsModal") setSettingsOpen(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setSettingsOpen(false);
+  });
 
   document.getElementById("reset-calc-btn")?.addEventListener("click", () => {
     Object.assign(state, DEFAULT_STATE);
@@ -328,14 +336,6 @@ function init() {
     syncStateToUI();
     calculateAndRender(true);
     showToast("Standardwerte wiederhergestellt");
-  });
-
-  wireCopyResultButton("copy-result-btn", () => {
-    const label = document.getElementById("result-label")?.textContent?.trim() || "";
-    const num = document.getElementById("result-number")?.textContent?.trim() || "";
-    const unit = document.getElementById("result-unit")?.textContent?.trim() || "";
-    const sub = document.getElementById("result-sub")?.textContent?.trim() || "";
-    return `${label}: ${num} ${unit} (${sub})`;
   });
 
   document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
@@ -357,7 +357,7 @@ function init() {
     btn.addEventListener("click", () => {
       state.dnMm = sanitizeNumber(btn.dataset.dn, 200, 50, 1500);
       document.querySelectorAll("#dn-group [data-dn]").forEach((b) => {
-        b.setAttribute("aria-pressed", String(b === btn));
+        b.setAttribute("aria-selected", String(b === btn));
       });
       calculateAndRender(true);
     });
@@ -388,6 +388,10 @@ function init() {
   const vqIn = document.getElementById("param-vquiet-input");
   if (rhoIn) rhoIn.value = String(luftParams.airRho);
   if (vqIn) vqIn.value = String(luftParams.vQuietMax);
+  const rhoRange = document.getElementById("param-air-rho-input-range");
+  const vqRange = document.getElementById("param-vquiet-input-range");
+  if (rhoRange) rhoRange.value = String(luftParams.airRho);
+  if (vqRange) vqRange.value = String(luftParams.vQuietMax);
 
   wireStepper("param-air-rho-minus", "param-air-rho-plus", "param-air-rho-input", 0.01, 0.9, 1.4, (v) => {
     luftParams.airRho = v;
@@ -400,7 +404,6 @@ function init() {
     calculateAndRender(true);
   });
 
-  window.addEventListener("resize", updateAllPills);
   syncStateToUI();
   calculateAndRender(false);
 }

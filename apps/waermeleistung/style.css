@@ -1,0 +1,50 @@
+/* App-spezifisch: Wärmeleistung. Nur Tokens aus global.css, keine Flächen oder Schatten. */
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.calc-modes {
+  margin-bottom: 1.25rem;
+}
+
+
+.control .control-label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+}
+
+.control .control-slide {
+  margin-top: 0.25rem;
+}
+
+.control .control-slide .value-input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  text-align: center;
+}
+
+.control .control-slide .input-unit-addon {
+  min-width: 3.5em;
+  padding-left: 0;
+}
+
+.control .tab-strip {
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.control .segmented-control {
+  margin-top: 0.5rem;
+}
+
+.control > .segmented-control:first-child {
+  margin-top: 0;
+}
+
+.modal-card .group {
+  margin-bottom: 0;
+}

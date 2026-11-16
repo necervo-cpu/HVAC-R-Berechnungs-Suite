@@ -15,6 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      id="agFonts"
       href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0..200&display=swap"
       rel="stylesheet"
       media="print"
@@ -40,225 +41,213 @@
       })();
     </script>
     <link rel="stylesheet" href="../../assets/css/global.css" />
+    <script>
+      (function () {
+        var root = document.documentElement, link = document.getElementById("agFonts");
+        if (!link || !document.fonts || !document.fonts.load) return;
+        var done = function () { root.classList.remove("icons-pending"); };
+        root.classList.add("icons-pending");
+        setTimeout(done, 4000);
+        link.addEventListener("load", function () {
+          setTimeout(function () { document.fonts.load('24px "Material Symbols Rounded"').then(done, done); }, 0);
+        });
+        link.addEventListener("error", done);
+      })();
+    </script>
     <script type="module" src="../../assets/js/shared.js"></script>
   </head>
   <body>
-    <div class="ambient-canvas" aria-hidden="true">
-      <div class="ambient-blob ambient-blob--cyan"></div>
-      <div class="ambient-blob ambient-blob--purple"></div>
-    </div>
+    <div class="ambient-canvas" aria-hidden="true"></div>
 
-    <main class="app-shell">
-      <header class="app-header">
-        <div class="hero-nav-left">
-          <a href="../../index.html" id="nav-home-link" class="back-btn press-btn" aria-label="Zurück zum Dashboard">
-            <span class="material-symbols-rounded" aria-hidden="true">arrow_back_ios_new</span>
-            <span>Übersicht</span>
-          </a>
-          <button type="button" id="nav-back-btn" class="back-btn press-btn" aria-label="Zurück zum Rechner" hidden>
-            <span class="material-symbols-rounded" aria-hidden="true">arrow_back_ios_new</span>
-            <span>Zurück</span>
-          </button>
-        </div>
+    <main class="app-shell app-shell--narrow">
+      <div class="app-topbar">
+        <a href="../../index.html" id="nav-home-link" class="back-btn">
+          <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>Übersicht
+        </a>
         <div class="top-actions">
-          <button type="button" id="reset-calc-btn" class="icon-btn press-icon" aria-label="Eingaben zurücksetzen" title="Zurücksetzen">
+          <button type="button" id="reset-calc-btn" class="icon-btn" aria-label="Eingaben zurücksetzen" title="Zurücksetzen">
             <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span>
           </button>
-          <button type="button" id="themeToggleBtn" class="icon-btn press-icon" aria-label="Designmodus wechseln (Hell / Dunkel)" title="Hell / Dunkel wechseln">
+          <button type="button" id="themeToggleBtn" class="icon-btn" aria-label="Erscheinungsbild wechseln" title="Hell oder Dunkel wechseln">
             <span class="material-symbols-rounded" id="themeToggleIcon" aria-hidden="true">light_mode</span>
           </button>
-          <button type="button" id="settings-toggle-btn" class="icon-btn settings-btn press-icon" aria-label="Einstellungen öffnen" title="Einstellungen">
+          <button type="button" id="settings-toggle-btn" class="icon-btn" aria-label="Einstellungen öffnen" title="Einstellungen">
             <span class="material-symbols-rounded" aria-hidden="true">settings</span>
           </button>
         </div>
-        <h1 class="brand-title" style="flex-basis: 100%;">
-          <span class="material-symbols-rounded" style="color: var(--system-cyan);" aria-hidden="true">air</span>
-          <span id="brand-title">Luftkanal</span>
-        </h1>
-      </header>
-
-      <div id="view-calc" class="view-stack calc-panel">
-        <div class="segmented" id="mode-tabs" role="tablist" aria-label="Berechnungsmodus">
-          <span class="t-tabs-pill" aria-hidden="true"></span>
-          <button type="button" class="tab-btn press-btn" role="tab" aria-selected="true" data-mode="duct">Kanal &amp; v</button>
-          <button type="button" class="tab-btn press-btn" role="tab" aria-selected="false" data-mode="room">Luftwechsel &amp; Q̇</button>
-        </div>
-
-        <section class="liquid-glass glass-card" aria-label="Luftkanal-Berechnung">
-          <div class="liquid-surface-inner result-hero" aria-live="polite">
-            <div class="result-top">
-              <span id="result-label" class="result-label">Luftgeschwindigkeit v</span>
-              <span id="result-badge" class="status-badge" data-state="ok">Leise (≤ 4 m/s)</span>
-            </div>
-            <div class="result-value-row">
-              <div class="result-main" id="result-main">
-                <span id="result-number">3,54</span><span id="result-unit" class="result-unit">m/s</span>
-              </div>
-              <button type="button" id="copy-result-btn" class="copy-result-btn press-icon" aria-label="Ergebnis kopieren" title="Ergebnis kopieren">
-                <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
-              </button>
-            </div>
-            <div id="result-sub" class="result-sub">DN 200 · Querschnitt 314 cm² · 111 l/s</div>
-            <div class="result-meter" aria-hidden="true">
-              <div id="result-meter-fill" class="result-meter-fill" data-state="ok"></div>
-            </div>
-          </div>
-
-          <div class="liquid-surface-inner well">
-            <div class="well-header">
-              <label class="well-label" for="air-flow-input">Luftvolumenstrom V̇</label>
-            </div>
-            <div class="stepper-row">
-              <button type="button" class="step-btn press-btn" id="air-flow-minus" aria-label="Volumenstrom verringern">−</button>
-              <div class="num-value-wrap">
-                <input id="air-flow-input" class="num-input" type="text" inputmode="decimal" step="50" min="0" max="50000" value="400" aria-label="Luftvolumenstrom in Kubikmetern pro Stunde" />
-                <span class="num-unit">m³/h</span>
-              </div>
-              <button type="button" class="step-btn press-btn" id="air-flow-plus" aria-label="Volumenstrom erhöhen">+</button>
-            </div>
-          </div>
-
-          <!-- PANEL 1: Kanal & Geschwindigkeit -->
-          <div id="panel-duct" class="calc-panel view-stack">
-            <div class="liquid-surface-inner well">
-              <div class="well-header">
-                <span class="well-label">Kanalform</span>
-              </div>
-              <div class="segmented segmented--compact" id="duct-shape-tabs" role="tablist" aria-label="Kanalform">
-                <span class="t-tabs-pill" aria-hidden="true"></span>
-                <button type="button" class="tab-btn press-btn" role="tab" aria-selected="true" data-shape="round">Rundrohr (DN)</button>
-                <button type="button" class="tab-btn press-btn" role="tab" aria-selected="false" data-shape="rect">Rechteckkanal</button>
-              </div>
-            </div>
-
-            <div class="liquid-surface-inner well" id="duct-round-well">
-              <div class="well-header">
-                <span class="well-label">Wickelfalzrohr Nennweite</span>
-              </div>
-              <div class="chip-group" id="dn-group" role="group" aria-label="Rundrohr Durchmesser">
-                <button type="button" class="chip-btn press-btn" data-dn="100" aria-pressed="false">DN 100</button>
-                <button type="button" class="chip-btn press-btn" data-dn="125" aria-pressed="false">DN 125</button>
-                <button type="button" class="chip-btn press-btn" data-dn="160" aria-pressed="false">DN 160</button>
-                <button type="button" class="chip-btn press-btn" data-dn="200" aria-pressed="true">DN 200</button>
-                <button type="button" class="chip-btn press-btn" data-dn="250" aria-pressed="false">DN 250</button>
-                <button type="button" class="chip-btn press-btn" data-dn="315" aria-pressed="false">DN 315</button>
-                <button type="button" class="chip-btn press-btn" data-dn="400" aria-pressed="false">DN 400</button>
-                <button type="button" class="chip-btn press-btn" data-dn="500" aria-pressed="false">DN 500</button>
-              </div>
-            </div>
-
-            <div class="field-grid field-grid--2" id="duct-rect-well" hidden>
-              <div class="liquid-surface-inner well">
-                <div class="well-header">
-                  <label class="well-label" for="rect-w-input">Breite B</label>
-                </div>
-                <div class="stepper-row">
-                  <button type="button" class="step-btn press-btn" id="rect-w-minus" aria-label="Breite verringern">−</button>
-                  <div class="num-value-wrap">
-                    <input id="rect-w-input" class="num-input" type="text" inputmode="decimal" step="50" min="50" max="2000" value="300" aria-label="Kanalbreite in Millimetern" />
-                    <span class="num-unit">mm</span>
-                  </div>
-                  <button type="button" class="step-btn press-btn" id="rect-w-plus" aria-label="Breite erhöhen">+</button>
-                </div>
-              </div>
-
-              <div class="liquid-surface-inner well">
-                <div class="well-header">
-                  <label class="well-label" for="rect-h-input">Höhe H</label>
-                </div>
-                <div class="stepper-row">
-                  <button type="button" class="step-btn press-btn" id="rect-h-minus" aria-label="Höhe verringern">−</button>
-                  <div class="num-value-wrap">
-                    <input id="rect-h-input" class="num-input" type="text" inputmode="decimal" step="50" min="50" max="2000" value="150" aria-label="Kanalhöhe in Millimetern" />
-                    <span class="num-unit">mm</span>
-                  </div>
-                  <button type="button" class="step-btn press-btn" id="rect-h-plus" aria-label="Höhe erhöhen">+</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- PANEL 2: Raumluftwechsel & Leistung -->
-          <div id="panel-room" class="calc-panel view-stack" hidden>
-            <div class="field-grid field-grid--2">
-              <div class="liquid-surface-inner well">
-                <div class="well-header">
-                  <label class="well-label" for="room-vol-input">Raumvolumen</label>
-                </div>
-                <div class="stepper-row">
-                  <button type="button" class="step-btn press-btn" id="room-vol-minus" aria-label="Raumvolumen verringern">−</button>
-                  <div class="num-value-wrap">
-                    <input id="room-vol-input" class="num-input" type="text" inputmode="decimal" step="10" min="1" max="50000" value="120" aria-label="Raumvolumen in Kubikmetern" />
-                    <span class="num-unit">m³</span>
-                  </div>
-                  <button type="button" class="step-btn press-btn" id="room-vol-plus" aria-label="Raumvolumen erhöhen">+</button>
-                </div>
-              </div>
-
-              <div class="liquid-surface-inner well">
-                <div class="well-header">
-                  <label class="well-label" for="air-dt-input">Temperaturdiff. ΔT</label>
-                </div>
-                <div class="stepper-row">
-                  <button type="button" class="step-btn press-btn" id="air-dt-minus" aria-label="Temperaturdifferenz verringern">−</button>
-                  <div class="num-value-wrap">
-                    <input id="air-dt-input" class="num-input" type="text" inputmode="decimal" step="1" min="0" max="60" value="8" aria-label="Temperaturdifferenz in Kelvin" />
-                    <span class="num-unit">K</span>
-                  </div>
-                  <button type="button" class="step-btn press-btn" id="air-dt-plus" aria-label="Temperaturdifferenz erhöhen">+</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
 
-      <section id="view-settings" class="liquid-glass glass-card calc-panel" aria-label="Einstellungen" hidden>
-        <div class="liquid-surface-inner well">
-          <div class="well-header">
-            <span class="well-label">Darstellung</span>
-            <span class="well-hint">Dual-Theme (Hell / Dunkel)</span>
+      <header class="app-header">
+        <div class="app-header-text">
+          <h1 class="brand-title" id="brand-title">Luftkanal</h1>
+          <p class="brand-subtitle">Kanalgeschwindigkeit, Luftwechsel und Luftleistung</p>
+        </div>
+      </header>
+
+      <div id="view-calc">
+        <div class="segmented-control" id="mode-tabs" role="group" aria-label="Berechnungsmodus">
+          <button type="button" class="segmented-option" data-mode="duct" aria-pressed="true">Kanal und v</button>
+          <button type="button" class="segmented-option" data-mode="room" aria-pressed="false">Luftwechsel und Q̇</button>
+        </div>
+
+        <section class="hero" aria-live="polite" aria-label="Ergebnis">
+          <div class="hero-caption" id="result-label">Luftgeschwindigkeit v</div>
+          <div class="hero-value numeric" id="result-main"><span id="result-number">–</span> <span id="result-unit" class="metric-unit">m/s</span></div>
+          <span class="status-pill status-pill--green" id="result-badge" data-state="ok"><span class="status-dot"></span><span id="result-badge-text">Leise</span></span>
+        </section>
+
+        <div class="info-list" id="result-rows" style="margin-bottom: 1.5rem"></div>
+
+        <section class="glass-card" aria-label="Luftkanal-Berechnung">
+        <div class="control">
+          <div class="control-head">
+            <label class="control-label" for="air-flow-input">Luftvolumenstrom V̇</label>
+            <input id="air-flow-input" class="value-input numeric" type="text" inputmode="decimal" autocomplete="off" value="400" aria-label="Luftvolumenstrom in Kubikmetern pro Stunde" />
+            <span class="input-unit-addon">m³/h</span>
           </div>
-          <div id="theme-mode-group" class="settings-segmented" role="radiogroup" aria-label="Darstellungsmodus">
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="auto" aria-checked="true">Auto</button>
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="light" aria-checked="false">Hell</button>
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="dark" aria-checked="false">Dunkel</button>
+          <div class="control-slide">
+            <button type="button" class="stepper" id="air-flow-minus" aria-label="Luftvolumenstrom V̇ verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+            <input type="range" id="air-flow-input-range" min="0" max="5000" step="50" value="400" aria-label="Luftvolumenstrom V̇ Schieberegler" />
+            <button type="button" class="stepper" id="air-flow-plus" aria-label="Luftvolumenstrom V̇ erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
           </div>
         </div>
 
-        <div class="field-grid field-grid--2">
-          <div class="liquid-surface-inner well">
-            <div class="well-header">
-              <label class="well-label" for="param-air-rho-input">Luftdichte ρ</label>
+          <div id="panel-duct">
+            <div class="segmented-control" id="duct-shape-tabs" role="group" aria-label="Kanalform">
+              <button type="button" class="segmented-option" data-shape="round" aria-pressed="true">Rundrohr</button>
+              <button type="button" class="segmented-option" data-shape="rect" aria-pressed="false">Rechteckkanal</button>
             </div>
-            <div class="stepper-row">
-              <button type="button" class="step-btn press-btn" id="param-air-rho-minus" aria-label="Luftdichte verringern">−</button>
-              <div class="num-value-wrap">
-                <input id="param-air-rho-input" class="num-input" type="text" inputmode="decimal" step="0.01" min="0.9" max="1.4" value="1.204" aria-label="Luftdichte in Kilogramm pro Kubikmeter" />
-                <span class="num-unit">kg/m³</span>
+
+            <div id="duct-round-well">
+              <div class="card-title" style="margin: 1rem 0 0.5rem">Wickelfalzrohr Nennweite</div>
+              <div class="tab-strip" id="dn-group" role="tablist" aria-label="Rundrohr Durchmesser">
+            <button type="button" class="tab-pill" role="tab" data-dn="100" aria-selected="false">DN 100</button>
+            <button type="button" class="tab-pill" role="tab" data-dn="125" aria-selected="false">DN 125</button>
+            <button type="button" class="tab-pill" role="tab" data-dn="160" aria-selected="false">DN 160</button>
+            <button type="button" class="tab-pill" role="tab" data-dn="200" aria-selected="true">DN 200</button>
+            <button type="button" class="tab-pill" role="tab" data-dn="250" aria-selected="false">DN 250</button>
+            <button type="button" class="tab-pill" role="tab" data-dn="315" aria-selected="false">DN 315</button>
+            <button type="button" class="tab-pill" role="tab" data-dn="400" aria-selected="false">DN 400</button>
+            <button type="button" class="tab-pill" role="tab" data-dn="500" aria-selected="false">DN 500</button>
               </div>
-              <button type="button" class="step-btn press-btn" id="param-air-rho-plus" aria-label="Luftdichte erhöhen">+</button>
+            </div>
+
+            <div id="duct-rect-well" hidden>
+        <div class="control">
+          <div class="control-head">
+            <label class="control-label" for="rect-w-input">Breite B</label>
+            <input id="rect-w-input" class="value-input numeric" type="text" inputmode="decimal" autocomplete="off" value="300" aria-label="Kanalbreite in Millimetern" />
+            <span class="input-unit-addon">mm</span>
+          </div>
+          <div class="control-slide">
+            <button type="button" class="stepper" id="rect-w-minus" aria-label="Breite B verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+            <input type="range" id="rect-w-input-range" min="50" max="2000" step="50" value="300" aria-label="Breite B Schieberegler" />
+            <button type="button" class="stepper" id="rect-w-plus" aria-label="Breite B erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label class="control-label" for="rect-h-input">Höhe H</label>
+            <input id="rect-h-input" class="value-input numeric" type="text" inputmode="decimal" autocomplete="off" value="150" aria-label="Kanalhöhe in Millimetern" />
+            <span class="input-unit-addon">mm</span>
+          </div>
+          <div class="control-slide">
+            <button type="button" class="stepper" id="rect-h-minus" aria-label="Höhe H verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+            <input type="range" id="rect-h-input-range" min="50" max="2000" step="50" value="150" aria-label="Höhe H Schieberegler" />
+            <button type="button" class="stepper" id="rect-h-plus" aria-label="Höhe H erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+          </div>
+        </div>
+
             </div>
           </div>
 
-          <div class="liquid-surface-inner well">
-            <div class="well-header">
-              <label class="well-label" for="param-vquiet-input">Max. v „Leise“</label>
-            </div>
-            <div class="stepper-row">
-              <button type="button" class="step-btn press-btn" id="param-vquiet-minus" aria-label="Grenzwert verringern">−</button>
-              <div class="num-value-wrap">
-                <input id="param-vquiet-input" class="num-input" type="text" inputmode="decimal" step="0.5" min="2" max="8" value="4" aria-label="Maximale leise Kanalgeschwindigkeit in Metern pro Sekunde" />
-                <span class="num-unit">m/s</span>
-              </div>
-              <button type="button" class="step-btn press-btn" id="param-vquiet-plus" aria-label="Grenzwert erhöhen">+</button>
-            </div>
+          <div id="panel-room" hidden>
+        <div class="control">
+          <div class="control-head">
+            <label class="control-label" for="room-vol-input">Raumvolumen</label>
+            <input id="room-vol-input" class="value-input numeric" type="text" inputmode="decimal" autocomplete="off" value="120" aria-label="Raumvolumen in Kubikmetern" />
+            <span class="input-unit-addon">m³</span>
+          </div>
+          <div class="control-slide">
+            <button type="button" class="stepper" id="room-vol-minus" aria-label="Raumvolumen verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+            <input type="range" id="room-vol-input-range" min="1" max="2000" step="10" value="120" aria-label="Raumvolumen Schieberegler" />
+            <button type="button" class="stepper" id="room-vol-plus" aria-label="Raumvolumen erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
           </div>
         </div>
-      </section>
+
+        <div class="control">
+          <div class="control-head">
+            <label class="control-label" for="air-dt-input">Temperaturdifferenz ΔT</label>
+            <input id="air-dt-input" class="value-input numeric" type="text" inputmode="decimal" autocomplete="off" value="8" aria-label="Temperaturdifferenz in Kelvin" />
+            <span class="input-unit-addon">K</span>
+          </div>
+          <div class="control-slide">
+            <button type="button" class="stepper" id="air-dt-minus" aria-label="Temperaturdifferenz ΔT verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+            <input type="range" id="air-dt-input-range" min="0" max="60" step="1" value="8" aria-label="Temperaturdifferenz ΔT Schieberegler" />
+            <button type="button" class="stepper" id="air-dt-plus" aria-label="Temperaturdifferenz ΔT erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+          </div>
+        </div>
+
+          </div>
+        </section>
+
+
+        <p class="hint numeric" id="formula-hint" style="margin-top: 1rem">v = V̇ / A, A = π · d² / 4, d_eq = 1,3 · (B · H)^0,625 / (B + H)^0,25</p>
+      </div>
     </main>
 
-    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite" data-visible="false"></div>
+    <div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="liquid-glass modal-card">
+        <div class="modal-head">
+          <h2 class="modal-title" id="settingsTitle">Einstellungen</h2>
+          <button type="button" class="icon-btn" id="settingsCloseBtn" aria-label="Schließen">
+            <span class="material-symbols-rounded" aria-hidden="true">close</span>
+          </button>
+        </div>
+
+        <div>
+          <div class="card-title" style="margin-bottom: 0.5rem">Darstellung</div>
+          <div class="segmented-control" id="theme-mode-group" role="group" aria-label="Darstellung">
+            <button type="button" class="segmented-option" data-theme-mode="light" aria-pressed="false">Hell</button>
+            <button type="button" class="segmented-option" data-theme-mode="dark" aria-pressed="false">Dunkel</button>
+            <button type="button" class="segmented-option" data-theme-mode="auto" aria-pressed="true">System</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="card-title">Rechenwerte</div>
+        <div class="control">
+          <div class="control-head">
+            <label class="control-label" for="param-air-rho-input">Luftdichte ρ</label>
+            <input id="param-air-rho-input" class="value-input numeric" type="text" inputmode="decimal" autocomplete="off" value="1.204" aria-label="Luftdichte in Kilogramm pro Kubikmeter" />
+            <span class="input-unit-addon">kg/m³</span>
+          </div>
+          <div class="control-slide">
+            <button type="button" class="stepper" id="param-air-rho-minus" aria-label="Luftdichte ρ verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+            <input type="range" id="param-air-rho-input-range" min="0.9" max="1.4" step="0.01" value="1.204" aria-label="Luftdichte ρ Schieberegler" />
+            <button type="button" class="stepper" id="param-air-rho-plus" aria-label="Luftdichte ρ erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label class="control-label" for="param-vquiet-input">Grenze „Leise“</label>
+            <input id="param-vquiet-input" class="value-input numeric" type="text" inputmode="decimal" autocomplete="off" value="4" aria-label="Maximale leise Kanalgeschwindigkeit in Metern pro Sekunde" />
+            <span class="input-unit-addon">m/s</span>
+          </div>
+          <div class="control-slide">
+            <button type="button" class="stepper" id="param-vquiet-minus" aria-label="Grenze „Leise“ verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+            <input type="range" id="param-vquiet-input-range" min="2" max="8" step="0.5" value="4" aria-label="Grenze „Leise“ Schieberegler" />
+            <button type="button" class="stepper" id="param-vquiet-plus" aria-label="Grenze „Leise“ erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+          </div>
+        </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite"><span class="material-symbols-rounded" aria-hidden="true">check_circle</span><span id="toast-text"></span></div>
     <script type="module" src="./app.js"></script>
   </body>
 </html>

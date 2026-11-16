@@ -8,17 +8,12 @@
  */
 
 import {
-  applyThemeMode,
   clearAppStorage,
   createNumberAnimator,
-  getCurrentThemeMode,
   loadAppParams,
   parseLocaleNumber,
-  prefersReducedMotion,
   saveAppParams,
   showToast,
-  updateAllPills,
-  wireCopyResultButton,
 } from "../../assets/js/shared.js";
 
 const TAUPUNKT_PARAMS_KEY = "hvacr-params-taupunkt";
@@ -54,8 +49,10 @@ function sanitizeNumber(raw, fallback, min, max) {
   return parseLocaleNumber(raw, fallback, min, max);
 }
 
+const invalidFields = new Set();
+
 function formatDe(value, decimals = 1) {
-  if (!Number.isFinite(value)) return "0";
+  if (!Number.isFinite(value)) return "–";
   return value.toLocaleString("de-DE", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -70,16 +67,6 @@ const resultNumberAnimator = createNumberAnimator({
     if (numEl) numEl.textContent = formatDe(val, 1);
   },
 });
-
-function triggerResultPop() {
-  if (prefersReducedMotion()) return;
-  const main = document.getElementById("result-main");
-  if (!main) return;
-  main.classList.remove("is-popping");
-  void main.offsetWidth;
-  main.classList.add("is-popping");
-  window.setTimeout(() => main.classList.remove("is-popping"), 180);
-}
 
 function calcMoistAir(tempC, rhPct) {
   const rh = Math.min(100, Math.max(1, rhPct));
@@ -107,25 +94,27 @@ function calcMoistAir(tempC, rhPct) {
   return { dewPointC, absHumidityGm3, xGKg, enthalpyKjKg };
 }
 
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
 function calculateAndRender(animate = true) {
   persistState();
   const air = calcMoistAir(state.tempC, state.rhPct);
-  const labelEl = document.getElementById("result-label");
-  const unitEl = document.getElementById("result-unit");
-  const subEl = document.getElementById("result-sub");
-  const badgeEl = document.getElementById("result-badge");
-  const meterEl = document.getElementById("result-meter-fill");
+  const pill = document.getElementById("result-pill");
+  const hint = document.getElementById("input-hint");
 
   let numericValue = air.dewPointC;
   let label = "Taupunkttemperatur";
   let unit = "°C";
   let badgeText = "Behaglich";
   let badgeState = "ok";
-  let meterPct = ((air.dewPointC + 10) / 40) * 100;
-  let sub = `${formatDe(air.absHumidityGm3, 1)} g/m³ · ${formatDe(air.xGKg, 1)} g/kg · ${formatDe(
-    air.enthalpyKjKg,
-    1
-  )} kJ/kg`;
+  let rows = [
+    ["Absolute Feuchte", `${formatDe(air.absHumidityGm3, 1)} g/m³`],
+    ["Feuchtegrad", `${formatDe(air.xGKg, 1)} g/kg`],
+    ["Enthalpie", `${formatDe(air.enthalpyKjKg, 1)} kJ/kg`],
+  ];
 
   if (state.mode === "dewpoint") {
     if (state.rhPct < 30) {
@@ -146,11 +135,14 @@ function calculateAndRender(animate = true) {
     numericValue = marginK;
     label = "Abstand zum Taupunkt";
     unit = "K";
-    sub = `Taupunkt ${formatDe(air.dewPointC, 1)} °C · Oberfläche ${formatDe(state.surfaceC, 1)} °C`;
-    meterPct = Math.max(6, Math.min(100, ((marginK + 2) / 12) * 100));
+    rows = [
+      ["Taupunkt", `${formatDe(air.dewPointC, 1)} °C`],
+      ["Oberfläche", `${formatDe(state.surfaceC, 1)} °C`],
+      ["Absolute Feuchte", `${formatDe(air.absHumidityGm3, 1)} g/m³`],
+    ];
 
     if (marginK <= 0) {
-      badgeText = "Tauwasserbildung!";
+      badgeText = "Tauwasserbildung";
       badgeState = "bad";
     } else if (marginK < taupunktParams.safetyMarginK) {
       badgeText = `Kritisch (< ${formatDe(taupunktParams.safetyMarginK, 1)} K Reserve)`;
@@ -161,103 +153,75 @@ function calculateAndRender(animate = true) {
     }
   }
 
-  if (labelEl) labelEl.textContent = label;
-  if (unitEl) unitEl.textContent = unit;
-  if (subEl) subEl.textContent = sub;
-  if (badgeEl) {
-    badgeEl.textContent = badgeText;
-    badgeEl.setAttribute("data-state", badgeState);
-  }
-  if (meterEl) {
-    meterEl.style.width = `${Math.min(100, Math.max(6, meterPct))}%`;
-    meterEl.setAttribute("data-state", badgeState);
+  const invalid = invalidFields.size > 0;
+  if (hint) hint.hidden = !invalid;
+  if (pill) pill.hidden = invalid;
+  if (invalid) {
+    numericValue = NaN;
+    rows = rows.map(([name]) => [name, "–"]);
   }
 
+  setText("result-label", label);
+  setText("result-unit", unit);
+  rows.forEach(([name, value], i) => {
+    setText(`row${i + 1}-label`, name);
+    setText(`row${i + 1}-value`, value);
+  });
+  if (pill) {
+    pill.classList.remove("status-pill--green", "status-pill--orange", "status-pill--red");
+    pill.classList.add(
+      badgeState === "ok" ? "status-pill--green" : badgeState === "warn" ? "status-pill--orange" : "status-pill--red"
+    );
+  }
+  setText("result-badge", badgeText);
+
   resultNumberAnimator.update(numericValue, state.mode, animate);
-  triggerResultPop();
 }
 
 function switchMode(newMode) {
   if (newMode !== "dewpoint" && newMode !== "condensation") return;
   state.mode = newMode;
   document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.mode === newMode));
+    btn.setAttribute("aria-pressed", String(btn.dataset.mode === newMode));
   });
   const surfaceWell = document.getElementById("surface-temp-well");
   if (surfaceWell) surfaceWell.hidden = newMode !== "condensation";
-  updateAllPills();
   calculateAndRender(true);
 }
 
-function wireStepper(minusId, plusId, inputId, step, min, max, onUpdate) {
-  const minus = document.getElementById(minusId);
-  const plus = document.getElementById(plusId);
+function isParsable(raw) {
+  const str = String(raw ?? "").replace(/\s+/g, "").replace(",", ".");
+  return str !== "" && Number.isFinite(Number(str));
+}
+
+function wireInput(inputId, min, max, onUpdate) {
   const input = document.getElementById(inputId);
-  if (!minus || !plus || !input) return;
-
-  minus.addEventListener("click", () => {
-    const cur = sanitizeNumber(input.value, min, min, max);
-    const next = Math.max(min, Number((cur - step).toFixed(1)));
-    input.value = String(next);
-    onUpdate(next);
-  });
-
-  plus.addEventListener("click", () => {
-    const cur = sanitizeNumber(input.value, min, min, max);
-    const next = Math.min(max, Number((cur + step).toFixed(1)));
-    input.value = String(next);
-    onUpdate(next);
-  });
-
+  if (!input) return;
   input.addEventListener("input", () => {
+    if (!isParsable(input.value)) {
+      invalidFields.add(inputId);
+      calculateAndRender(false);
+      return;
+    }
+    invalidFields.delete(inputId);
     onUpdate(sanitizeNumber(input.value, min, min, max));
   });
-}
-
-function renderSettingsTheme() {
-  const mode = getCurrentThemeMode();
-  document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
-    btn.setAttribute("aria-checked", String(btn.getAttribute("data-theme-mode") === mode));
+  input.addEventListener("blur", () => {
+    if (!invalidFields.has(inputId)) {
+      const num = sanitizeNumber(input.value, min, min, max);
+      input.value = String(num).replace(".", ",");
+    }
   });
-}
-
-function openSettings() {
-  document.getElementById("view-calc").hidden = true;
-  const sv = document.getElementById("view-settings");
-  sv.hidden = false;
-  sv.classList.remove("is-entering");
-  void sv.offsetWidth;
-  sv.classList.add("is-entering");
-  document.getElementById("nav-home-link").hidden = true;
-  document.getElementById("nav-back-btn").hidden = false;
-  const resetBtn = document.getElementById("reset-calc-btn");
-  if (resetBtn) resetBtn.hidden = true;
-  document.getElementById("brand-title").textContent = "Einstellungen";
-  renderSettingsTheme();
-}
-
-function openCalc() {
-  document.getElementById("view-settings").hidden = true;
-  const cv = document.getElementById("view-calc");
-  cv.hidden = false;
-  cv.classList.remove("is-entering");
-  void cv.offsetWidth;
-  cv.classList.add("is-entering");
-  document.getElementById("nav-back-btn").hidden = true;
-  document.getElementById("nav-home-link").hidden = false;
-  const resetBtn = document.getElementById("reset-calc-btn");
-  if (resetBtn) resetBtn.hidden = false;
-  document.getElementById("brand-title").textContent = "Taupunkt";
-  updateAllPills();
 }
 
 function syncStateToUI() {
   document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.mode === state.mode));
+    btn.setAttribute("aria-pressed", String(btn.dataset.mode === state.mode));
   });
   const surfaceWell = document.getElementById("surface-temp-well");
   if (surfaceWell) surfaceWell.hidden = state.mode !== "condensation";
 
+  invalidFields.clear();
   const setVal = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.value = String(val);
@@ -272,14 +236,9 @@ function syncStateToUI() {
     const match = Math.abs(t - state.tempC) < 0.01 && Math.abs(rh - state.rhPct) < 0.01;
     btn.setAttribute("aria-pressed", String(match));
   });
-
-  updateAllPills();
 }
 
 function init() {
-  document.getElementById("settings-toggle-btn")?.addEventListener("click", openSettings);
-  document.getElementById("nav-back-btn")?.addEventListener("click", openCalc);
-
   document.getElementById("reset-calc-btn")?.addEventListener("click", () => {
     Object.assign(state, DEFAULT_STATE);
     clearAppStorage(TAUPUNKT_STATE_KEY);
@@ -288,34 +247,19 @@ function init() {
     showToast("Standardwerte wiederhergestellt");
   });
 
-  wireCopyResultButton("copy-result-btn", () => {
-    const label = document.getElementById("result-label")?.textContent?.trim() || "";
-    const num = document.getElementById("result-number")?.textContent?.trim() || "";
-    const unit = document.getElementById("result-unit")?.textContent?.trim() || "";
-    const sub = document.getElementById("result-sub")?.textContent?.trim() || "";
-    return `${label}: ${num} ${unit} (${sub})`;
-  });
-
-  document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      applyThemeMode(btn.getAttribute("data-theme-mode"));
-      renderSettingsTheme();
-    });
-  });
-
   document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
     btn.addEventListener("click", () => switchMode(btn.dataset.mode));
   });
 
-  wireStepper("tp-temp-minus", "tp-temp-plus", "tp-temp-input", 0.5, -30, 60, (v) => {
+  wireInput("tp-temp-input", -30, 60, (v) => {
     state.tempC = v;
     calculateAndRender(true);
   });
-  wireStepper("tp-rh-minus", "tp-rh-plus", "tp-rh-input", 2, 1, 100, (v) => {
+  wireInput("tp-rh-input", 1, 100, (v) => {
     state.rhPct = v;
     calculateAndRender(true);
   });
-  wireStepper("tp-surface-minus", "tp-surface-plus", "tp-surface-input", 0.5, -30, 60, (v) => {
+  wireInput("tp-surface-input", -30, 60, (v) => {
     state.surfaceC = v;
     calculateAndRender(true);
   });
@@ -326,6 +270,8 @@ function init() {
       const rh = sanitizeNumber(btn.dataset.rh, 50, 1, 100);
       state.tempC = t;
       state.rhPct = rh;
+      invalidFields.delete("tp-temp-input");
+      invalidFields.delete("tp-rh-input");
       document.getElementById("tp-temp-input").value = String(t);
       document.getElementById("tp-rh-input").value = String(rh);
       document.querySelectorAll("#climate-preset-group [data-t]").forEach((b) => {
@@ -335,23 +281,29 @@ function init() {
     });
   });
 
+  const accHead = document.getElementById("params-acc-head");
+  accHead?.addEventListener("click", () => {
+    const acc = document.getElementById("params-acc");
+    const open = acc.classList.toggle("is-open");
+    accHead.setAttribute("aria-expanded", String(open));
+  });
+
   const pAtmIn = document.getElementById("param-patm-hpa-input");
   const marginIn = document.getElementById("param-margin-input");
   if (pAtmIn) pAtmIn.value = String(taupunktParams.pAtmHpa);
   if (marginIn) marginIn.value = String(taupunktParams.safetyMarginK);
 
-  wireStepper("param-patm-hpa-minus", "param-patm-hpa-plus", "param-patm-hpa-input", 5, 700, 1100, (v) => {
+  wireInput("param-patm-hpa-input", 700, 1100, (v) => {
     taupunktParams.pAtmHpa = v;
     saveAppParams(TAUPUNKT_PARAMS_KEY, taupunktParams);
     calculateAndRender(true);
   });
-  wireStepper("param-margin-minus", "param-margin-plus", "param-margin-input", 0.5, 0.5, 6, (v) => {
+  wireInput("param-margin-input", 0.5, 6, (v) => {
     taupunktParams.safetyMarginK = v;
     saveAppParams(TAUPUNKT_PARAMS_KEY, taupunktParams);
     calculateAndRender(true);
   });
 
-  window.addEventListener("resize", updateAllPills);
   syncStateToUI();
   calculateAndRender(false);
 }

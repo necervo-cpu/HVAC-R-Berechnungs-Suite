@@ -16,6 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      id="agFonts"
       href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0..200&display=swap"
       rel="stylesheet"
       media="print"
@@ -40,93 +41,69 @@
         root.setAttribute("data-theme", activeTheme);
       })();
     </script>
+    <script>
+      (function () {
+        var root = document.documentElement,
+          link = document.getElementById("agFonts");
+        if (!link || !document.fonts || !document.fonts.load) return;
+        var done = function () {
+          root.classList.remove("icons-pending");
+        };
+        root.classList.add("icons-pending");
+        setTimeout(done, 4000);
+        link.addEventListener("load", function () {
+          setTimeout(function () {
+            document.fonts.load('24px "Material Symbols Rounded"').then(done, done);
+          }, 0);
+        });
+        link.addEventListener("error", done);
+      })();
+    </script>
     <link rel="stylesheet" href="./assets/css/global.css" />
     <script type="module" src="./assets/js/shared.js"></script>
     <script type="module" src="./assets/js/dashboard.js"></script>
   </head>
   <body>
-    <div class="ambient-canvas" aria-hidden="true">
-      <div class="ambient-blob ambient-blob--cyan"></div>
-      <div class="ambient-blob ambient-blob--purple"></div>
-    </div>
+    <div class="ambient-canvas" aria-hidden="true"></div>
 
-    <main class="app-shell">
-      <section id="hero-home" class="view-stack" aria-label="HVAC·R Übersicht">
-        <header class="app-header">
-          <div class="hero-nav-left">
-            <h1 class="brand-title">
-              <span class="material-symbols-rounded" style="color: var(--system-cyan);" aria-hidden="true">thermostat_auto</span>
-              <span>HVAC·R Rechner</span>
-            </h1>
-          </div>
-          <div class="top-actions">
-            <button
-              type="button"
-              id="themeToggleBtn"
-              class="icon-btn press-icon"
-              aria-label="Designmodus wechseln (Hell / Dunkel)"
-              title="Hell / Dunkel wechseln"
-            >
-              <span class="material-symbols-rounded" id="themeToggleIcon" aria-hidden="true">light_mode</span>
-            </button>
-            <button
-              type="button"
-              id="settings-toggle-btn"
-              class="icon-btn settings-btn press-icon"
-              aria-label="Einstellungen öffnen"
-              title="Einstellungen"
-            >
-              <span class="material-symbols-rounded" aria-hidden="true">settings</span>
-            </button>
-          </div>
-        </header>
-        <p class="hero-sub">Berechnung, Kennlinien und Auslegung – alles an einem Ort.</p>
-
-        <label class="search" for="hub-search">
-          <span class="material-symbols-rounded" aria-hidden="true">search</span>
-          <input
-            id="hub-search"
-            type="search"
-            placeholder="App suchen …"
-            aria-label="Rechner durchsuchen"
-            autocomplete="off"
-            autocapitalize="off"
-            spellcheck="false"
-            enterkeyhint="search"
-          />
-        </label>
-      </section>
-
-      <!-- Kompakte Top-Leiste (nur in der Einstellungen-Ansicht sichtbar) -->
-      <header id="top-bar" class="app-header" hidden>
-        <div class="hero-nav-left">
-          <button
-            type="button"
-            id="nav-back-btn"
-            class="back-btn press-btn"
-            aria-label="Zurück zur Übersicht"
-          >
-            <span class="material-symbols-rounded" aria-hidden="true">arrow_back_ios_new</span>
-            <span>Übersicht</span>
-          </button>
-          <h1 class="brand-title">
-            <span class="material-symbols-rounded" style="color: var(--system-cyan);" aria-hidden="true">tune</span>
-            <span id="brand-title">Einstellungen</span>
-          </h1>
+    <div class="app-shell" id="appShell">
+      <header class="app-header">
+        <div class="app-header-text">
+          <h1 class="brand-title">HVAC·R Rechner</h1>
         </div>
+        <button type="button" id="themeToggleBtn" class="icon-btn" aria-label="Hellmodus aktivieren">
+          <span class="material-symbols-rounded" id="themeToggleIcon" aria-hidden="true">light_mode</span>
+        </button>
+        <button type="button" id="settings-toggle-btn" class="icon-btn" aria-label="Einstellungen und Updates">
+          <span class="material-symbols-rounded" aria-hidden="true">settings</span>
+        </button>
       </header>
 
-      <!-- DASHBOARD / APP-LAUNCHER (statisch vorgerendert als gruppierte Listen für 0 ms First Paint auf iOS) -->
-      <section id="view-home" class="view-stack calc-panel" aria-label="Rechner-Übersicht">
+      <label class="search" for="hub-search">
+        <span class="material-symbols-rounded" aria-hidden="true">search</span>
+        <input
+          id="hub-search"
+          type="search"
+          placeholder="Rechner suchen"
+          aria-label="Rechner suchen"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          enterkeyhint="search"
+        />
+      </label>
+
+      <main>
+        <!-- App-Übersicht statisch im HTML (Zeilen auf dem Canvas, nur Haarlinien) -->
         <div id="hub-grid" class="hub-grid">
           <section class="hub-section" data-section="heizung">
             <h2 class="section-title">Heizung &amp; Hydraulik <span class="section-count">3</span></h2>
-            <div class="liquid-glass group" role="list">
+            <div class="group" role="list">
               <a href="./apps/waermeleistung/index.html" class="row" role="listitem" data-module-id="waermeleistung">
                 <span class="row-icon row-icon--orange"><span class="material-symbols-rounded" aria-hidden="true">local_fire_department</span></span>
                 <span class="row-text">
                   <span class="row-title">Wärmeleistung (Q̇)</span>
-                  <span class="row-sub">Hydraulik (V̇·ΔT), Volumenstrom &amp; Heizlast</span>
+                  <span class="row-sub">Volumenstrom, Spreizung und Heizlast</span>
                 </span>
                 <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
               </a>
@@ -134,7 +111,7 @@
                 <span class="row-icon row-icon--orange"><span class="material-symbols-rounded" aria-hidden="true">plumbing</span></span>
                 <span class="row-text">
                   <span class="row-title">Rohrnetz &amp; Druckverlust</span>
-                  <span class="row-sub">Fließgeschwindigkeit v (m/s) &amp; R (mbar/m)</span>
+                  <span class="row-sub">Fließgeschwindigkeit v (m/s) und R (mbar/m)</span>
                 </span>
                 <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
               </a>
@@ -142,7 +119,7 @@
                 <span class="row-icon row-icon--orange"><span class="material-symbols-rounded" aria-hidden="true">compress</span></span>
                 <span class="row-text">
                   <span class="row-title">MAG &amp; Vordruck</span>
-                  <span class="row-sub">Stickstoff-Vordruck p₀, pₐ &amp; Gefäßgröße (l)</span>
+                  <span class="row-sub">Stickstoff-Vordruck p₀, pₐ und Gefäßgröße (l)</span>
                 </span>
                 <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
               </a>
@@ -151,12 +128,12 @@
 
           <section class="hub-section" data-section="kaelte">
             <h2 class="section-title">Kälte &amp; Sensorik <span class="section-count">2</span></h2>
-            <div class="liquid-glass group" role="list">
+            <div class="group" role="list">
               <a href="./apps/sensor/index.html" class="row" role="listitem" data-module-id="sensor">
                 <span class="row-icon row-icon--blue"><span class="material-symbols-rounded" aria-hidden="true">thermostat</span></span>
                 <span class="row-text">
                   <span class="row-title">PTC / NTC Sensoren</span>
-                  <span class="row-sub">Ohm ↔ °C · NTC 2k–20k, PT100/1000, KTY81</span>
+                  <span class="row-sub">Ohm ↔ °C für NTC, PT100, PT1000 und KTY81</span>
                 </span>
                 <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
               </a>
@@ -164,7 +141,7 @@
                 <span class="row-icon row-icon--blue"><span class="material-symbols-rounded" aria-hidden="true">ac_unit</span></span>
                 <span class="row-text">
                   <span class="row-title">Kältemittel &amp; SH / SC</span>
-                  <span class="row-sub">Druck ↔ °C · Überhitzung &amp; Unterkühlung</span>
+                  <span class="row-sub">Druck ↔ °C, Überhitzung und Unterkühlung</span>
                 </span>
                 <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
               </a>
@@ -173,12 +150,12 @@
 
           <section class="hub-section" data-section="lueftung">
             <h2 class="section-title">Lüftung &amp; Feuchte <span class="section-count">2</span></h2>
-            <div class="liquid-glass group" role="list">
+            <div class="group" role="list">
               <a href="./apps/taupunkt/index.html" class="row" role="listitem" data-module-id="taupunkt">
                 <span class="row-icon row-icon--green"><span class="material-symbols-rounded" aria-hidden="true">water_drop</span></span>
                 <span class="row-text">
                   <span class="row-title">Taupunkt &amp; Feuchte</span>
-                  <span class="row-sub">Taupunkt °C, g/m³, Enthalpie &amp; Tauwasser</span>
+                  <span class="row-sub">Taupunkt, Absolutfeuchte, Enthalpie und Tauwasser</span>
                 </span>
                 <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
               </a>
@@ -186,64 +163,72 @@
                 <span class="row-icon row-icon--green"><span class="material-symbols-rounded" aria-hidden="true">air</span></span>
                 <span class="row-text">
                   <span class="row-title">Luftkanal &amp; RLT</span>
-                  <span class="row-sub">Geschwindigkeit v (m/s), DN &amp; Luftwechsel</span>
+                  <span class="row-sub">Geschwindigkeit v (m/s), DN und Luftwechsel</span>
                 </span>
                 <span class="material-symbols-rounded row-chevron" aria-hidden="true">chevron_right</span>
               </a>
             </div>
           </section>
         </div>
-        <div id="hub-empty" class="liquid-glass glass-card empty-state" hidden>
-          Kein passender Rechner gefunden.
-        </div>
-      </section>
+        <p id="hub-empty" class="hint" hidden>Kein Rechner gefunden. Anderen Suchbegriff eingeben oder das Feld leeren.</p>
+      </main>
+    </div>
 
-      <!-- EINSTELLUNGEN-ANSICHT -->
-      <section id="view-settings" class="liquid-glass glass-card calc-panel" aria-label="Einstellungen" hidden>
-        <div class="liquid-surface-inner well">
-          <div class="well-header">
-            <span class="well-label">Darstellung</span>
-            <span class="well-hint">Dual-Theme (Hell / Dunkel)</span>
-          </div>
-          <div id="theme-mode-group" class="settings-segmented" role="radiogroup" aria-label="Darstellungsmodus">
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="auto" aria-checked="true">Auto</button>
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="light" aria-checked="false">Hell</button>
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="dark" aria-checked="false">Dunkel</button>
-          </div>
+    <!-- Einstellungen: mittige Glas-Karte, einzige Glasfläche -->
+    <div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="liquid-glass modal-card">
+        <div class="modal-head">
+          <h2 class="modal-title" id="settingsTitle">Einstellungen</h2>
+          <button class="icon-btn" id="settingsCloseBtn" type="button" aria-label="Schließen">
+            <span class="material-symbols-rounded" aria-hidden="true">close</span>
+          </button>
         </div>
 
-        <div class="liquid-surface-inner well">
-          <div class="well-header">
-            <span class="well-label">App-Info & Updates</span>
-            <span class="status-pill status-pill--success" id="app-status-pill">
+        <div>
+          <div class="card-title" style="margin-bottom: 0.5rem">Darstellung</div>
+          <div class="segmented-control" id="theme-mode-group" role="group" aria-label="Darstellung">
+            <button type="button" class="segmented-option" data-theme-mode="light" aria-pressed="false">Hell</button>
+            <button type="button" class="segmented-option" data-theme-mode="dark" aria-pressed="false">Dunkel</button>
+            <button type="button" class="segmented-option" data-theme-mode="auto" aria-pressed="true">System</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="card-header" style="align-items: center; margin-bottom: 0.25rem">
+            <span class="card-title">App-Info und Updates</span>
+            <span class="status-pill status-pill--green" id="app-status-pill">
               <span class="status-dot"></span>
               <span>Aktuell</span>
             </span>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; font-size: var(--text-sub);">
-            <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
-              <span>Installierte Version:</span>
-              <strong id="app-version-label" class="numeric" style="font-family: var(--font-mono); color: var(--text-primary);">v1.3.4</strong>
+          <div class="info-list">
+            <div class="info-row">
+              <span class="info-row-label">Installierte Version</span>
+              <span class="info-row-value numeric" id="app-version-label">v1.4.6</span>
             </div>
-            <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
-              <span>Build-Datum:</span>
-              <span id="app-build-date" class="numeric" style="font-family: var(--font-mono); color: var(--text-primary);">2026-11-15</span>
+            <div class="info-row">
+              <span class="info-row-label">Build-Datum</span>
+              <span class="info-row-value numeric" id="app-build-date">2026-11-15</span>
             </div>
-          </div>
-          <div class="settings-actions-stack">
-            <button type="button" id="check-update-btn" class="update-check-btn press-btn">
-              <span class="material-symbols-rounded" aria-hidden="true">sync</span>
-              <span>Nach Updates suchen</span>
-            </button>
-            <button type="button" id="force-cache-reset-btn" class="update-check-btn update-check-btn--secondary press-btn">
-              <span class="material-symbols-rounded" aria-hidden="true">cleaning_services</span>
-              <span>Update erzwingen / Cache leeren</span>
-            </button>
           </div>
         </div>
-      </section>
-    </main>
 
-    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite" data-visible="false"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-primary" id="check-update-btn">
+            <span class="material-symbols-rounded" aria-hidden="true">sync</span>
+            <span>Nach Updates suchen</span>
+          </button>
+          <button type="button" class="btn-secondary" id="force-cache-reset-btn">
+            <span class="material-symbols-rounded" aria-hidden="true">cleaning_services</span>
+            <span>Cache leeren und neu laden</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite">
+      <span class="material-symbols-rounded" aria-hidden="true">check_circle</span>
+      <span id="toast-text"></span>
+    </div>
   </body>
 </html>

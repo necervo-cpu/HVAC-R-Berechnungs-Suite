@@ -9,12 +9,13 @@
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2F2F7" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
     <meta name="apple-mobile-web-app-title" content="MAG & Vordruck" />
-    <title>MAG &amp; Vordruck · HVAC·R Rechner</title>
+    <title>MAG &amp; Vordruck – HVAC·R Rechner</title>
     <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
     <link rel="apple-touch-icon" href="../../icon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      id="agFonts"
       href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0..200&display=swap"
       rel="stylesheet"
       media="print"
@@ -39,185 +40,157 @@
         root.setAttribute("data-theme", activeTheme);
       })();
     </script>
+    <script>
+      (function () {
+        var root = document.documentElement, link = document.getElementById('agFonts');
+        if (!link || !document.fonts || !document.fonts.load) return;
+        var done = function () { root.classList.remove('icons-pending'); };
+        root.classList.add('icons-pending');
+        setTimeout(done, 4000);
+        link.addEventListener('load', function () {
+          setTimeout(function () { document.fonts.load('24px "Material Symbols Rounded"').then(done, done); }, 0);
+        });
+        link.addEventListener('error', done);
+      })();
+    </script>
     <link rel="stylesheet" href="../../assets/css/global.css" />
     <script type="module" src="../../assets/js/shared.js"></script>
   </head>
   <body>
-    <div class="ambient-canvas" aria-hidden="true">
-      <div class="ambient-blob ambient-blob--cyan"></div>
-      <div class="ambient-blob ambient-blob--purple"></div>
-    </div>
+    <div class="ambient-canvas" aria-hidden="true"></div>
 
-    <main class="app-shell">
-      <header class="app-header">
-        <div class="hero-nav-left">
-          <a href="../../index.html" id="nav-home-link" class="back-btn press-btn" aria-label="Zurück zum Dashboard">
-            <span class="material-symbols-rounded" aria-hidden="true">arrow_back_ios_new</span>
-            <span>Übersicht</span>
-          </a>
-          <button type="button" id="nav-back-btn" class="back-btn press-btn" aria-label="Zurück zum Rechner" hidden>
-            <span class="material-symbols-rounded" aria-hidden="true">arrow_back_ios_new</span>
-            <span>Zurück</span>
-          </button>
-        </div>
-        <div class="top-actions">
-          <button type="button" id="reset-calc-btn" class="icon-btn press-icon" aria-label="Eingaben zurücksetzen" title="Zurücksetzen">
+    <div class="app-shell app-shell--narrow">
+      <div class="app-topbar">
+        <a href="../../index.html" class="back-btn"><span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>Übersicht</a>
+        <div style="display: flex; align-items: center; gap: 0.25rem;">
+          <button type="button" id="reset-calc-btn" class="icon-btn" aria-label="Eingaben zurücksetzen" title="Zurücksetzen">
             <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span>
           </button>
-          <button type="button" id="themeToggleBtn" class="icon-btn press-icon" aria-label="Designmodus wechseln (Hell / Dunkel)" title="Hell / Dunkel wechseln">
+          <button type="button" id="themeToggleBtn" class="icon-btn" aria-label="Erscheinungsbild wechseln" title="Erscheinungsbild wechseln">
             <span class="material-symbols-rounded" id="themeToggleIcon" aria-hidden="true">light_mode</span>
           </button>
-          <button type="button" id="settings-toggle-btn" class="icon-btn settings-btn press-icon" aria-label="Einstellungen öffnen" title="Einstellungen">
-            <span class="material-symbols-rounded" aria-hidden="true">settings</span>
-          </button>
         </div>
-        <h1 class="brand-title" style="flex-basis: 100%;">
-          <span class="material-symbols-rounded" style="color: var(--system-orange);" aria-hidden="true">compress</span>
-          <span id="brand-title">MAG &amp; Vordruck</span>
-        </h1>
+      </div>
+
+      <header class="app-header">
+        <div class="app-header-text">
+          <h1 class="brand-title">MAG &amp; Vordruck</h1>
+          <p class="brand-subtitle">Ausdehnungsgefäß nach EN 12828</p>
+        </div>
       </header>
 
-      <div id="view-calc" class="view-stack calc-panel">
-        <div class="segmented" id="mode-tabs" role="tablist" aria-label="Berechnungsmodus">
-          <span class="t-tabs-pill" aria-hidden="true"></span>
-          <button type="button" class="tab-btn press-btn" role="tab" aria-selected="true" data-mode="pressure">Vordruck p₀</button>
-          <button type="button" class="tab-btn press-btn" role="tab" aria-selected="false" data-mode="volume">MAG-Größe (l)</button>
+      <main>
+        <div class="segmented-control" id="mode-tabs" role="group" aria-label="Berechnungsmodus">
+          <button type="button" class="segmented-option" data-mode="pressure" aria-pressed="true">Vordruck p₀</button>
+          <button type="button" class="segmented-option" data-mode="volume" aria-pressed="false">MAG-Größe</button>
         </div>
 
-        <section class="liquid-glass glass-card" aria-label="MAG-Auslegung">
-          <div class="liquid-surface-inner result-hero" aria-live="polite">
-            <div class="result-top">
-              <span id="result-label" class="result-label">Stickstoff-Vordruck p₀</span>
-              <span id="result-badge" class="status-badge" data-state="ok">EN 12828</span>
-            </div>
-            <div class="result-value-row">
-              <div class="result-main" id="result-main">
-                <span id="result-number">1,20</span><span id="result-unit" class="result-unit">bar</span>
+        <section class="hero" aria-live="polite" style="margin-top: 1.25rem;">
+          <div id="result-label" class="hero-caption">Stickstoff-Vordruck p₀</div>
+          <div class="hero-value numeric"><span id="result-number">–</span><span id="result-unit" class="metric-unit">bar</span></div>
+          <span id="result-badge" class="status-pill status-pill--green"><span class="status-dot"></span><span id="result-badge-text">EN 12828</span></span>
+          <div id="result-note" class="hero-note" hidden></div>
+        </section>
+
+        <section class="glass-card" aria-label="Zwischenwerte">
+          <div id="result-rows" class="info-list numeric"></div>
+        </section>
+
+        <section class="glass-card" aria-label="Eingaben">
+          <div class="form-group">
+            <label class="form-label" for="mag-height-input"><span>Statische Höhe H</span></label>
+            <div class="control-slide">
+              <button type="button" class="stepper" id="mag-height-minus" aria-label="Höhe verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+              <div class="liquid-surface-inner input-wrapper" style="flex: 1;">
+                <input id="mag-height-input" class="glass-input numeric" type="text" inputmode="decimal" value="9" autocomplete="off" aria-label="Statische Höhe in Metern" />
+                <span class="input-unit-addon">m</span>
               </div>
-              <button type="button" id="copy-result-btn" class="copy-result-btn press-icon" aria-label="Ergebnis kopieren" title="Ergebnis kopieren">
-                <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
-              </button>
-            </div>
-            <div id="result-sub" class="result-sub">pₛₜ = 0,90 bar + 0,30 bar Zuschlag · Fülldruck pₐ = 1,50 bar · pₑ = 2,50 bar</div>
-            <div class="result-meter" aria-hidden="true">
-              <div id="result-meter-fill" class="result-meter-fill" data-state="ok"></div>
+              <button type="button" class="stepper" id="mag-height-plus" aria-label="Höhe erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
             </div>
           </div>
 
-          <div class="field-grid field-grid--2">
-            <div class="liquid-surface-inner well">
-              <div class="well-header">
-                <label class="well-label" for="mag-height-input">Statische Höhe H</label>
-              </div>
-              <div class="stepper-row">
-                <button type="button" class="step-btn press-btn" id="mag-height-minus" aria-label="Höhe verringern">−</button>
-                <div class="num-value-wrap">
-                  <input id="mag-height-input" class="num-input" type="text" inputmode="decimal" step="1" min="0" max="60" value="9" aria-label="Statische Höhe in Metern" />
-                  <span class="num-unit">m</span>
-                </div>
-                <button type="button" class="step-btn press-btn" id="mag-height-plus" aria-label="Höhe erhöhen">+</button>
-              </div>
-            </div>
-
-            <div class="liquid-surface-inner well">
-              <div class="well-header">
-                <span class="well-label">Sicherheitsventil</span>
-              </div>
-              <div class="chip-group" id="sv-group" role="group" aria-label="Ansprechdruck Sicherheitsventil">
-                <button type="button" class="chip-btn press-btn" data-sv="2.5" aria-pressed="false">2,5</button>
-                <button type="button" class="chip-btn press-btn" data-sv="3.0" aria-pressed="true">3,0</button>
-                <button type="button" class="chip-btn press-btn" data-sv="4.0" aria-pressed="false">4,0</button>
-                <button type="button" class="chip-btn press-btn" data-sv="6.0" aria-pressed="false">6,0</button>
-              </div>
+          <div class="form-group" style="margin-top: 1rem;">
+            <span class="form-label" id="sv-label"><span>Ansprechdruck Sicherheitsventil in bar</span></span>
+            <div class="segmented-control" id="sv-group" role="group" aria-labelledby="sv-label">
+              <button type="button" class="segmented-option numeric" data-sv="2.5" aria-pressed="false">2,5</button>
+              <button type="button" class="segmented-option numeric" data-sv="3.0" aria-pressed="true">3,0</button>
+              <button type="button" class="segmented-option numeric" data-sv="4.0" aria-pressed="false">4,0</button>
+              <button type="button" class="segmented-option numeric" data-sv="6.0" aria-pressed="false">6,0</button>
             </div>
           </div>
 
-          <div id="panel-volume" class="calc-panel view-stack" hidden>
-            <div class="liquid-surface-inner well">
-              <div class="well-header">
-                <label class="well-label" for="mag-vol-input">Anlagenvolumen Vₐ</label>
-              </div>
-              <div class="stepper-row">
-                <button type="button" class="step-btn press-btn" id="mag-vol-minus" aria-label="Volumen verringern">−</button>
-                <div class="num-value-wrap">
-                  <input id="mag-vol-input" class="num-input" type="text" inputmode="decimal" step="20" min="10" max="10000" value="250" aria-label="Anlagenvolumen in Litern" />
-                  <span class="num-unit">l</span>
+          <div id="panel-volume" hidden>
+            <div class="form-group" style="margin-top: 1rem;">
+              <label class="form-label" for="mag-vol-input"><span>Anlagenvolumen Vₐ</span></label>
+              <div class="control-slide">
+                <button type="button" class="stepper" id="mag-vol-minus" aria-label="Volumen verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+                <div class="liquid-surface-inner input-wrapper" style="flex: 1;">
+                  <input id="mag-vol-input" class="glass-input numeric" type="text" inputmode="decimal" value="250" autocomplete="off" aria-label="Anlagenvolumen in Litern" />
+                  <span class="input-unit-addon">l</span>
                 </div>
-                <button type="button" class="step-btn press-btn" id="mag-vol-plus" aria-label="Volumen erhöhen">+</button>
+                <button type="button" class="stepper" id="mag-vol-plus" aria-label="Volumen erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
               </div>
             </div>
 
-            <div class="liquid-surface-inner well">
-              <div class="well-header">
-                <span class="well-label">Max. Vorlauftemperatur</span>
-              </div>
-              <div class="chip-group" id="tmax-group" role="group" aria-label="Maximale Vorlauftemperatur">
-                <button type="button" class="chip-btn press-btn" data-tmax="40" aria-pressed="false">40 °C (WP)</button>
-                <button type="button" class="chip-btn press-btn" data-tmax="55" aria-pressed="false">55 °C</button>
-                <button type="button" class="chip-btn press-btn" data-tmax="70" aria-pressed="true">70 °C</button>
-                <button type="button" class="chip-btn press-btn" data-tmax="85" aria-pressed="false">85 °C</button>
+            <div class="form-group" style="margin-top: 1rem;">
+              <span class="form-label" id="tmax-label"><span>Max. Vorlauftemperatur, 40 °C typisch für Wärmepumpen</span></span>
+              <div class="segmented-control" id="tmax-group" role="group" aria-labelledby="tmax-label">
+                <button type="button" class="segmented-option numeric" data-tmax="40" aria-pressed="false">40 °C</button>
+                <button type="button" class="segmented-option numeric" data-tmax="55" aria-pressed="false">55 °C</button>
+                <button type="button" class="segmented-option numeric" data-tmax="70" aria-pressed="true">70 °C</button>
+                <button type="button" class="segmented-option numeric" data-tmax="85" aria-pressed="false">85 °C</button>
               </div>
             </div>
 
-            <div class="liquid-surface-inner well">
-              <div class="well-header">
-                <span class="well-label">Medium</span>
-              </div>
-              <div class="chip-group" id="mag-medium-group" role="group" aria-label="Anlagenmedium">
-                <button type="button" class="chip-btn press-btn" data-med="water" aria-pressed="true">Wasser</button>
-                <button type="button" class="chip-btn press-btn" data-med="glycol" aria-pressed="false">Glykol 30 %</button>
+            <div class="form-group" style="margin-top: 1rem;">
+              <span class="form-label" id="med-label"><span>Medium</span></span>
+              <div class="segmented-control" id="mag-medium-group" role="group" aria-labelledby="med-label">
+                <button type="button" class="segmented-option" data-med="water" aria-pressed="true">Wasser</button>
+                <button type="button" class="segmented-option" data-med="glycol" aria-pressed="false">Glykol 30 %</button>
               </div>
             </div>
           </div>
         </section>
-      </div>
 
-      <section id="view-settings" class="liquid-glass glass-card calc-panel" aria-label="Einstellungen" hidden>
-        <div class="liquid-surface-inner well">
-          <div class="well-header">
-            <span class="well-label">Darstellung</span>
-            <span class="well-hint">Dual-Theme (Hell / Dunkel)</span>
-          </div>
-          <div id="theme-mode-group" class="settings-segmented" role="radiogroup" aria-label="Darstellungsmodus">
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="auto" aria-checked="true">Auto</button>
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="light" aria-checked="false">Hell</button>
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="dark" aria-checked="false">Dunkel</button>
-          </div>
-        </div>
-
-        <div class="field-grid field-grid--2">
-          <div class="liquid-surface-inner well">
-            <div class="well-header">
-              <label class="well-label" for="param-safety-input">Sicherheitszuschlag</label>
-            </div>
-            <div class="stepper-row">
-              <button type="button" class="step-btn press-btn" id="param-safety-minus" aria-label="Sicherheitszuschlag verringern">−</button>
-              <div class="num-value-wrap">
-                <input id="param-safety-input" class="num-input" type="text" inputmode="decimal" step="0.1" min="0" max="1.0" value="0.3" aria-label="Sicherheitszuschlag in bar" />
-                <span class="num-unit">bar</span>
+        <section class="expander glass-card" id="params-expander" aria-label="Auslegungsannahmen">
+          <button type="button" class="expander-head" id="params-toggle" aria-expanded="false" aria-controls="params-body">
+            <span class="expander-text"><span class="expander-title" style="font-size: 1.0625rem;">Auslegungsannahmen</span></span>
+            <span class="expander-knob"><span class="material-symbols-rounded" aria-hidden="true">expand_more</span></span>
+          </button>
+          <div class="expander-body" id="params-body">
+            <div>
+              <div class="form-group" style="margin-top: 0.875rem;">
+                <label class="form-label" for="param-safety-input"><span>Sicherheitszuschlag</span></label>
+                <div class="control-slide">
+                  <button type="button" class="stepper" id="param-safety-minus" aria-label="Sicherheitszuschlag verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+                  <div class="liquid-surface-inner input-wrapper" style="flex: 1;">
+                    <input id="param-safety-input" class="glass-input numeric" type="text" inputmode="decimal" value="0.3" autocomplete="off" aria-label="Sicherheitszuschlag in bar" />
+                    <span class="input-unit-addon">bar</span>
+                  </div>
+                  <button type="button" class="stepper" id="param-safety-plus" aria-label="Sicherheitszuschlag erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+                </div>
               </div>
-              <button type="button" class="step-btn press-btn" id="param-safety-plus" aria-label="Sicherheitszuschlag erhöhen">+</button>
-            </div>
-          </div>
-
-          <div class="liquid-surface-inner well">
-            <div class="well-header">
-              <label class="well-label" for="param-p0min-input">Mindest-Vordruck p₀</label>
-            </div>
-            <div class="stepper-row">
-              <button type="button" class="step-btn press-btn" id="param-p0min-minus" aria-label="Mindest-Vordruck verringern">−</button>
-              <div class="num-value-wrap">
-                <input id="param-p0min-input" class="num-input" type="text" inputmode="decimal" step="0.1" min="0.5" max="1.5" value="0.8" aria-label="Mindest-Vordruck in bar" />
-                <span class="num-unit">bar</span>
+              <div class="form-group" style="margin: 1rem 0 0.25rem;">
+                <label class="form-label" for="param-p0min-input"><span>Mindest-Vordruck p₀</span></label>
+                <div class="control-slide">
+                  <button type="button" class="stepper" id="param-p0min-minus" aria-label="Mindest-Vordruck verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+                  <div class="liquid-surface-inner input-wrapper" style="flex: 1;">
+                    <input id="param-p0min-input" class="glass-input numeric" type="text" inputmode="decimal" value="0.8" autocomplete="off" aria-label="Mindest-Vordruck in bar" />
+                    <span class="input-unit-addon">bar</span>
+                  </div>
+                  <button type="button" class="stepper" id="param-p0min-plus" aria-label="Mindest-Vordruck erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+                </div>
               </div>
-              <button type="button" class="step-btn press-btn" id="param-p0min-plus" aria-label="Mindest-Vordruck erhöhen">+</button>
             </div>
           </div>
-        </div>
-      </section>
-    </main>
+        </section>
 
-    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite" data-visible="false"></div>
+
+        <p class="hint numeric" style="margin-top: 1rem;">Vₙ = (Vₑ + Vᵥ) · (pₑ + 1) / (pₑ − p₀), nach DIN EN 12828</p>
+      </main>
+    </div>
+
+    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite"><span class="material-symbols-rounded" aria-hidden="true">check_circle</span><span id="toast-text"></span></div>
     <script type="module" src="./app.js"></script>
   </body>
 </html>

@@ -9,17 +9,13 @@
  */
 
 import {
-  applyThemeMode,
   clearAppStorage,
   createNumberAnimator,
-  getCurrentThemeMode,
+  fadeThrough,
   loadAppParams,
   parseLocaleNumber,
-  prefersReducedMotion,
   saveAppParams,
   showToast,
-  updateAllPills,
-  wireCopyResultButton,
 } from "../../assets/js/shared.js";
 
 const ROHR_PARAMS_KEY = "hvacr-params-rohrnetz";
@@ -233,16 +229,6 @@ const resultNumberAnimator = createNumberAnimator({
   },
 });
 
-function triggerResultPop() {
-  if (prefersReducedMotion()) return;
-  const main = document.getElementById("result-main");
-  if (!main) return;
-  main.classList.remove("is-popping");
-  void main.offsetWidth;
-  main.classList.add("is-popping");
-  window.setTimeout(() => main.classList.remove("is-popping"), 180);
-}
-
 /**
  * Berechnet den Rohrreibungsbeiwert lambda (laminar: 64/Re, turbulent: Colebrook-White).
  */
@@ -275,7 +261,7 @@ function renderSizeChips() {
   container.innerHTML = mat.sizes
     .map(
       (s) =>
-        `<button type="button" class="chip-btn press-btn" data-size-id="${s.id}" aria-pressed="${String(
+        `<button type="button" class="tab-pill" role="tab" data-size-id="${s.id}" aria-selected="${String(
           s.id === size.id
         )}">${s.label}</button>`
     )
@@ -290,10 +276,10 @@ function renderSizeChips() {
     });
   });
 
-  const roughHint = document.getElementById("pipe-roughness-hint");
-  const diHint = document.getElementById("pipe-di-hint");
-  if (roughHint) roughHint.textContent = `k = ${formatDe(mat.roughnessMm, mat.roughnessMm < 0.01 ? 4 : 2)} mm`;
-  if (diHint) diHint.textContent = `dᵢ = ${formatDe(size.diMm, 1)} mm`;
+  const roughValue = document.getElementById("pipe-roughness-value");
+  const diValue = document.getElementById("pipe-di-value");
+  if (roughValue) roughValue.textContent = formatDe(mat.roughnessMm, mat.roughnessMm < 0.01 ? 4 : 2);
+  if (diValue) diValue.textContent = formatDe(size.diMm, 1);
 }
 
 function calculateAndRender(animate = true) {
@@ -301,11 +287,15 @@ function calculateAndRender(animate = true) {
   const { mat, size } = getActivePipeSpec();
   const fluid = calcFluidProperties(state.fluidTempC, state.glycolPct);
 
-  const fluidHint = document.getElementById("fluid-props-hint");
-  if (fluidHint) {
-    const mediumName = state.glycolPct > 0 ? `Glykol ${formatDe(state.glycolPct, 0)} %` : "Wasser";
-    fluidHint.textContent = `${mediumName} · ρ ${formatDe(fluid.rho, 1)} kg/m³ · ν ${formatDe(fluid.nu * 1e6, 2)} mm²/s`;
+  const fluidName = document.getElementById("fluid-name");
+  const fluidRho = document.getElementById("fluid-rho");
+  const fluidNu = document.getElementById("fluid-nu");
+  if (fluidName) {
+    fluidName.textContent =
+      state.glycolPct > 0 ? `Dichte ρ, Glykol ${formatDe(state.glycolPct, 0)} %` : "Dichte ρ, Wasser";
   }
+  if (fluidRho) fluidRho.textContent = formatDe(fluid.rho, 1);
+  if (fluidNu) fluidNu.textContent = formatDe(fluid.nu * 1e6, 2);
 
   let flowM3h = state.flowM3h;
   if (state.mode === "power") {
@@ -349,68 +339,20 @@ function calculateAndRender(animate = true) {
 
   resultNumberAnimator.update(velocity, state.mode, animate);
 
-  const subEl = document.getElementById("result-sub");
   const badgeEl = document.getElementById("result-badge");
-  const meterEl = document.getElementById("result-meter-fill");
-
-  if (subEl) {
-    subEl.textContent = `R = ${formatDe(rMbarM, 2)} mbar/m (${formatDe(rPaM, 0)} Pa/m) · ${formatDe(
-      flowLh,
-      0
-    )} l/h · dᵢ ${formatDe(size.diMm, 1)} mm`;
-  }
+  const badgeTextEl = document.getElementById("result-badge-text");
+  const setText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  setText("result-r-mbar", formatDe(rMbarM, 2));
+  setText("result-r-pa", formatDe(rPaM, 0));
+  setText("result-flow-lh", formatDe(flowLh, 0));
+  if (badgeTextEl) badgeTextEl.textContent = badgeText;
   if (badgeEl) {
-    badgeEl.textContent = badgeText;
-    badgeEl.setAttribute("data-state", badgeState);
+    const cls = { ok: "green", warn: "orange", bad: "red" }[badgeState] || "green";
+    badgeEl.className = `status-pill status-pill--${cls}`;
   }
-  if (meterEl) {
-    const pct = Math.min(100, Math.max(6, (velocity / 1.5) * 100));
-    meterEl.style.width = `${pct}%`;
-    meterEl.setAttribute("data-state", badgeState);
-  }
-
-  triggerResultPop();
-}
-
-function renderSettingsTheme() {
-  const mode = getCurrentThemeMode();
-  const group = document.getElementById("theme-mode-group");
-  if (!group) return;
-  group.querySelectorAll("[data-theme-mode]").forEach((btn) => {
-    btn.setAttribute("aria-checked", String(btn.getAttribute("data-theme-mode") === mode));
-  });
-}
-
-function openSettings() {
-  state.view = "settings";
-  document.getElementById("view-calc").hidden = true;
-  const settingsView = document.getElementById("view-settings");
-  settingsView.hidden = false;
-  settingsView.classList.remove("is-entering");
-  void settingsView.offsetWidth;
-  settingsView.classList.add("is-entering");
-  document.getElementById("nav-home-link").hidden = true;
-  document.getElementById("nav-back-btn").hidden = false;
-  const resetBtn = document.getElementById("reset-calc-btn");
-  if (resetBtn) resetBtn.hidden = true;
-  document.getElementById("brand-title").textContent = "Einstellungen";
-  renderSettingsTheme();
-}
-
-function openCalc() {
-  state.view = "calc";
-  document.getElementById("view-settings").hidden = true;
-  const calcView = document.getElementById("view-calc");
-  calcView.hidden = false;
-  calcView.classList.remove("is-entering");
-  void calcView.offsetWidth;
-  calcView.classList.add("is-entering");
-  document.getElementById("nav-back-btn").hidden = true;
-  document.getElementById("nav-home-link").hidden = false;
-  const resetBtn = document.getElementById("reset-calc-btn");
-  if (resetBtn) resetBtn.hidden = false;
-  document.getElementById("brand-title").textContent = "Rohrnetz";
-  updateAllPills();
 }
 
 function switchMode(newMode) {
@@ -418,22 +360,16 @@ function switchMode(newMode) {
   state.mode = newMode;
 
   document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.mode === newMode));
+    btn.setAttribute("aria-pressed", String(btn.dataset.mode === newMode));
   });
 
-  ["flow", "power"].forEach((m) => {
-    const panel = document.getElementById(`panel-${m}`);
-    if (!panel) return;
-    const isTarget = m === newMode;
-    panel.hidden = !isTarget;
-    if (isTarget) {
-      panel.classList.remove("is-entering");
-      void panel.offsetWidth;
-      panel.classList.add("is-entering");
-    }
+  const from = document.getElementById(`panel-${newMode === "flow" ? "power" : "flow"}`);
+  const to = document.getElementById(`panel-${newMode}`);
+  fadeThrough(from, to, () => {
+    if (from) from.hidden = true;
+    if (to) to.hidden = false;
   });
 
-  updateAllPills();
   calculateAndRender(true);
 }
 
@@ -443,7 +379,7 @@ function switchFlowUnit(newUnit) {
   const cfg = FLOW_UNIT_CONFIG[newUnit];
 
   document.querySelectorAll("#flow-unit-tabs [data-flow-unit]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.flowUnit === newUnit));
+    btn.setAttribute("aria-pressed", String(btn.dataset.flowUnit === newUnit));
   });
 
   const input = document.getElementById("flow-input");
@@ -451,7 +387,6 @@ function switchFlowUnit(newUnit) {
   if (input) input.value = formatInputVal(state.flowM3h / cfg.factorToM3h, cfg.decimals);
   if (label) label.textContent = cfg.label;
 
-  updateAllPills();
   calculateAndRender(true);
 }
 
@@ -489,13 +424,13 @@ function wireStepper(minusId, plusId, inputId, getStep, onUpdate) {
 function syncDtPresetChips() {
   document.querySelectorAll("#dt-preset-group [data-dt]").forEach((btn) => {
     const val = Number.parseFloat(btn.dataset.dt || "");
-    btn.setAttribute("aria-pressed", String(Math.abs(val - state.dtK) < 0.001));
+    btn.setAttribute("aria-selected", String(Math.abs(val - state.dtK) < 0.001));
   });
 }
 
 function syncStateToUI() {
   document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.mode === state.mode));
+    btn.setAttribute("aria-pressed", String(btn.dataset.mode === state.mode));
   });
   ["flow", "power"].forEach((m) => {
     const panel = document.getElementById(`panel-${m}`);
@@ -503,12 +438,12 @@ function syncStateToUI() {
   });
 
   document.querySelectorAll("#material-group [data-material]").forEach((btn) => {
-    btn.setAttribute("aria-pressed", String(btn.dataset.material === state.material));
+    btn.setAttribute("aria-selected", String(btn.dataset.material === state.material));
   });
 
   const cfg = FLOW_UNIT_CONFIG[state.flowUnit] || FLOW_UNIT_CONFIG.m3h;
   document.querySelectorAll("#flow-unit-tabs [data-flow-unit]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.flowUnit === state.flowUnit));
+    btn.setAttribute("aria-pressed", String(btn.dataset.flowUnit === state.flowUnit));
   });
   const flowInput = document.getElementById("flow-input");
   const flowUnitLabel = document.getElementById("flow-unit-label");
@@ -526,34 +461,23 @@ function syncStateToUI() {
 
   syncDtPresetChips();
   renderSizeChips();
-  updateAllPills();
 }
 
 function init() {
-  document.getElementById("settings-toggle-btn")?.addEventListener("click", openSettings);
-  document.getElementById("nav-back-btn")?.addEventListener("click", openCalc);
+  const paramsToggle = document.getElementById("params-toggle-btn");
+  paramsToggle?.addEventListener("click", () => {
+    const expander = paramsToggle.closest(".expander");
+    const open = !expander.classList.contains("is-open");
+    expander.classList.toggle("is-open", open);
+    paramsToggle.setAttribute("aria-expanded", String(open));
+  });
 
   document.getElementById("reset-calc-btn")?.addEventListener("click", () => {
     Object.assign(state, DEFAULT_STATE, { view: "calc" });
     clearAppStorage(ROHR_STATE_KEY);
     syncStateToUI();
     calculateAndRender(true);
-    showToast("Standardwerte wiederhergestellt");
-  });
-
-  wireCopyResultButton("copy-result-btn", () => {
-    const label = document.getElementById("result-label")?.textContent?.trim() || "";
-    const num = document.getElementById("result-number")?.textContent?.trim() || "";
-    const unit = document.getElementById("result-unit")?.textContent?.trim() || "";
-    const sub = document.getElementById("result-sub")?.textContent?.trim() || "";
-    return `${label}: ${num} ${unit} (${sub})`;
-  });
-
-  document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      applyThemeMode(btn.getAttribute("data-theme-mode"));
-      renderSettingsTheme();
-    });
+    showToast("Eingaben zurückgesetzt");
   });
 
   document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
@@ -572,7 +496,7 @@ function init() {
       // Passende Standard-Nennweite je Material wählen (~DN 25)
       state.sizeId = PIPE_MATERIALS[nextMat].sizes[Math.min(3, PIPE_MATERIALS[nextMat].sizes.length - 1)].id;
       document.querySelectorAll("#material-group [data-material]").forEach((b) => {
-        b.setAttribute("aria-pressed", String(b.dataset.material === nextMat));
+        b.setAttribute("aria-selected", String(b.dataset.material === nextMat));
       });
       renderSizeChips();
       calculateAndRender(true);
@@ -675,7 +599,6 @@ function init() {
     }
   );
 
-  window.addEventListener("resize", updateAllPills);
   syncStateToUI();
   calculateAndRender(false);
 }

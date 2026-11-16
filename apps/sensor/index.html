@@ -9,12 +9,13 @@
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2F2F7" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
     <meta name="apple-mobile-web-app-title" content="PTC / NTC Sensoren" />
-    <title>PTC / NTC Sensoren · HVAC·R</title>
+    <title>PTC / NTC Sensoren | HVAC·R</title>
     <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
     <link rel="apple-touch-icon" href="../../icon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      id="agFonts"
       href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0..200&display=swap"
       rel="stylesheet"
       media="print"
@@ -26,6 +27,19 @@
         rel="stylesheet"
       />
     </noscript>
+    <script>
+      (function () {
+        var root = document.documentElement, link = document.getElementById('agFonts');
+        if (!link || !document.fonts || !document.fonts.load) return;
+        var done = function () { root.classList.remove('icons-pending'); };
+        root.classList.add('icons-pending');
+        setTimeout(done, 4000);
+        link.addEventListener('load', function () {
+          setTimeout(function () { document.fonts.load('24px "Material Symbols Rounded"').then(done, done); }, 0);
+        });
+        link.addEventListener('error', done);
+      })();
+    </script>
     <script>
       (function () {
         var root = document.documentElement;
@@ -40,191 +54,158 @@
       })();
     </script>
     <link rel="stylesheet" href="../../assets/css/global.css" />
-    <script type="module" src="../../assets/js/shared.js"></script>
     <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="../../assets/js/shared.js"></script>
   </head>
   <body>
-    <div class="ambient-canvas" aria-hidden="true">
-      <div class="ambient-blob ambient-blob--cyan"></div>
-      <div class="ambient-blob ambient-blob--purple"></div>
-    </div>
+    <div class="ambient-canvas" aria-hidden="true"></div>
 
-    <main class="app-shell">
-      <header class="app-header">
-        <div class="hero-nav-left">
-          <a href="../../index.html" id="nav-home-link" class="back-btn press-btn" aria-label="Zurück zum Dashboard">
-            <span class="material-symbols-rounded" aria-hidden="true">arrow_back_ios_new</span>
-            <span>Übersicht</span>
-          </a>
-          <button type="button" id="nav-back-btn" class="back-btn press-btn" aria-label="Zurück zum Rechner" hidden>
-            <span class="material-symbols-rounded" aria-hidden="true">arrow_back_ios_new</span>
-            <span>Zurück</span>
-          </button>
-        </div>
+    <main class="app-shell app-shell--narrow">
+      <div class="app-topbar">
+        <a href="../../index.html" class="back-btn">
+          <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>Übersicht
+        </a>
         <div class="top-actions">
-          <button type="button" id="reset-calc-btn" class="icon-btn press-icon" aria-label="Eingaben zurücksetzen" title="Zurücksetzen">
+          <button type="button" id="reset-calc-btn" class="icon-btn" aria-label="Eingaben zurücksetzen" title="Zurücksetzen">
             <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span>
           </button>
-          <button type="button" id="themeToggleBtn" class="icon-btn press-icon" aria-label="Designmodus wechseln (Hell / Dunkel)" title="Hell / Dunkel wechseln">
+          <button type="button" id="themeToggleBtn" class="icon-btn" aria-label="Erscheinungsbild wechseln" title="Erscheinungsbild wechseln">
             <span class="material-symbols-rounded" id="themeToggleIcon" aria-hidden="true">light_mode</span>
           </button>
-          <button type="button" id="settings-toggle-btn" class="icon-btn settings-btn press-icon" aria-label="Einstellungen öffnen" title="Einstellungen">
+          <button type="button" id="settings-toggle-btn" class="icon-btn" aria-label="Einstellungen öffnen" title="Einstellungen">
             <span class="material-symbols-rounded" aria-hidden="true">settings</span>
           </button>
         </div>
-        <h1 class="brand-title" style="flex-basis: 100%;">
-          <span class="material-symbols-rounded" style="color: var(--system-cyan);" aria-hidden="true">thermostat</span>
-          <span id="brand-title">PTC / NTC</span>
-        </h1>
+      </div>
+
+      <header class="app-header">
+        <div class="app-header-text">
+          <h1 class="brand-title">PTC / NTC Sensoren</h1>
+        </div>
       </header>
 
-      <section id="panel-sensor" class="liquid-glass glass-card calc-panel is-entering" aria-label="PTC und NTC Sensor-Rechner">
-        <!-- Richtung: Ohm -> °C vs. °C -> Ohm -->
-        <div id="sensor-dir-switcher" class="segmented segmented--compact" role="tablist" aria-label="Umrechnungsrichtung">
-          <span class="t-tabs-pill" aria-hidden="true"></span>
-          <button type="button" class="tab-btn press-btn" role="tab" data-dir="ohmToTemp" aria-selected="true">
-            Ohm → °C
-          </button>
-          <button type="button" class="tab-btn press-btn" role="tab" data-dir="tempToOhm" aria-selected="false">
-            °C → Ohm
-          </button>
+      <section class="glass-card" aria-label="Umrechnung">
+        <div id="sensor-dir-switcher" class="segmented-control" role="group" aria-label="Umrechnungsrichtung">
+          <button type="button" class="segmented-option" data-dir="ohmToTemp" aria-pressed="true">Ohm in °C</button>
+          <button type="button" class="segmented-option" data-dir="tempToOhm" aria-pressed="false">°C in Ohm</button>
         </div>
-
-        <!-- Typ: NTC vs. PTC -->
-        <div id="sensor-family-switcher" class="segmented segmented--compact" role="tablist" aria-label="Sensortyp">
-          <span class="t-tabs-pill" aria-hidden="true"></span>
-          <button type="button" class="tab-btn press-btn" role="tab" data-family="ntc" aria-selected="true">
-            NTC-Fühler
-          </button>
-          <button type="button" class="tab-btn press-btn" role="tab" data-family="ptc" aria-selected="false">
-            PTC-Fühler
-          </button>
-        </div>
-
-        <!-- Live Ergebnis Hero -->
-        <div class="liquid-surface-inner result-hero" aria-live="polite">
-          <div class="result-top">
-            <span id="sensor-result-title" class="result-label">NTC 10 kΩ (B=3435)</span>
-            <span id="sensor-status-badge" class="status-badge" data-state="ok">Plausibel · Arbeitsbereich</span>
-          </div>
-          <div class="result-value-row">
-            <div id="sensor-result-val" class="result-main">25,0<span class="result-unit">°C</span></div>
-            <button type="button" id="copy-result-btn" class="copy-result-btn press-icon" aria-label="Ergebnis kopieren" title="Ergebnis kopieren">
-              <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
-            </button>
-          </div>
-          <div id="sensor-result-sub" class="result-sub">R₂₅ = 10.000 Ω · B = 3435 K</div>
-        </div>
-
-        <!-- Kennlinien-Auswahl als Dropdown -->
-        <div class="liquid-surface-inner well">
-          <div class="well-header">
-            <label class="well-label" for="sensor-select">Sensorkennlinie</label>
-          </div>
-          <div class="select-wrap">
-            <div class="glass-select-face" aria-hidden="true">
-              <span id="sensor-select-label" class="glass-select-label">NTC 10 kΩ (B=3435)</span>
-              <span class="material-symbols-rounded select-chevron" aria-hidden="true">expand_more</span>
-            </div>
-            <select id="sensor-select" class="glass-select-native" aria-label="Sensorkennlinie wählen"></select>
-          </div>
-        </div>
-
-        <!-- Optionales Panel für eigenen NTC (R25 & B-Wert) -->
-        <div id="custom-ntc-panel" class="t-acc-panel" data-open="false">
-          <div class="t-acc-panel-inner">
-            <div class="custom-ntc-grid">
-              <div class="liquid-surface-inner well">
-                <div class="well-header">
-                  <label class="well-label" for="input-custom-r25">R₂₅ (Ω)</label>
-                </div>
-                <input id="input-custom-r25" class="num-input" type="text" inputmode="decimal" value="10000" aria-label="Nennwiderstand R25 in Ohm" />
-              </div>
-              <div class="liquid-surface-inner well">
-                <div class="well-header">
-                  <label class="well-label" for="input-custom-b">B-Wert (K)</label>
-                </div>
-                <input id="input-custom-b" class="num-input" type="text" inputmode="decimal" value="3950" aria-label="B-Wert in Kelvin" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Haupt-Eingabe mit Steppern -->
-        <div class="liquid-surface-inner well">
-          <div class="well-header">
-            <label id="sensor-input-label" class="well-label" for="input-sensor-val">Gemessener Widerstand</label>
-            <span id="sensor-step-hint" class="well-hint">Schritt ±100 Ω</span>
-          </div>
-          <div class="stepper-row">
-            <button type="button" id="sensor-step-minus" class="step-btn press-icon" aria-label="Wert verringern">−</button>
-            <label class="num-value-wrap" for="input-sensor-val">
-              <input id="input-sensor-val" class="num-input" type="text" inputmode="decimal" value="10000" aria-label="Messwert eingeben" />
-              <span id="sensor-input-unit" class="num-unit">Ω</span>
-            </label>
-            <button type="button" id="sensor-step-plus" class="step-btn press-icon" aria-label="Wert erhöhen">+</button>
-          </div>
-        </div>
-
-        <!-- Aufklappbare Prüfpunkte (0 / 20 / 25 / 50 °C) -->
-        <button
-          type="button"
-          id="ref-acc-trigger"
-          class="liquid-surface-inner acc-trigger press-card"
-          aria-expanded="false"
-          aria-controls="ref-acc-panel"
-        >
-          <span>Prüfpunkte dieser Kennlinie (0–50 °C)</span>
-          <span class="material-symbols-rounded acc-chevron" aria-hidden="true">expand_more</span>
-        </button>
-        <div id="ref-acc-panel" class="t-acc-panel" data-open="false">
-          <div class="t-acc-panel-inner">
-            <div id="sensor-ref-grid" class="ref-grid"></div>
-          </div>
+        <div id="sensor-family-switcher" class="segmented-control" role="group" aria-label="Sensortyp">
+          <button type="button" class="segmented-option" data-family="ntc" aria-pressed="true">NTC-Fühler</button>
+          <button type="button" class="segmented-option" data-family="ptc" aria-pressed="false">PTC-Fühler</button>
         </div>
       </section>
 
-      <section id="view-settings" class="liquid-glass glass-card calc-panel" aria-label="Einstellungen" hidden>
-        <div class="liquid-surface-inner well">
-          <div class="well-header">
-            <span class="well-label">Darstellung</span>
-            <span class="well-hint">Dual-Theme (Hell / Dunkel)</span>
-          </div>
-          <div id="theme-mode-group" class="settings-segmented" role="radiogroup" aria-label="Darstellungsmodus">
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="auto" aria-checked="true">Auto</button>
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="light" aria-checked="false">Hell</button>
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="dark" aria-checked="false">Dunkel</button>
-          </div>
+      <section class="hero" aria-live="polite" aria-label="Ergebnis">
+        <div id="sensor-result-title" class="hero-caption">NTC 10 kΩ (B=3435)</div>
+        <div id="sensor-result-val" class="hero-value numeric">25,0<span class="metric-unit">°C</span></div>
+        <span id="sensor-status-badge" class="status-pill status-pill--green" data-state="ok"><span class="status-dot"></span><span id="sensor-status-text">Plausibel</span></span>
+        <p id="sensor-result-sub" class="hero-note hint numeric"></p>
+      </section>
+
+      <section class="glass-card" aria-label="Eingabe">
+        <div class="form-group">
+          <span id="sensor-select-label" class="form-label">Sensorkennlinie</span>
+          <div id="sensor-select-host" aria-labelledby="sensor-select-label"></div>
         </div>
 
-        <div class="liquid-surface-inner well">
-          <div class="well-header">
-            <label class="well-label" for="param-lead-ohm">Leitungswiderstand (2-Leiter)</label>
-            <span class="well-hint">Standard 0,0 Ω</span>
-          </div>
-          <div class="stepper-row">
-            <button type="button" class="step-btn press-btn" id="param-lead-minus" aria-label="Leitungswiderstand verringern">−</button>
-            <div class="num-value-wrap">
-              <input id="param-lead-ohm" class="num-input" type="text" inputmode="decimal" step="0.2" min="0" max="20" value="0" aria-label="Leitungswiderstand in Ohm" />
-              <span class="num-unit">Ω</span>
+        <div id="custom-ntc-panel" class="custom-ntc-grid" hidden>
+          <div class="form-group">
+            <label class="form-label" for="input-custom-r25"><span>R₂₅</span></label>
+            <div class="liquid-surface-inner input-wrapper">
+              <input id="input-custom-r25" class="glass-input numeric" type="text" inputmode="decimal" value="10000" autocomplete="off" aria-label="Nennwiderstand R25 in Ohm" />
+              <span class="input-unit-addon">Ω</span>
             </div>
-            <button type="button" class="step-btn press-btn" id="param-lead-plus" aria-label="Leitungswiderstand erhöhen">+</button>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="input-custom-b"><span>B-Wert</span></label>
+            <div class="liquid-surface-inner input-wrapper">
+              <input id="input-custom-b" class="glass-input numeric" type="text" inputmode="decimal" value="3950" autocomplete="off" aria-label="B-Wert in Kelvin" />
+              <span class="input-unit-addon">K</span>
+            </div>
           </div>
         </div>
 
-        <div class="liquid-surface-inner well">
-          <div class="well-header">
-            <span class="well-label">Nachkommastellen (°C)</span>
+        <div class="form-group">
+          <label class="form-label" for="input-sensor-val">
+            <span id="sensor-input-label">Gemessener Widerstand</span>
+            <span id="sensor-step-hint">Schritt ±100 Ω</span>
+          </label>
+          <div class="control-slide">
+            <button type="button" id="sensor-step-minus" class="stepper" aria-label="Wert verringern">
+              <span class="material-symbols-rounded" aria-hidden="true">remove</span>
+            </button>
+            <div class="liquid-surface-inner input-wrapper" style="flex: 1; min-width: 0;">
+              <input id="input-sensor-val" class="glass-input numeric" type="text" inputmode="decimal" value="10000" autocomplete="off" aria-label="Messwert eingeben" />
+              <span id="sensor-input-unit" class="input-unit-addon">Ω</span>
+            </div>
+            <button type="button" id="sensor-step-plus" class="stepper" aria-label="Wert erhöhen">
+              <span class="material-symbols-rounded" aria-hidden="true">add</span>
+            </button>
           </div>
-          <div class="chip-group" id="param-decimals-group" role="group" aria-label="Nachkommastellen für Temperatur">
-            <button type="button" class="chip-btn press-btn" data-dec="1" aria-pressed="true">1 Stelle (0,1 °C)</button>
-            <button type="button" class="chip-btn press-btn" data-dec="2" aria-pressed="false">2 Stellen (0,01 °C)</button>
+        </div>
+
+      </section>
+
+      <section class="group" aria-label="Prüfpunkte">
+        <div id="ref-acc" class="acc">
+          <button type="button" id="ref-acc-trigger" class="acc-head" aria-expanded="false" aria-controls="ref-acc-panel">
+            <span class="acc-name">Prüfpunkte dieser Kennlinie, 0 bis 50 °C</span>
+            <span class="material-symbols-rounded acc-chevron" aria-hidden="true">expand_more</span>
+          </button>
+          <div id="ref-acc-panel" class="acc-body">
+            <div>
+              <div id="sensor-ref-grid" class="ref-grid"></div>
+            </div>
           </div>
         </div>
       </section>
     </main>
 
-    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite" data-visible="false"></div>
+    <div id="settings-overlay" class="modal-overlay" aria-hidden="true">
+      <div class="liquid-glass modal-card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div class="modal-head">
+          <h2 id="settings-title" class="modal-title">Einstellungen</h2>
+          <button type="button" id="settings-close-btn" class="icon-btn" aria-label="Einstellungen schließen">
+            <span class="material-symbols-rounded" aria-hidden="true">close</span>
+          </button>
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Darstellung</span>
+          <div id="theme-mode-group" class="segmented-control" role="group" aria-label="Darstellungsmodus">
+            <button type="button" class="segmented-option" data-theme-mode="light" aria-pressed="false">Hell</button>
+            <button type="button" class="segmented-option" data-theme-mode="dark" aria-pressed="false">Dunkel</button>
+            <button type="button" class="segmented-option" data-theme-mode="auto" aria-pressed="true">System</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="param-lead-ohm"><span>Leitungswiderstand (2-Leiter)</span></label>
+          <div class="control-slide">
+            <button type="button" class="stepper" id="param-lead-minus" aria-label="Leitungswiderstand verringern">
+              <span class="material-symbols-rounded" aria-hidden="true">remove</span>
+            </button>
+            <div class="liquid-surface-inner input-wrapper" style="flex: 1; min-width: 0;">
+              <input id="param-lead-ohm" class="glass-input numeric" type="text" inputmode="decimal" value="0" autocomplete="off" aria-label="Leitungswiderstand in Ohm" />
+              <span class="input-unit-addon">Ω</span>
+            </div>
+            <button type="button" class="stepper" id="param-lead-plus" aria-label="Leitungswiderstand erhöhen">
+              <span class="material-symbols-rounded" aria-hidden="true">add</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Nachkommastellen der Temperatur</span>
+          <div class="segmented-control" id="param-decimals-group" role="group" aria-label="Nachkommastellen für Temperatur">
+            <button type="button" class="segmented-option" data-dec="1" aria-pressed="true">0,1 °C</button>
+            <button type="button" class="segmented-option" data-dec="2" aria-pressed="false">0,01 °C</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite"><span class="material-symbols-rounded" aria-hidden="true">check_circle</span><span id="toast-text"></span></div>
     <script type="module" src="./app.js"></script>
   </body>
 </html>

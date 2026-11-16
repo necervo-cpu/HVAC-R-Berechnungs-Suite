@@ -17,9 +17,6 @@ import {
   parseLocaleNumber,
   saveAppParams,
   showToast,
-  updateAllPills,
-  updateSegmentedPill,
-  wireCopyResultButton,
 } from "../../assets/js/shared.js";
 
 const NTC_SENSORS = {
@@ -92,11 +89,15 @@ const resultNumberAnimator = createNumberAnimator({
   render: (val, direction) => {
     const valEl = document.getElementById("sensor-result-val");
     if (!valEl) return;
+    if (!Number.isFinite(val)) {
+      valEl.textContent = "–";
+      return;
+    }
     if (direction === "ohmToTemp") {
-      valEl.innerHTML = `${formatDE(val, sensorParams.tempDecimals)}<span class="result-unit">°C</span>`;
+      valEl.innerHTML = `${formatDE(val, sensorParams.tempDecimals)}<span class="metric-unit">°C</span>`;
     } else {
       const f = formatOhm(val);
-      valEl.innerHTML = `${f.num}<span class="result-unit">${f.unit}</span>`;
+      valEl.innerHTML = `${f.num}<span class="metric-unit">${f.unit}</span>`;
     }
   },
 });
@@ -112,7 +113,7 @@ function formatDE(num, decimals = 1) {
 }
 
 function formatOhm(ohm) {
-  if (!Number.isFinite(ohm) || ohm < 0) return { num: "—", unit: "Ω" };
+  if (!Number.isFinite(ohm) || ohm < 0) return { num: "–", unit: "Ω" };
   if (ohm >= 10000) {
     return { num: (ohm / 1000).toFixed(2).replace(".", ","), unit: "kΩ" };
   }
@@ -205,7 +206,7 @@ function calculateSensorConversion({
     const useR25 = sensorId === "ntc_custom" ? r25 : spec.r25;
     const useB = sensorId === "ntc_custom" ? bVal : spec.b;
     sensorName = spec.fullLabel;
-    sensorMeta = `R₂₅ = ${useR25.toLocaleString("de-DE")} Ω · B = ${useB} K${leadOhm > 0 ? ` · −${formatDE(leadOhm, 1)} Ω Leitung` : ""}`;
+    sensorMeta = `R₂₅ = ${useR25.toLocaleString("de-DE")} Ω, B = ${useB} K${leadOhm > 0 ? `, −${formatDE(leadOhm, 1)} Ω Leitung` : ""}`;
 
     if (direction === "ohmToTemp") {
       const measuredOhm = clampNumber(inputValue, 0.1, 2000000, useR25);
@@ -218,7 +219,7 @@ function calculateSensorConversion({
   } else {
     const spec = PTC_SENSORS[sensorId] || PTC_SENSORS.pt1000;
     sensorName = spec.fullLabel;
-    sensorMeta = `${spec.note}${leadOhm > 0 ? ` · −${formatDE(leadOhm, 1)} Ω Leitung` : ""}`;
+    sensorMeta = `${spec.note}${leadOhm > 0 ? `, −${formatDE(leadOhm, 1)} Ω Leitung` : ""}`;
 
     if (direction === "ohmToTemp") {
       const measuredOhm = clampNumber(inputValue, 1, 50000, sensorId === "pt100" ? 100 : 1000);
@@ -233,14 +234,14 @@ function calculateSensorConversion({
   }
 
   let statusState = "ok";
-  let statusText = "Plausibel · Arbeitsbereich";
+  let statusText = "Plausibel, im Arbeitsbereich";
 
   if (direction === "ohmToTemp" && inputValue <= 1) {
     statusState = "bad";
-    statusText = "Kurzschluss-Verdacht (≤ 1 Ω)";
+    statusText = "Kurzschluss vermutet (≤ 1 Ω), Leitung prüfen";
   } else if (isNtc && ohm > 500000) {
     statusState = "bad";
-    statusText = "Fühlerbruch-Verdacht (> 500 kΩ)";
+    statusText = "Fühlerbruch vermutet (> 500 kΩ), Fühler prüfen";
   } else if (tempC < -50 || tempC > 150) {
     statusState = "warn";
     statusText = "Außerhalb Standard-Bereich (−50…+150 °C)";
@@ -282,33 +283,46 @@ function getDefaultOhmForSensor(family, sensorId) {
 }
 
 function renderSensorSelect() {
-  const select = document.getElementById("sensor-select");
-  const selectLabel = document.getElementById("sensor-select-label");
-  if (!select) return;
+  const host = document.getElementById("sensor-select-host");
+  if (!host) return;
 
   const map = state.family === "ntc" ? NTC_SENSORS : PTC_SENSORS;
-  select.innerHTML = Object.values(map)
-    .map((s) => `<option value="${s.id}">${s.fullLabel}</option>`)
+  const sensors = Object.values(map);
+  const useStrip = sensors.length >= 5;
+  host.className = useStrip ? "tab-strip" : "segmented-control";
+  host.setAttribute("role", useStrip ? "tablist" : "group");
+  host.innerHTML = sensors
+    .map((sp) =>
+      useStrip
+        ? `<button type="button" class="tab-pill" role="tab" data-sensor="${sp.id}" aria-selected="${sp.id === state.sensorId}">${sp.fullLabel}</button>`
+        : `<button type="button" class="segmented-option" data-sensor="${sp.id}" aria-pressed="${sp.id === state.sensorId}">${sp.label}</button>`
+    )
     .join("");
-  select.value = state.sensorId;
+}
 
-  const activeSpec = map[state.sensorId];
-  if (selectLabel && activeSpec) {
-    selectLabel.textContent = activeSpec.fullLabel;
+function selectSensor(sensorId) {
+  state.sensorId = sensorId;
+  if (state.direction === "ohmToTemp") {
+    state.inputValue = getDefaultOhmForSensor(state.family, state.sensorId);
+    const input = document.getElementById("input-sensor-val");
+    if (input) input.value = String(state.inputValue);
   }
+  renderSensorSelect();
+  persistState();
+  renderSensorResult(true);
+}
+
+function setPressed(container, attr, value) {
+  container.querySelectorAll(`[${attr}]`).forEach((b) => {
+    b.setAttribute("aria-pressed", String(b.getAttribute(attr) === value));
+  });
 }
 
 function renderSensorResult(animate = true) {
   const customPanel = document.getElementById("custom-ntc-panel");
   if (customPanel) {
     const showCustom = state.family === "ntc" && state.sensorId === "ntc_custom";
-    customPanel.setAttribute("data-open", String(showCustom));
-  }
-
-  const inputEl = document.getElementById("input-sensor-val");
-  if (inputEl) {
-    const len = Math.max(2, String(inputEl.value).length);
-    inputEl.style.width = `${len + 0.4}ch`;
+    customPanel.hidden = !showCustom;
   }
 
   const res = calculateSensorConversion(state);
@@ -317,8 +331,10 @@ function renderSensorResult(animate = true) {
   const valEl = document.getElementById("sensor-result-val");
   const subEl = document.getElementById("sensor-result-sub");
   const badgeEl = document.getElementById("sensor-status-badge");
+  const badgeTextEl = document.getElementById("sensor-status-text");
   const inputLabelEl = document.getElementById("sensor-input-label");
   const inputUnitEl = document.getElementById("sensor-input-unit");
+  const inputEl = document.getElementById("input-sensor-val");
   const stepHintEl = document.getElementById("sensor-step-hint");
   const refGridEl = document.getElementById("sensor-ref-grid");
 
@@ -326,7 +342,8 @@ function renderSensorResult(animate = true) {
   if (subEl) subEl.textContent = res.sensorMeta;
   if (badgeEl) {
     badgeEl.setAttribute("data-state", res.statusState);
-    badgeEl.textContent = res.statusText;
+    badgeEl.className = `status-pill status-pill--${res.statusState === "ok" ? "green" : res.statusState === "warn" ? "orange" : "red"}`;
+    if (badgeTextEl) badgeTextEl.textContent = res.statusText;
   }
 
   const targetNum = state.direction === "ohmToTemp" ? res.tempC : res.ohm;
@@ -337,10 +354,12 @@ function renderSensorResult(animate = true) {
     if (inputLabelEl) inputLabelEl.textContent = "Gemessener Widerstand";
     if (inputUnitEl) inputUnitEl.textContent = "Ω";
     if (stepHintEl) stepHintEl.textContent = `Schritt ±${delta} Ω`;
+    if (inputEl) inputEl.setAttribute("inputmode", "decimal");
   } else {
     if (inputLabelEl) inputLabelEl.textContent = "Soll-/Ist-Temperatur";
     if (inputUnitEl) inputUnitEl.textContent = "°C";
     if (stepHintEl) stepHintEl.textContent = `Schritt ±${delta} °C`;
+    if (inputEl) inputEl.setAttribute("inputmode", "text");
   }
 
   if (refGridEl) {
@@ -348,8 +367,8 @@ function renderSensorResult(animate = true) {
       .map(
         (p) => `
         <div class="ref-cell">
-          <span class="ref-temp">${p.tempC} °C</span>
-          <span class="ref-ohm">${p.formattedOhm.num} ${p.formattedOhm.unit}</span>
+          <span class="ref-temp numeric">${p.tempC} °C</span>
+          <span class="ref-ohm numeric">${p.formattedOhm.num} ${p.formattedOhm.unit}</span>
         </div>
       `
       )
@@ -360,16 +379,13 @@ function renderSensorResult(animate = true) {
 function wireEvents() {
   const dirSeg = document.getElementById("sensor-dir-switcher");
   if (dirSeg) {
-    dirSeg.querySelectorAll(".tab-btn").forEach((btn) => {
+    dirSeg.querySelectorAll("[data-dir]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const nextDir = btn.dataset.dir;
         if (nextDir === state.direction) return;
         const prev = calculateSensorConversion(state);
         state.direction = nextDir;
-
-        dirSeg.querySelectorAll(".tab-btn").forEach((b) => b.setAttribute("aria-selected", "false"));
-        btn.setAttribute("aria-selected", "true");
-        updateSegmentedPill(dirSeg);
+        setPressed(dirSeg, "data-dir", nextDir);
 
         const input = document.getElementById("input-sensor-val");
         if (nextDir === "tempToOhm") {
@@ -386,16 +402,13 @@ function wireEvents() {
 
   const famSeg = document.getElementById("sensor-family-switcher");
   if (famSeg) {
-    famSeg.querySelectorAll(".tab-btn").forEach((btn) => {
+    famSeg.querySelectorAll("[data-family]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const nextFamily = btn.dataset.family;
         if (nextFamily === state.family) return;
         state.family = nextFamily;
         state.sensorId = nextFamily === "ntc" ? "ntc10k_3435" : "pt1000";
-
-        famSeg.querySelectorAll(".tab-btn").forEach((b) => b.setAttribute("aria-selected", "false"));
-        btn.setAttribute("aria-selected", "true");
-        updateSegmentedPill(famSeg);
+        setPressed(famSeg, "data-family", nextFamily);
 
         if (state.direction === "ohmToTemp") {
           state.inputValue = getDefaultOhmForSensor(state.family, state.sensorId);
@@ -409,21 +422,12 @@ function wireEvents() {
     });
   }
 
-  const sensorSelect = document.getElementById("sensor-select");
-  const sensorSelectLabel = document.getElementById("sensor-select-label");
-  if (sensorSelect) {
-    sensorSelect.addEventListener("change", () => {
-      state.sensorId = sensorSelect.value;
-      if (sensorSelectLabel && sensorSelect.selectedOptions[0]) {
-        sensorSelectLabel.textContent = sensorSelect.selectedOptions[0].textContent;
-      }
-      if (state.direction === "ohmToTemp") {
-        state.inputValue = getDefaultOhmForSensor(state.family, state.sensorId);
-        const input = document.getElementById("input-sensor-val");
-        if (input) input.value = String(state.inputValue);
-      }
-      persistState();
-      renderSensorResult(true);
+  const sensorHost = document.getElementById("sensor-select-host");
+  if (sensorHost) {
+    sensorHost.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("[data-sensor]");
+      if (!btn || btn.dataset.sensor === state.sensorId) return;
+      selectSensor(btn.dataset.sensor);
     });
   }
 
@@ -471,13 +475,12 @@ function wireEvents() {
     });
   }
 
+  const refAcc = document.getElementById("ref-acc");
   const refTrigger = document.getElementById("ref-acc-trigger");
-  const refPanel = document.getElementById("ref-acc-panel");
-  if (refTrigger && refPanel) {
+  if (refTrigger && refAcc) {
     refTrigger.addEventListener("click", () => {
-      const isOpen = refPanel.getAttribute("data-open") === "true";
-      refPanel.setAttribute("data-open", String(!isOpen));
-      refTrigger.setAttribute("aria-expanded", String(!isOpen));
+      const isOpen = refAcc.classList.toggle("is-open");
+      refTrigger.setAttribute("aria-expanded", String(isOpen));
     });
   }
 }
@@ -485,17 +488,15 @@ function wireEvents() {
 function renderSettingsTheme() {
   const mode = getCurrentThemeMode();
   document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
-    btn.setAttribute("aria-checked", String(btn.getAttribute("data-theme-mode") === mode));
+    btn.setAttribute("aria-pressed", String(btn.getAttribute("data-theme-mode") === mode));
   });
 }
 
 function syncStateToUI() {
-  document.querySelectorAll("#sensor-dir-switcher .tab-btn").forEach((b) => {
-    b.setAttribute("aria-selected", String(b.dataset.dir === state.direction));
-  });
-  document.querySelectorAll("#sensor-family-switcher .tab-btn").forEach((b) => {
-    b.setAttribute("aria-selected", String(b.dataset.family === state.family));
-  });
+  const dirSeg = document.getElementById("sensor-dir-switcher");
+  const famSeg = document.getElementById("sensor-family-switcher");
+  if (dirSeg) setPressed(dirSeg, "data-dir", state.direction);
+  if (famSeg) setPressed(famSeg, "data-family", state.family);
   const valInput = document.getElementById("input-sensor-val");
   const r25Input = document.getElementById("input-custom-r25");
   const bInput = document.getElementById("input-custom-b");
@@ -503,7 +504,6 @@ function syncStateToUI() {
   if (r25Input) r25Input.value = String(state.customR25);
   if (bInput) bInput.value = String(state.customB);
   renderSensorSelect();
-  updateAllPills();
 }
 
 function init() {
@@ -511,11 +511,20 @@ function init() {
 
   const settingsBtn = document.getElementById("settings-toggle-btn");
   const resetBtn = document.getElementById("reset-calc-btn");
-  const backBtn = document.getElementById("nav-back-btn");
-  const homeLink = document.getElementById("nav-home-link");
-  const panelSensor = document.getElementById("panel-sensor");
-  const viewSettings = document.getElementById("view-settings");
-  const brandTitle = document.getElementById("brand-title");
+  const overlay = document.getElementById("settings-overlay");
+  const closeBtn = document.getElementById("settings-close-btn");
+
+  const setSettingsOpen = (open) => {
+    if (!overlay) return;
+    overlay.classList.toggle("is-open", open);
+    overlay.setAttribute("aria-hidden", String(!open));
+    if (open) {
+      renderSettingsTheme();
+      closeBtn?.focus();
+    } else {
+      settingsBtn?.focus();
+    }
+  };
 
   resetBtn?.addEventListener("click", () => {
     Object.assign(state, DEFAULT_STATE);
@@ -525,41 +534,13 @@ function init() {
     showToast("Standardwerte wiederhergestellt");
   });
 
-  wireCopyResultButton("copy-result-btn", () => {
-    const title = document.getElementById("sensor-result-title")?.textContent?.trim() || "";
-    const val = document.getElementById("sensor-result-val")?.textContent?.trim() || "";
-    const sub = document.getElementById("sensor-result-sub")?.textContent?.trim() || "";
-    return `${title}: ${val} (${sub})`;
+  settingsBtn?.addEventListener("click", () => setSettingsOpen(true));
+  closeBtn?.addEventListener("click", () => setSettingsOpen(false));
+  overlay?.addEventListener("click", (ev) => {
+    if (ev.target === overlay) setSettingsOpen(false);
   });
-
-  settingsBtn?.addEventListener("click", () => {
-    if (panelSensor) panelSensor.hidden = true;
-    if (viewSettings) {
-      viewSettings.hidden = false;
-      viewSettings.classList.remove("is-entering");
-      void viewSettings.offsetWidth;
-      viewSettings.classList.add("is-entering");
-    }
-    if (homeLink) homeLink.hidden = true;
-    if (backBtn) backBtn.hidden = false;
-    if (resetBtn) resetBtn.hidden = true;
-    if (brandTitle) brandTitle.textContent = "Einstellungen";
-    renderSettingsTheme();
-  });
-
-  backBtn?.addEventListener("click", () => {
-    if (viewSettings) viewSettings.hidden = true;
-    if (panelSensor) {
-      panelSensor.hidden = false;
-      panelSensor.classList.remove("is-entering");
-      void panelSensor.offsetWidth;
-      panelSensor.classList.add("is-entering");
-    }
-    if (backBtn) backBtn.hidden = true;
-    if (homeLink) homeLink.hidden = false;
-    if (resetBtn) resetBtn.hidden = false;
-    if (brandTitle) brandTitle.textContent = "PTC / NTC";
-    updateAllPills();
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape" && overlay?.classList.contains("is-open")) setSettingsOpen(false);
   });
 
   document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
@@ -606,9 +587,6 @@ function init() {
 
   syncStateToUI();
   renderSensorResult(false);
-
-  requestAnimationFrame(updateAllPills);
-  window.addEventListener("resize", updateAllPills);
 }
 
 document.addEventListener("DOMContentLoaded", init);

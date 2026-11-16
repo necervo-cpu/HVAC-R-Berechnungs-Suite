@@ -9,12 +9,13 @@
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2F2F7" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
     <meta name="apple-mobile-web-app-title" content="Rohrnetz" />
-    <title>Rohrnetz · HVAC·R Rechner</title>
+    <title>Rohrnetz und Druckverlust</title>
     <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
     <link rel="apple-touch-icon" href="../../icon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      id="agFonts"
       href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0..200&display=swap"
       rel="stylesheet"
       media="print"
@@ -39,350 +40,205 @@
         root.setAttribute("data-theme", activeTheme);
       })();
     </script>
+    <script>
+      (function () {
+        var root = document.documentElement,
+          link = document.getElementById("agFonts");
+        if (!link || !document.fonts || !document.fonts.load) return;
+        var done = function () {
+          root.classList.remove("icons-pending");
+        };
+        root.classList.add("icons-pending");
+        setTimeout(done, 4000);
+        link.addEventListener("load", function () {
+          setTimeout(function () {
+            document.fonts.load('24px "Material Symbols Rounded"').then(done, done);
+          }, 0);
+        });
+        link.addEventListener("error", done);
+      })();
+    </script>
     <link rel="stylesheet" href="../../assets/css/global.css" />
     <script type="module" src="../../assets/js/shared.js"></script>
   </head>
   <body>
-    <div class="ambient-canvas" aria-hidden="true">
-      <div class="ambient-blob ambient-blob--cyan"></div>
-      <div class="ambient-blob ambient-blob--purple"></div>
-    </div>
+    <div class="ambient-canvas" aria-hidden="true"></div>
 
-    <main class="app-shell">
-      <header class="app-header">
-        <div class="hero-nav-left">
-          <a
-            href="../../index.html"
-            id="nav-home-link"
-            class="back-btn press-btn"
-            aria-label="Zurück zum Dashboard"
-          >
-            <span class="material-symbols-rounded" aria-hidden="true">arrow_back_ios_new</span>
-            <span>Übersicht</span>
-          </a>
-          <button
-            type="button"
-            id="nav-back-btn"
-            class="back-btn press-btn"
-            aria-label="Zurück zum Rechner"
-            hidden
-          >
-            <span class="material-symbols-rounded" aria-hidden="true">arrow_back_ios_new</span>
-            <span>Zurück</span>
-          </button>
-        </div>
+    <main class="app-shell app-shell--narrow">
+      <div class="app-topbar">
+        <a href="../../index.html" id="nav-home-link" class="back-btn">
+          <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>Übersicht
+        </a>
         <div class="top-actions">
-          <button
-            type="button"
-            id="reset-calc-btn"
-            class="icon-btn press-icon"
-            aria-label="Eingaben zurücksetzen"
-            title="Zurücksetzen"
-          >
+          <button type="button" id="reset-calc-btn" class="icon-btn" aria-label="Eingaben zurücksetzen" title="Eingaben zurücksetzen">
             <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span>
           </button>
-          <button
-            type="button"
-            id="themeToggleBtn"
-            class="icon-btn press-icon"
-            aria-label="Designmodus wechseln (Hell / Dunkel)"
-            title="Hell / Dunkel wechseln"
-          >
+          <button type="button" id="themeToggleBtn" class="icon-btn" aria-label="Erscheinungsbild wechseln" title="Erscheinungsbild wechseln">
             <span class="material-symbols-rounded" id="themeToggleIcon" aria-hidden="true">light_mode</span>
           </button>
-          <button
-            type="button"
-            id="settings-toggle-btn"
-            class="icon-btn settings-btn press-icon"
-            aria-label="Einstellungen öffnen"
-            title="Einstellungen"
-          >
-            <span class="material-symbols-rounded" aria-hidden="true">settings</span>
-          </button>
         </div>
-        <h1 class="brand-title" style="flex-basis: 100%;">
-          <span class="material-symbols-rounded" style="color: var(--system-cyan);" aria-hidden="true">plumbing</span>
-          <span id="brand-title">Rohrnetz</span>
-        </h1>
-      </header>
-
-      <div id="view-calc" class="view-stack calc-panel">
-        <!-- Eingabemodus -->
-        <div class="segmented" id="mode-tabs" role="tablist" aria-label="Eingabemodus">
-          <span class="t-tabs-pill" aria-hidden="true"></span>
-          <button
-            type="button"
-            class="tab-btn press-btn"
-            role="tab"
-            aria-selected="true"
-            data-mode="flow"
-          >
-            Volumenstrom
-          </button>
-          <button
-            type="button"
-            class="tab-btn press-btn"
-            role="tab"
-            aria-selected="false"
-            data-mode="power"
-          >
-            Leistung &amp; ΔT
-          </button>
-        </div>
-
-        <!-- Hauptkarte -->
-        <section class="liquid-glass glass-card" aria-label="Rohrnetz-Berechnung">
-          <!-- Live-Ergebnis -->
-          <div class="liquid-surface-inner result-hero" aria-live="polite">
-            <div class="result-top">
-              <span id="result-label" class="result-label">Fließgeschwindigkeit v</span>
-              <span id="result-badge" class="status-badge" data-state="ok">Optimal</span>
-            </div>
-            <div class="result-value-row">
-              <div class="result-main" id="result-main">
-                <span id="result-number">0,63</span><span id="result-unit" class="result-unit">m/s</span>
-              </div>
-              <button type="button" id="copy-result-btn" class="copy-result-btn press-icon" aria-label="Ergebnis kopieren" title="Ergebnis kopieren">
-                <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
-              </button>
-            </div>
-            <div id="result-sub" class="result-sub">R = 1,92 mbar/m (192 Pa/m) · 1.500 l/h · dᵢ 26,0 mm</div>
-            <div class="result-meter" aria-hidden="true">
-              <div id="result-meter-fill" class="result-meter-fill" data-state="ok"></div>
-            </div>
-          </div>
-
-          <!-- Rohrmaterial (Viega) -->
-          <div class="liquid-surface-inner well">
-            <div class="well-header">
-              <span class="well-label">Rohrsystem (Viega)</span>
-              <span id="pipe-roughness-hint" class="well-hint">k = 0,0015 mm</span>
-            </div>
-            <div class="chip-group" id="material-group" role="group" aria-label="Viega Rohrsystem">
-              <button type="button" class="chip-btn press-btn" data-material="profipress" aria-pressed="true">Profipress (Cu)</button>
-              <button type="button" class="chip-btn press-btn" data-material="prestabo" aria-pressed="false">Prestabo (C-Stahl)</button>
-              <button type="button" class="chip-btn press-btn" data-material="sanpress_inox" aria-pressed="false">Sanpress Inox</button>
-              <button type="button" class="chip-btn press-btn" data-material="temponox" aria-pressed="false">Temponox (Edelstahl Hzg.)</button>
-              <button type="button" class="chip-btn press-btn" data-material="raxofix" aria-pressed="false">Raxofix (Verbund)</button>
-              <button type="button" class="chip-btn press-btn" data-material="megapress" aria-pressed="false">Megapress (Stahl)</button>
-            </div>
-          </div>
-
-          <!-- Nennweite / Dimension -->
-          <div class="liquid-surface-inner well">
-            <div class="well-header">
-              <span class="well-label">Dimension</span>
-              <span id="pipe-di-hint" class="well-hint">dᵢ = 25,0 mm</span>
-            </div>
-            <div class="chip-group" id="size-group" role="group" aria-label="Rohrdimension"></div>
-          </div>
-
-          <!-- PANEL 1: Direkter Volumenstrom -->
-          <div id="panel-flow" class="calc-panel view-stack">
-            <div class="liquid-surface-inner well">
-              <div class="well-header">
-                <label class="well-label" for="flow-input">Volumenstrom V̇</label>
-              </div>
-              <div class="segmented segmented--compact" id="flow-unit-tabs" role="tablist" aria-label="Einheit Volumenstrom">
-                <span class="t-tabs-pill" aria-hidden="true"></span>
-                <button type="button" class="tab-btn press-btn" role="tab" aria-selected="true" data-flow-unit="m3h">m³/h</button>
-                <button type="button" class="tab-btn press-btn" role="tab" aria-selected="false" data-flow-unit="lh">l/h</button>
-                <button type="button" class="tab-btn press-btn" role="tab" aria-selected="false" data-flow-unit="lmin">l/min</button>
-              </div>
-              <div class="stepper-row">
-                <button type="button" class="step-btn press-btn" id="flow-minus" aria-label="Volumenstrom verringern">−</button>
-                <div class="num-value-wrap">
-                  <input
-                    id="flow-input"
-                    class="num-input"
-                    type="text"
-                    inputmode="decimal"
-                    step="any"
-                    min="0"
-                    value="1.5"
-                    aria-label="Volumenstrom"
-                  />
-                  <span id="flow-unit-label" class="num-unit">m³/h</span>
-                </div>
-                <button type="button" class="step-btn press-btn" id="flow-plus" aria-label="Volumenstrom erhöhen">+</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- PANEL 2: Leistung & Spreizung -->
-          <div id="panel-power" class="calc-panel view-stack" hidden>
-            <div class="field-grid field-grid--2">
-              <div class="liquid-surface-inner well">
-                <div class="well-header">
-                  <label class="well-label" for="power-input">Leistung Q̇</label>
-                </div>
-                <div class="stepper-row">
-                  <button type="button" class="step-btn press-btn" id="power-minus" aria-label="Leistung verringern">−</button>
-                  <div class="num-value-wrap">
-                    <input
-                      id="power-input"
-                      class="num-input"
-                      type="text"
-                      inputmode="decimal"
-                      step="0.5"
-                      min="0"
-                      value="15"
-                      aria-label="Leistung in Kilowatt"
-                    />
-                    <span class="num-unit">kW</span>
-                  </div>
-                  <button type="button" class="step-btn press-btn" id="power-plus" aria-label="Leistung erhöhen">+</button>
-                </div>
-              </div>
-
-              <div class="liquid-surface-inner well">
-                <div class="well-header">
-                  <label class="well-label" for="dt-input">Spreizung ΔT</label>
-                </div>
-                <div class="stepper-row">
-                  <button type="button" class="step-btn press-btn" id="dt-minus" aria-label="Spreizung verringern">−</button>
-                  <div class="num-value-wrap">
-                    <input
-                      id="dt-input"
-                      class="num-input"
-                      type="text"
-                      inputmode="decimal"
-                      step="0.5"
-                      min="0.1"
-                      value="10"
-                      aria-label="Temperaturspreizung in Kelvin"
-                    />
-                    <span class="num-unit">K</span>
-                  </div>
-                  <button type="button" class="step-btn press-btn" id="dt-plus" aria-label="Spreizung erhöhen">+</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="liquid-surface-inner well">
-              <div class="well-header">
-                <span class="well-label">Typische Spreizung ΔT</span>
-              </div>
-              <div class="chip-group" id="dt-preset-group" role="group" aria-label="Typische Spreizungswerte">
-                <button type="button" class="chip-btn press-btn" data-dt="5" aria-pressed="false">5 K</button>
-                <button type="button" class="chip-btn press-btn" data-dt="7" aria-pressed="false">7 K</button>
-                <button type="button" class="chip-btn press-btn" data-dt="10" aria-pressed="true">10 K</button>
-                <button type="button" class="chip-btn press-btn" data-dt="15" aria-pressed="false">15 K</button>
-                <button type="button" class="chip-btn press-btn" data-dt="20" aria-pressed="false">20 K</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Medium & Temperatur (flach, ohne verschachtelte Wells) -->
-          <div class="form-group">
-            <div class="form-label">
-              <span>Medium &amp; Temperatur</span>
-              <span id="fluid-props-hint" class="well-hint numeric">Wasser · ρ 988,0 kg/m³</span>
-            </div>
-            <div class="field-grid field-grid--2">
-              <div class="liquid-surface-inner well">
-                <div class="well-header">
-                  <label class="well-label" for="fluid-temp-input">Temperatur</label>
-                </div>
-                <div class="stepper-row">
-                  <button type="button" class="step-btn press-btn" id="fluid-temp-minus" aria-label="Temperatur verringern">−</button>
-                  <div class="num-value-wrap">
-                    <input
-                      id="fluid-temp-input"
-                      class="num-input"
-                      type="text"
-                      inputmode="decimal"
-                      step="1"
-                      min="-35"
-                      max="130"
-                      value="50"
-                      aria-label="Mediumtemperatur in Grad Celsius"
-                    />
-                    <span class="num-unit">°C</span>
-                  </div>
-                  <button type="button" class="step-btn press-btn" id="fluid-temp-plus" aria-label="Temperatur erhöhen">+</button>
-                </div>
-              </div>
-
-              <div class="liquid-surface-inner well">
-                <div class="well-header">
-                  <label class="well-label" for="fluid-glycol-input">Glykol-Anteil</label>
-                </div>
-                <div class="stepper-row">
-                  <button type="button" class="step-btn press-btn" id="fluid-glycol-minus" aria-label="Glykol-Anteil verringern">−</button>
-                  <div class="num-value-wrap">
-                    <input
-                      id="fluid-glycol-input"
-                      class="num-input"
-                      type="text"
-                      inputmode="decimal"
-                      step="5"
-                      min="0"
-                      max="60"
-                      value="0"
-                      aria-label="Ethylenglykol-Anteil in Prozent"
-                    />
-                    <span class="num-unit">%</span>
-                  </div>
-                  <button type="button" class="step-btn press-btn" id="fluid-glycol-plus" aria-label="Glykol-Anteil erhöhen">+</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <p class="hero-sub" style="margin-top: 0;">
-            Hinweis: Für die Berechnung wurden die Rohrdimensionen (Innendurchmesser dᵢ) und Wandrauhigkeiten des Herstellers Viega herangezogen (Profipress, Prestabo, Sanpress Inox, Temponox, Raxofix, Megapress Reihe M).
-          </p>
-        </section>
       </div>
 
-      <!-- EINSTELLUNGEN-ANSICHT -->
-      <section id="view-settings" class="liquid-glass glass-card calc-panel" aria-label="Einstellungen" hidden>
-        <div class="liquid-surface-inner well">
-          <div class="well-header">
-            <span class="well-label">Darstellung</span>
-            <span class="well-hint">Dual-Theme (Hell / Dunkel)</span>
+      <header class="app-header">
+        <div class="app-header-text">
+          <h1 class="brand-title">Rohrnetz</h1>
+          <p class="brand-subtitle">Fließgeschwindigkeit und Druckverlust</p>
+        </div>
+      </header>
+
+      <section class="glass-card" aria-label="Ergebnis">
+        <div class="hero" aria-live="polite">
+          <div id="result-label" class="hero-caption">Fließgeschwindigkeit v</div>
+          <div class="hero-value numeric"><span id="result-number">0,63</span><span class="metric-unit">m/s</span></div>
+          <span id="result-badge" class="status-pill status-pill--green"><span class="status-dot"></span><span id="result-badge-text">Optimal</span></span>
+        </div>
+        <div class="info-list">
+          <div class="info-row"><span class="info-row-label">Druckverlust R</span><span class="info-row-value numeric"><span id="result-r-mbar">–</span> <span class="metric-unit">mbar/m</span></span></div>
+          <div class="info-row"><span class="info-row-label">Druckverlust R</span><span class="info-row-value numeric"><span id="result-r-pa">–</span> <span class="metric-unit">Pa/m</span></span></div>
+          <div class="info-row"><span class="info-row-label">Volumenstrom</span><span class="info-row-value numeric"><span id="result-flow-lh">–</span> <span class="metric-unit">l/h</span></span></div>
+        </div>
+      </section>
+
+      <section class="glass-card" aria-label="Rohr">
+        <div class="form-group">
+          <span class="form-label"><span>Rohrsystem (Viega)</span></span>
+          <div class="tab-strip" id="material-group" role="tablist" aria-label="Viega Rohrsystem">
+            <button type="button" class="tab-pill" role="tab" aria-selected="true" data-material="profipress">Profipress (Cu)</button>
+            <button type="button" class="tab-pill" role="tab" aria-selected="false" data-material="prestabo">Prestabo (C-Stahl)</button>
+            <button type="button" class="tab-pill" role="tab" aria-selected="false" data-material="sanpress_inox">Sanpress Inox</button>
+            <button type="button" class="tab-pill" role="tab" aria-selected="false" data-material="temponox">Temponox (Edelstahl Hzg.)</button>
+            <button type="button" class="tab-pill" role="tab" aria-selected="false" data-material="raxofix">Raxofix (Verbund)</button>
+            <button type="button" class="tab-pill" role="tab" aria-selected="false" data-material="megapress">Megapress (Stahl)</button>
           </div>
-          <div id="theme-mode-group" class="settings-segmented" role="radiogroup" aria-label="Darstellungsmodus">
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="auto" aria-checked="true">Auto</button>
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="light" aria-checked="false">Hell</button>
-            <button type="button" class="settings-seg-btn press-btn" role="radio" data-theme-mode="dark" aria-checked="false">Dunkel</button>
+        </div>
+        <div class="form-group">
+          <span class="form-label"><span>Dimension</span></span>
+          <div class="tab-strip" id="size-group" role="tablist" aria-label="Rohrdimension"></div>
+        </div>
+        <div class="info-list">
+          <div class="info-row"><span class="info-row-label">Innendurchmesser dᵢ</span><span class="info-row-value numeric"><span id="pipe-di-value">–</span> <span class="metric-unit">mm</span></span></div>
+          <div class="info-row"><span class="info-row-label">Wandrauigkeit k</span><span class="info-row-value numeric"><span id="pipe-roughness-value">–</span> <span class="metric-unit">mm</span></span></div>
+        </div>
+      </section>
+
+      <section class="glass-card" aria-label="Durchfluss">
+        <div class="segmented-control" id="mode-tabs" role="group" aria-label="Eingabemodus">
+          <button type="button" class="segmented-option" data-mode="flow" aria-pressed="true">Volumenstrom</button>
+          <button type="button" class="segmented-option" data-mode="power" aria-pressed="false">Leistung und ΔT</button>
+        </div>
+
+        <div id="panel-flow">
+          <div class="segmented-control" id="flow-unit-tabs" role="group" aria-label="Einheit Volumenstrom">
+            <button type="button" class="segmented-option" data-flow-unit="m3h" aria-pressed="true">m³/h</button>
+            <button type="button" class="segmented-option" data-flow-unit="lh" aria-pressed="false">l/h</button>
+            <button type="button" class="segmented-option" data-flow-unit="lmin" aria-pressed="false">l/min</button>
+          </div>
+          <div class="control">
+            <div class="control-head">
+              <label class="control-label" for="flow-input">Volumenstrom V̇</label>
+              <button type="button" class="stepper" id="flow-minus" aria-label="Volumenstrom V̇ verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+              <input id="flow-input" class="value-input numeric" type="text" inputmode="decimal" min="0" value="1.5" autocomplete="off" aria-label="Volumenstrom V̇" />
+              <span class="input-unit-addon" id="flow-unit-label">m³/h</span>
+              <button type="button" class="stepper" id="flow-plus" aria-label="Volumenstrom V̇ erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+            </div>
           </div>
         </div>
 
-        <div class="field-grid field-grid--2">
-          <div class="liquid-surface-inner well">
-            <div class="well-header">
-              <label class="well-label" for="param-vopt-input">Max. v „Optimal“</label>
-            </div>
-            <div class="stepper-row">
-              <button type="button" class="step-btn press-btn" id="param-vopt-minus" aria-label="Geschwindigkeitsgrenze verringern">−</button>
-              <div class="num-value-wrap">
-                <input id="param-vopt-input" class="num-input" type="text" inputmode="decimal" step="0.1" min="0.3" max="1.5" value="0.8" aria-label="Maximale optimale Fließgeschwindigkeit in Metern pro Sekunde" />
-                <span class="num-unit">m/s</span>
-              </div>
-              <button type="button" class="step-btn press-btn" id="param-vopt-plus" aria-label="Geschwindigkeitsgrenze erhöhen">+</button>
+        <div id="panel-power" hidden>
+          <div class="control">
+            <div class="control-head">
+              <label class="control-label" for="power-input">Leistung Q̇</label>
+              <button type="button" class="stepper" id="power-minus" aria-label="Leistung Q̇ verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+              <input id="power-input" class="value-input numeric" type="text" inputmode="decimal" min="0" value="15" autocomplete="off" aria-label="Leistung Q̇" />
+              <span class="input-unit-addon">kW</span>
+              <button type="button" class="stepper" id="power-plus" aria-label="Leistung Q̇ erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
             </div>
           </div>
-
-          <div class="liquid-surface-inner well">
-            <div class="well-header">
-              <label class="well-label" for="param-fitting-input">Formteil-Zuschlag</label>
+          <div class="control">
+            <div class="control-head">
+              <label class="control-label" for="dt-input">Spreizung ΔT</label>
+              <button type="button" class="stepper" id="dt-minus" aria-label="Spreizung ΔT verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+              <input id="dt-input" class="value-input numeric" type="text" inputmode="decimal" min="0.1" value="10" autocomplete="off" aria-label="Spreizung ΔT" />
+              <span class="input-unit-addon">K</span>
+              <button type="button" class="stepper" id="dt-plus" aria-label="Spreizung ΔT erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
             </div>
-            <div class="stepper-row">
-              <button type="button" class="step-btn press-btn" id="param-fitting-minus" aria-label="Formteilzuschlag verringern">−</button>
-              <div class="num-value-wrap">
-                <input id="param-fitting-input" class="num-input" type="text" inputmode="decimal" step="5" min="0" max="100" value="0" aria-label="Zuschlag für Einzelwiderstände in Prozent" />
-                <span class="num-unit">%</span>
-              </div>
-              <button type="button" class="step-btn press-btn" id="param-fitting-plus" aria-label="Formteilzuschlag erhöhen">+</button>
-            </div>
+          </div>
+          <div class="tab-strip" id="dt-preset-group" data-choice-action="Typische Spreizung wählen" role="tablist" aria-label="Typische Spreizung">
+            <button type="button" class="tab-pill" role="tab" aria-selected="false" data-dt="5">5 K</button>
+            <button type="button" class="tab-pill" role="tab" aria-selected="false" data-dt="7">7 K</button>
+            <button type="button" class="tab-pill" role="tab" aria-selected="true" data-dt="10">10 K</button>
+            <button type="button" class="tab-pill" role="tab" aria-selected="false" data-dt="15">15 K</button>
+            <button type="button" class="tab-pill" role="tab" aria-selected="false" data-dt="20">20 K</button>
           </div>
         </div>
       </section>
+
+      <section class="glass-card" aria-label="Medium und Temperatur">
+        <div class="form-group">
+          <span class="form-label"><span>Medium und Temperatur</span></span>
+        </div>
+        <div class="group">
+          <div class="control">
+            <div class="control-head">
+              <label class="control-label" for="fluid-temp-input">Temperatur</label>
+              <button type="button" class="stepper" id="fluid-temp-minus" aria-label="Temperatur verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+              <input id="fluid-temp-input" class="value-input numeric" type="text" inputmode="text" min="-35" max="130" value="50" autocomplete="off" aria-label="Temperatur" />
+              <span class="input-unit-addon">°C</span>
+              <button type="button" class="stepper" id="fluid-temp-plus" aria-label="Temperatur erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+            </div>
+          </div>
+          <div class="control">
+            <div class="control-head">
+              <label class="control-label" for="fluid-glycol-input">Glykol-Anteil</label>
+              <button type="button" class="stepper" id="fluid-glycol-minus" aria-label="Glykol-Anteil verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+              <input id="fluid-glycol-input" class="value-input numeric" type="text" inputmode="decimal" min="0" max="60" value="0" autocomplete="off" aria-label="Glykol-Anteil" />
+              <span class="input-unit-addon">%</span>
+              <button type="button" class="stepper" id="fluid-glycol-plus" aria-label="Glykol-Anteil erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="info-list">
+          <div class="info-row"><span class="info-row-label" id="fluid-name">Wasser</span><span class="info-row-value numeric"><span id="fluid-rho">–</span> <span class="metric-unit">kg/m³</span></span></div>
+          <div class="info-row"><span class="info-row-label">Kinematische Viskosität ν</span><span class="info-row-value numeric"><span id="fluid-nu">–</span> <span class="metric-unit">mm²/s</span></span></div>
+        </div>
+      </section>
+
+      <section class="expander glass-card" aria-label="Grenzwerte">
+        <button class="expander-head" id="params-toggle-btn" type="button" aria-expanded="false" aria-controls="params-body">
+          <span class="expander-text">
+            <span class="expander-title">Grenzwerte</span>
+          </span>
+          <span class="expander-knob"><span class="material-symbols-rounded" aria-hidden="true">expand_more</span></span>
+        </button>
+        <div class="expander-body" id="params-body">
+          <div>
+          <div class="control">
+            <div class="control-head">
+              <label class="control-label" for="param-vopt-input">Max. v optimal</label>
+              <button type="button" class="stepper" id="param-vopt-minus" aria-label="Max. v optimal verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+              <input id="param-vopt-input" class="value-input numeric" type="text" inputmode="decimal" min="0.3" max="1.5" value="0.8" autocomplete="off" aria-label="Max. v optimal" />
+              <span class="input-unit-addon">m/s</span>
+              <button type="button" class="stepper" id="param-vopt-plus" aria-label="Max. v optimal erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+            </div>
+          </div>
+          <div class="control">
+            <div class="control-head">
+              <label class="control-label" for="param-fitting-input">Formteil-Zuschlag</label>
+              <button type="button" class="stepper" id="param-fitting-minus" aria-label="Formteil-Zuschlag verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+              <input id="param-fitting-input" class="value-input numeric" type="text" inputmode="decimal" min="0" max="100" value="0" autocomplete="off" aria-label="Formteil-Zuschlag" />
+              <span class="input-unit-addon">%</span>
+              <button type="button" class="stepper" id="param-fitting-plus" aria-label="Formteil-Zuschlag erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+            </div>
+          </div>
+          </div>
+        </div>
+      </section>
+
+      <p class="hint">Die Berechnung nutzt Innendurchmesser dᵢ und Wandrauigkeiten des Herstellers Viega (Profipress, Prestabo, Sanpress Inox, Temponox, Raxofix, Megapress).</p>
+      <p class="hint numeric">R = λ / dᵢ · ρ / 2 · v², λ nach Colebrook-White</p>
     </main>
 
-    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite" data-visible="false"></div>
+    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite"><span class="material-symbols-rounded" aria-hidden="true">check_circle</span><span id="toast-text"></span></div>
     <script type="module" src="./app.js"></script>
   </body>
 </html>

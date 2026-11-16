@@ -12,14 +12,12 @@ import {
   applyThemeMode,
   clearAppStorage,
   createNumberAnimator,
+  fadeThrough,
   getCurrentThemeMode,
   loadAppParams,
   parseLocaleNumber,
-  prefersReducedMotion,
   saveAppParams,
   showToast,
-  updateAllPills,
-  wireCopyResultButton,
 } from "../../assets/js/shared.js";
 
 const WAERME_PARAMS_KEY = "hvacr-params-waermeleistung";
@@ -143,14 +141,9 @@ function formatInputVal(value, decimals = 2) {
   return Number(value.toFixed(decimals)).toString();
 }
 
-function triggerResultPop() {
-  if (prefersReducedMotion()) return;
-  const main = document.getElementById("result-main");
-  if (!main) return;
-  main.classList.remove("is-popping");
-  void main.offsetWidth;
-  main.classList.add("is-popping");
-  window.setTimeout(() => main.classList.remove("is-popping"), 180);
+function setActive(btn, isActive) {
+  const attr = btn.classList.contains("tab-pill") ? "aria-selected" : "aria-pressed";
+  btn.setAttribute(attr, String(isActive));
 }
 
 function renderSettingsTheme() {
@@ -160,61 +153,34 @@ function renderSettingsTheme() {
 
   group.querySelectorAll("[data-theme-mode]").forEach((btn) => {
     const isActive = btn.getAttribute("data-theme-mode") === mode;
-    btn.setAttribute("aria-checked", String(isActive));
+    btn.setAttribute("aria-pressed", String(isActive));
   });
 }
 
 function openSettings() {
   state.view = "settings";
-  const calcView = document.getElementById("view-calc");
-  const settingsView = document.getElementById("view-settings");
-  const homeLink = document.getElementById("nav-home-link");
-  const backBtn = document.getElementById("nav-back-btn");
-  const resetBtn = document.getElementById("reset-calc-btn");
-  const brandTitle = document.getElementById("brand-title");
-
-  if (calcView) calcView.hidden = true;
-  if (settingsView) {
-    settingsView.hidden = false;
-    settingsView.classList.remove("is-entering");
-    void settingsView.offsetWidth;
-    settingsView.classList.add("is-entering");
+  const overlay = document.getElementById("settings-overlay");
+  if (overlay) {
+    overlay.classList.add("is-open");
+    overlay.setAttribute("aria-hidden", "false");
   }
-  if (homeLink) homeLink.hidden = true;
-  if (backBtn) backBtn.hidden = false;
-  if (resetBtn) resetBtn.hidden = true;
-  if (brandTitle) brandTitle.textContent = "Einstellungen";
-
   renderSettingsTheme();
+  document.getElementById("settings-close-btn")?.focus();
 }
 
 function openCalc() {
   state.view = "calc";
-  const calcView = document.getElementById("view-calc");
-  const settingsView = document.getElementById("view-settings");
-  const homeLink = document.getElementById("nav-home-link");
-  const backBtn = document.getElementById("nav-back-btn");
-  const resetBtn = document.getElementById("reset-calc-btn");
-  const brandTitle = document.getElementById("brand-title");
-
-  if (settingsView) settingsView.hidden = true;
-  if (calcView) {
-    calcView.hidden = false;
-    calcView.classList.remove("is-entering");
-    void calcView.offsetWidth;
-    calcView.classList.add("is-entering");
+  const overlay = document.getElementById("settings-overlay");
+  if (overlay) {
+    overlay.classList.remove("is-open");
+    overlay.setAttribute("aria-hidden", "true");
   }
-  if (backBtn) backBtn.hidden = true;
-  if (homeLink) homeLink.hidden = false;
-  if (resetBtn) resetBtn.hidden = false;
-  if (brandTitle) brandTitle.textContent = "Wärmeleistung";
-
-  updateAllPills();
+  document.getElementById("settings-toggle-btn")?.focus();
 }
 
 function syncMediumChips() {
   document.querySelectorAll("[data-medium]").forEach((btn) => {
-    btn.setAttribute("aria-pressed", String(btn.dataset.medium === state.medium));
+    setActive(btn, btn.dataset.medium === state.medium);
   });
   const isGlycol = state.medium === "glycol";
   const hydWell = document.getElementById("hyd-glycol-well");
@@ -237,37 +203,62 @@ function syncPresetChips(groupSelector, attr, activeValue) {
   if (!group) return;
   group.querySelectorAll(`[${attr}]`).forEach((btn) => {
     const val = Number.parseFloat(btn.getAttribute(attr) || "");
-    btn.setAttribute("aria-pressed", String(Math.abs(val - activeValue) < 0.001));
+    setActive(btn, Math.abs(val - activeValue) < 0.001);
   });
 }
 
-let activeResultFormatter = (val) => formatDe(val, 2);
+let activeResultFormatter = (val) => (val > 0 ? formatDe(val, 2) : "–");
 
 const resultNumberAnimator = createNumberAnimator({
   duration: 220,
   epsilon: 0.001,
   render: (val) => {
     const numEl = document.getElementById("result-number");
-    if (numEl) numEl.textContent = activeResultFormatter(val);
+    if (numEl) numEl.textContent = Number.isFinite(val) ? activeResultFormatter(val) : "–";
   },
 });
+
+const BADGE_CLASS = { ok: "status-pill--green", warn: "status-pill--orange", bad: "status-pill--red" };
+
+function renderResultRows(rows) {
+  const host = document.getElementById("result-rows");
+  if (!host) return;
+  host.replaceChildren(
+    ...rows.map(([label, value]) => {
+      const row = document.createElement("div");
+      row.className = "info-row";
+      const l = document.createElement("span");
+      l.className = "info-row-label";
+      l.textContent = label;
+      const v = document.createElement("span");
+      v.className = "info-row-value numeric";
+      v.textContent = value;
+      row.append(l, v);
+      return row;
+    })
+  );
+}
+
+function fmtUnit(value, decimals, unit) {
+  return Number.isFinite(value) && value > 0 ? `${formatDe(value, decimals)} ${unit}` : "–";
+}
 
 function setResult({
   label,
   numericValue,
   formatValue,
   unit,
-  sub,
+  rows,
   badgeText,
   badgeState,
-  meterPct = 40,
+  note = "",
   animate = true,
 }) {
   const labelEl = document.getElementById("result-label");
   const unitEl = document.getElementById("result-unit");
-  const subEl = document.getElementById("result-sub");
   const badgeEl = document.getElementById("result-badge");
-  const meterEl = document.getElementById("result-meter-fill");
+  const badgeTextEl = document.getElementById("result-badge-text");
+  const noteEl = document.getElementById("result-note");
 
   if (labelEl) labelEl.textContent = label;
   if (typeof formatValue === "function") {
@@ -275,17 +266,15 @@ function setResult({
   }
   resultNumberAnimator.update(numericValue, state.mode, animate);
   if (unitEl) unitEl.textContent = unit;
-  if (subEl) subEl.textContent = sub;
+  renderResultRows(rows);
   if (badgeEl) {
-    badgeEl.textContent = badgeText;
-    badgeEl.setAttribute("data-state", badgeState);
+    badgeEl.className = `status-pill ${BADGE_CLASS[badgeState] || BADGE_CLASS.ok}`;
   }
-  if (meterEl) {
-    const safePct = Math.min(100, Math.max(6, Number.isFinite(meterPct) ? meterPct : 40));
-    meterEl.style.width = `${safePct}%`;
-    meterEl.setAttribute("data-state", badgeState);
+  if (badgeTextEl) badgeTextEl.textContent = badgeText;
+  if (noteEl) {
+    noteEl.textContent = note;
+    noteEl.hidden = !note;
   }
-  triggerResultPop();
 }
 
 function calculateHydraulik() {
@@ -297,26 +286,33 @@ function calculateHydraulik() {
 
   let badgeText = "Plausibel";
   let badgeState = "ok";
+  let note = "";
   if (state.flowM3h <= 0 || state.hydDt <= 0) {
     badgeText = "Nullwert";
     badgeState = "warn";
+    note = "Volumenstrom und Spreizung müssen größer als 0 sein.";
   } else if (state.medium !== "air" && state.hydDt < 3) {
-    badgeText = "ΔT sehr klein (< 3 K)";
+    badgeText = "ΔT sehr klein";
     badgeState = "warn";
+    note = "Spreizung unter 3 K: Messfehler wirken stark. Messwerte prüfen oder Volumenstrom verringern.";
   } else if (state.medium !== "air" && state.hydDt > 25) {
-    badgeText = "ΔT hoch (> 25 K)";
+    badgeText = "ΔT hoch";
     badgeState = "warn";
+    note = "Spreizung über 25 K: für Heizkreise unüblich. Eingaben prüfen.";
   }
 
   setResult({
     label: "Wärmeleistung Q̇",
     numericValue: qKw,
-    formatValue: (v) => formatDe(v, v >= 100 ? 1 : 2),
+    formatValue: (v) => (v > 0 ? formatDe(v, v >= 100 ? 1 : 2) : "–"),
     unit: "kW",
-    sub: `${formatDe(qWatt, 0)} W · ${formatDe(massFlowKgH, 0)} kg/h`,
+    rows: [
+      ["Leistung", fmtUnit(qWatt, 0, "W")],
+      ["Massenstrom", fmtUnit(massFlowKgH, 0, "kg/h")],
+    ],
     badgeText,
     badgeState,
-    meterPct: (state.hydDt / 25) * 100,
+    note,
   });
 }
 
@@ -329,23 +325,29 @@ function calculateVolumenstrom() {
 
   let badgeText = "Erforderlich";
   let badgeState = "ok";
+  let note = "";
   if (state.volPowerKw <= 0 || state.volDt <= 0) {
     badgeText = "Ungültig";
     badgeState = "bad";
+    note = "Wärmeleistung und Spreizung müssen größer als 0 sein.";
   } else if (state.medium !== "air" && state.volDt < 3) {
-    badgeText = "Hoher Durchfluss (ΔT < 3 K)";
+    badgeText = "Hoher Durchfluss";
     badgeState = "warn";
+    note = "Spreizung unter 3 K ergibt sehr hohe Volumenströme. Spreizung erhöhen.";
   }
 
   setResult({
     label: "Volumenstrom V̇",
     numericValue: flowM3h,
-    formatValue: (v) => formatDe(v, v >= 10 ? 2 : 3),
+    formatValue: (v) => (v > 0 ? formatDe(v, v >= 10 ? 2 : 3) : "–"),
     unit: "m³/h",
-    sub: `${formatDe(flowLh, 0)} l/h · ${formatDe(flowLmin, 1)} l/min`,
+    rows: [
+      ["Volumenstrom", fmtUnit(flowLh, 0, "l/h")],
+      ["Volumenstrom", fmtUnit(flowLmin, 1, "l/min")],
+    ],
     badgeText,
     badgeState,
-    meterPct: (state.volDt / 25) * 100,
+    note,
   });
 }
 
@@ -358,23 +360,30 @@ function calculateHeizlast() {
 
   let badgeText = "Richtwert";
   let badgeState = "ok";
+  let note = "";
   if (state.hlArea <= 0 || state.hlSpec <= 0) {
     badgeText = "Nullwert";
     badgeState = "warn";
+    note = "Fläche und spezifische Heizlast müssen größer als 0 sein.";
   } else if (state.hlSpec > 130) {
     badgeText = "Sehr hoher Bedarf";
     badgeState = "warn";
+    note = "Über 130 W/m²: Wert prüfen oder Gebäudestandard anpassen.";
   }
 
   setResult({
     label: "Gebäude-Heizlast Q̇",
     numericValue: qKw,
-    formatValue: (v) => formatDe(v, v >= 100 ? 1 : 2),
+    formatValue: (v) => (v > 0 ? formatDe(v, v >= 100 ? 1 : 2) : "–"),
     unit: "kW",
-    sub: `${formatDe(qWatt, 0)} W · ${formatDe(flowLh, 0)} l/h (${formatDe(flowM3h, 2)} m³/h bei ${formatDe(state.hlDt, 1)} K)`,
+    rows: [
+      ["Leistung", fmtUnit(qWatt, 0, "W")],
+      [`Volumenstrom bei ${formatDe(state.hlDt, 1)} K`, fmtUnit(flowLh, 0, "l/h")],
+      [`Volumenstrom bei ${formatDe(state.hlDt, 1)} K`, fmtUnit(flowM3h, 2, "m³/h")],
+    ],
     badgeText,
     badgeState,
-    meterPct: (state.hlSpec / 150) * 100,
+    note,
   });
 }
 
@@ -387,25 +396,24 @@ function renderActiveMode() {
 
 function switchMode(newMode) {
   if (!["hydraulik", "volumenstrom", "heizlast"].includes(newMode)) return;
+  const previous = state.mode;
   state.mode = newMode;
 
   document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.mode === newMode));
+    setActive(btn, btn.dataset.mode === newMode);
   });
 
+  const from = document.getElementById(`panel-${previous}`);
+  const to = document.getElementById(`panel-${newMode}`);
   ["hydraulik", "volumenstrom", "heizlast"].forEach((m) => {
     const panel = document.getElementById(`panel-${m}`);
-    if (!panel) return;
-    const isTarget = m === newMode;
-    panel.hidden = !isTarget;
-    if (isTarget) {
-      panel.classList.remove("is-entering");
-      void panel.offsetWidth;
-      panel.classList.add("is-entering");
-    }
+    if (panel && panel !== from && panel !== to) panel.hidden = true;
   });
+  if (to) {
+    if (from && from !== to && !from.hidden) fadeThrough(from, to);
+    else to.hidden = false;
+  }
 
-  updateAllPills();
   renderActiveMode();
 }
 
@@ -415,7 +423,7 @@ function switchFlowUnit(newUnit) {
   const cfg = FLOW_UNIT_CONFIG[newUnit];
 
   document.querySelectorAll("#flow-unit-tabs [data-flow-unit]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.flowUnit === newUnit));
+    setActive(btn, btn.dataset.flowUnit === newUnit);
   });
 
   const input = document.getElementById("hyd-flow-input");
@@ -423,7 +431,6 @@ function switchFlowUnit(newUnit) {
   if (input) input.value = formatInputVal(state.flowM3h / cfg.factorToM3h, cfg.decimals);
   if (unitLabel) unitLabel.textContent = cfg.label;
 
-  updateAllPills();
   calculateHydraulik();
 }
 
@@ -453,22 +460,22 @@ function wireStepper(minusId, plusId, inputId, getStep, onUpdate) {
 }
 
 function wireEvents() {
-  // Einstellungen-Umschalter (Zahnrad) & Zurück-Button
+  // Einstellungen: mittige Karte, schließt über Knopf, Hintergrund und Escape
   const settingsBtn = document.getElementById("settings-toggle-btn");
-  const backBtn = document.getElementById("nav-back-btn");
+  const closeBtn = document.getElementById("settings-close-btn");
+  const overlay = document.getElementById("settings-overlay");
   const themeModeGroup = document.getElementById("theme-mode-group");
 
-  if (settingsBtn) {
-    settingsBtn.addEventListener("click", () => {
-      if (state.view === "settings") {
-        openCalc();
-      } else {
-        openSettings();
-      }
+  if (settingsBtn) settingsBtn.addEventListener("click", openSettings);
+  if (closeBtn) closeBtn.addEventListener("click", openCalc);
+  if (overlay) {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) openCalc();
     });
   }
-
-  if (backBtn) backBtn.addEventListener("click", openCalc);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && state.view === "settings") openCalc();
+  });
 
   if (themeModeGroup) {
     themeModeGroup.addEventListener("click", (e) => {
@@ -645,12 +652,11 @@ function wireEvents() {
     renderActiveMode();
   });
 
-  window.addEventListener("resize", updateAllPills);
 }
 
 function syncStateToUI() {
   document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.mode === state.mode));
+    setActive(btn, btn.dataset.mode === state.mode);
   });
   ["hydraulik", "volumenstrom", "heizlast"].forEach((m) => {
     const panel = document.getElementById(`panel-${m}`);
@@ -662,7 +668,7 @@ function syncStateToUI() {
 
   const cfg = FLOW_UNIT_CONFIG[state.flowUnit] || FLOW_UNIT_CONFIG.m3h;
   document.querySelectorAll("#flow-unit-tabs [data-flow-unit]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.flowUnit === state.flowUnit));
+    setActive(btn, btn.dataset.flowUnit === state.flowUnit);
   });
   const flowInput = document.getElementById("hyd-flow-input");
   const flowUnitLabel = document.getElementById("hyd-flow-unit-label");
@@ -684,7 +690,6 @@ function syncStateToUI() {
   syncPresetChips("#vol-dt-preset-group", "data-dt", state.volDt);
   syncPresetChips("#hl-preset-group", "data-q", state.hlSpec);
   syncPresetChips("#hl-dt-preset-group", "data-dt", state.hlDt);
-  updateAllPills();
 }
 
 function init() {
@@ -701,14 +706,6 @@ function init() {
     syncStateToUI();
     renderActiveMode();
     showToast("Standardwerte wiederhergestellt");
-  });
-
-  wireCopyResultButton("copy-result-btn", () => {
-    const label = document.getElementById("result-label")?.textContent?.trim() || "";
-    const num = document.getElementById("result-number")?.textContent?.trim() || "";
-    const unit = document.getElementById("result-unit")?.textContent?.trim() || "";
-    const sub = document.getElementById("result-sub")?.textContent?.trim() || "";
-    return `${label}: ${num} ${unit} (${sub})`;
   });
 
   syncStateToUI();

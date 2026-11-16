@@ -2,7 +2,7 @@
  * Modul: Kältemittel Druck-Temperatur & SH/SC-Rechner (apps/kaeltemittel/app.js)
  * Zweck: Berechnet Sättigungstemperatur, Sättigungsdruck sowie Überhitzung (SH) und
  *   Unterkühlung (SC) für gängige HVAC-R-Kältemittel anhand der Antoine-Dampfdruckgleichung.
- * Verantwortlichkeit: Kältemittel-Koeffizienten, Druckbezug (bar ü / bar abs),
+ * Verantwortlichkeit: Kältemittel-Koeffizienten, Druckbezug (Überdruck / Absolutdruck),
  *   Plausibilitäts- und SH/SC-Bewertung sowie Live-Ergebnis mit Zahlenanimation.
  * Sicherheits- & Stabilitätsrelevanz: Eingabe-Clamping gegen negative Absolutdrücke
  *   und Schutz vor NaN/Infinity bei Logarithmen.
@@ -12,14 +12,12 @@ import {
   applyThemeMode,
   clearAppStorage,
   createNumberAnimator,
+  fadeThrough,
   getCurrentThemeMode,
   loadAppParams,
   parseLocaleNumber,
-  prefersReducedMotion,
   saveAppParams,
   showToast,
-  updateAllPills,
-  wireCopyResultButton,
 } from "../../assets/js/shared.js";
 
 const KAELTE_PARAMS_KEY = "hvacr-params-kaeltemittel";
@@ -82,7 +80,7 @@ function sanitizeNumber(raw, fallback, min = -100, max = 200) {
 }
 
 function formatDe(value, decimals = 1) {
-  if (!Number.isFinite(value)) return "0";
+  if (!Number.isFinite(value)) return "–";
   return value.toLocaleString("de-DE", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -124,14 +122,47 @@ const resultNumberAnimator = createNumberAnimator({
   },
 });
 
-function triggerResultPop() {
-  if (prefersReducedMotion()) return;
-  const main = document.getElementById("result-main");
-  if (!main) return;
-  main.classList.remove("is-popping");
-  void main.offsetWidth;
-  main.classList.add("is-popping");
-  window.setTimeout(() => main.classList.remove("is-popping"), 180);
+function makeRow(label, value, unit) {
+  const row = document.createElement("div");
+  row.className = "info-row";
+  const l = document.createElement("span");
+  l.className = "info-row-label";
+  l.textContent = label;
+  const v = document.createElement("span");
+  v.className = "info-row-value numeric";
+  v.append(document.createTextNode(value));
+  if (unit) {
+    const u = document.createElement("span");
+    u.className = "metric-unit";
+    u.textContent = unit;
+    v.append(u);
+  }
+  row.append(l, v);
+  return row;
+}
+
+function renderRows(rows) {
+  const host = document.getElementById("result-rows");
+  if (!host) return;
+  host.replaceChildren(...rows.map((r) => makeRow(r[0], r[1], r[2])));
+}
+
+function metaRows(spec) {
+  const parts = String(spec.meta).split(" · ");
+  const rows = [];
+  if (parts[0]) rows.push(["GWP", parts[0].replace(/^GWP\s*/, ""), ""]);
+  if (parts[1]) rows.push(["Sicherheitsklasse", parts[1], ""]);
+  return rows;
+}
+
+function setBadge(text, badgeState) {
+  const badgeEl = document.getElementById("result-badge");
+  const textEl = document.getElementById("result-badge-text");
+  if (textEl) textEl.textContent = text;
+  if (badgeEl) {
+    const cls = badgeState === "bad" ? "red" : badgeState === "warn" ? "orange" : "green";
+    badgeEl.className = `status-pill status-pill--${cls}`;
+  }
 }
 
 function calculateAndRender(animate = true) {
@@ -139,9 +170,7 @@ function calculateAndRender(animate = true) {
   const spec = REFRIGERANTS[state.refrigerant] || REFRIGERANTS.R32;
   const labelEl = document.getElementById("result-label");
   const unitEl = document.getElementById("result-unit");
-  const subEl = document.getElementById("result-sub");
-  const badgeEl = document.getElementById("result-badge");
-  const meterEl = document.getElementById("result-meter-fill");
+  const subEl = document.getElementById("result-label");
 
   let numericValue = 0;
   let unit = "°C";
@@ -149,7 +178,7 @@ function calculateAndRender(animate = true) {
   let sub = "";
   let badgeText = "Plausibel";
   let badgeState = "ok";
-  let meterPct = 50;
+  let rows = [];
 
   if (state.mode === "p2t") {
     const pAbs = toAbsBar(state.p2tValue);
@@ -158,8 +187,12 @@ function calculateAndRender(animate = true) {
     numericValue = satT;
     unit = "°C";
     label = "Sättigungstemperatur";
-    sub = `${spec.label} · p_abs = ${formatDe(pAbs, 2)} bar · p_ü = ${formatDe(pAbs - kaelteParams.atmBar, 2)} bar`;
-    meterPct = ((satT + 40) / 110) * 100;
+    sub = `${spec.label}, Absolutdruck ${formatDe(pAbs, 2)} bar, Überdruck ${formatDe(pAbs - kaelteParams.atmBar, 2)} bar`;
+    rows = [
+      ["Absolutdruck", formatDe(pAbs, 2), "bar"],
+      ["Überdruck (Manometer)", formatDe(pAbs - kaelteParams.atmBar, 2), "bar"],
+      ...metaRows(spec),
+    ];
 
     if (satT < spec.tMin || satT > spec.tMax) {
       badgeText = "Außerhalb Standardbereich";
@@ -173,10 +206,15 @@ function calculateAndRender(animate = true) {
     const pOut = fromAbsBar(pAbs);
     activeDecimals = 2;
     numericValue = pOut;
-    unit = state.pressureRef === "gauge" ? "bar ü" : "bar";
+    unit = state.pressureRef === "gauge" ? "bar Überdruck" : "bar absolut";
     label = "Sättigungsdruck";
-    sub = `${spec.label} · p_abs = ${formatDe(pAbs, 2)} bar · ${formatDe(state.t2pValue, 1)} °C`;
-    meterPct = (pAbs / 45) * 100;
+    sub = `${spec.label}, Absolutdruck ${formatDe(pAbs, 2)} bar, Überdruck ${formatDe(pAbs - kaelteParams.atmBar, 2)} bar, ${formatDe(state.t2pValue, 1)} °C`;
+    rows = [
+      ["Absolutdruck", formatDe(pAbs, 2), "bar"],
+      ["Überdruck (Manometer)", formatDe(pAbs - kaelteParams.atmBar, 2), "bar"],
+      ["Sättigungstemperatur", formatDe(state.t2pValue, 1), "°C"],
+      ...metaRows(spec),
+    ];
 
     if (state.t2pValue < spec.tMin || state.t2pValue > spec.tMax) {
       badgeText = "Grenzbereich";
@@ -193,8 +231,14 @@ function calculateAndRender(animate = true) {
     numericValue = diff;
     unit = "K";
     label = state.shscType === "sh" ? "Überhitzung (SH)" : "Unterkühlung (SC)";
-    sub = `${spec.label} · T_satt = ${formatDe(satT, 1)} °C · T_rohr = ${formatDe(state.shscTemp, 1)} °C`;
-    meterPct = (Math.max(0, diff) / 16) * 100;
+    sub = `${spec.label}, T_satt = ${formatDe(satT, 1)} °C, T_rohr = ${formatDe(state.shscTemp, 1)} °C`;
+    rows = [
+      ["Absolutdruck", formatDe(pAbs, 2), "bar"],
+      ["Überdruck (Manometer)", formatDe(pAbs - kaelteParams.atmBar, 2), "bar"],
+      ["Sättigungstemperatur T_satt", formatDe(satT, 1), "°C"],
+      ["Rohrtemperatur T_rohr", formatDe(state.shscTemp, 1), "°C"],
+      ...metaRows(spec),
+    ];
 
     if (diff < 0) {
       badgeText = state.shscType === "sh" ? "Nassdampf / Flüssigkeit!" : "Keine Unterkühlung!";
@@ -216,22 +260,15 @@ function calculateAndRender(animate = true) {
 
   if (labelEl) labelEl.textContent = label;
   if (unitEl) unitEl.textContent = unit;
-  if (subEl) subEl.textContent = sub;
-  if (badgeEl) {
-    badgeEl.textContent = badgeText;
-    badgeEl.setAttribute("data-state", badgeState);
-  }
-  if (meterEl) {
-    meterEl.style.width = `${Math.min(100, Math.max(6, meterPct))}%`;
-    meterEl.setAttribute("data-state", badgeState);
-  }
+  if (subEl) subEl.dataset.sub = sub;
+  setBadge(badgeText, badgeState);
+  renderRows(rows);
 
   resultNumberAnimator.update(numericValue, `${state.mode}:${state.shscType}`, animate);
-  triggerResultPop();
 }
 
 function syncPressureUnitLabels() {
-  const unitText = state.pressureRef === "gauge" ? "bar ü" : "bar";
+  const unitText = state.pressureRef === "gauge" ? "bar Überdruck" : "bar absolut";
   const p2tUnit = document.getElementById("p2t-unit-label");
   const shscUnit = document.getElementById("shsc-p-unit");
   if (p2tUnit) p2tUnit.textContent = unitText;
@@ -242,20 +279,15 @@ function switchMode(newMode) {
   if (!["p2t", "t2p", "shsc"].includes(newMode)) return;
   state.mode = newMode;
   document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.mode === newMode));
+    btn.setAttribute("aria-pressed", String(btn.dataset.mode === newMode));
   });
-  ["p2t", "t2p", "shsc"].forEach((m) => {
-    const panel = document.getElementById(`panel-${m}`);
-    if (!panel) return;
-    const isTarget = m === newMode;
-    panel.hidden = !isTarget;
-    if (isTarget) {
-      panel.classList.remove("is-entering");
-      void panel.offsetWidth;
-      panel.classList.add("is-entering");
-    }
+  const panels = ["p2t", "t2p", "shsc"].map((m) => document.getElementById(`panel-${m}`));
+  const target = document.getElementById(`panel-${newMode}`);
+  const current = panels.find((p) => p && !p.hidden);
+  panels.forEach((p) => {
+    if (p && p !== target && p !== current) p.hidden = true;
   });
-  updateAllPills();
+  fadeThrough(current, target);
   calculateAndRender(true);
 }
 
@@ -287,43 +319,24 @@ function wireStepper(minusId, plusId, inputId, step, min, max, onUpdate) {
 function renderSettingsTheme() {
   const mode = getCurrentThemeMode();
   document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
-    btn.setAttribute("aria-checked", String(btn.getAttribute("data-theme-mode") === mode));
+    btn.setAttribute("aria-pressed", String(btn.getAttribute("data-theme-mode") === mode));
   });
 }
 
 function openSettings() {
-  document.getElementById("view-calc").hidden = true;
-  const sv = document.getElementById("view-settings");
-  sv.hidden = false;
-  sv.classList.remove("is-entering");
-  void sv.offsetWidth;
-  sv.classList.add("is-entering");
-  document.getElementById("nav-home-link").hidden = true;
-  document.getElementById("nav-back-btn").hidden = false;
-  const resetBtn = document.getElementById("reset-calc-btn");
-  if (resetBtn) resetBtn.hidden = true;
-  document.getElementById("brand-title").textContent = "Einstellungen";
   renderSettingsTheme();
+  document.getElementById("settings-modal")?.classList.add("is-open");
+  document.getElementById("settings-close-btn")?.focus();
 }
 
-function openCalc() {
-  document.getElementById("view-settings").hidden = true;
-  const cv = document.getElementById("view-calc");
-  cv.hidden = false;
-  cv.classList.remove("is-entering");
-  void cv.offsetWidth;
-  cv.classList.add("is-entering");
-  document.getElementById("nav-back-btn").hidden = true;
-  document.getElementById("nav-home-link").hidden = false;
-  const resetBtn = document.getElementById("reset-calc-btn");
-  if (resetBtn) resetBtn.hidden = false;
-  document.getElementById("brand-title").textContent = "Kältemittel";
-  updateAllPills();
+function closeSettings() {
+  document.getElementById("settings-modal")?.classList.remove("is-open");
+  document.getElementById("settings-toggle-btn")?.focus();
 }
 
 function syncStateToUI() {
   document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.mode === state.mode));
+    btn.setAttribute("aria-pressed", String(btn.dataset.mode === state.mode));
   });
   ["p2t", "t2p", "shsc"].forEach((m) => {
     const panel = document.getElementById(`panel-${m}`);
@@ -331,18 +344,14 @@ function syncStateToUI() {
   });
 
   document.querySelectorAll("#refrigerant-group [data-ref]").forEach((btn) => {
-    btn.setAttribute("aria-pressed", String(btn.dataset.ref === state.refrigerant));
+    btn.setAttribute("aria-selected", String(btn.dataset.ref === state.refrigerant));
   });
-  const hint = document.getElementById("ref-meta-hint");
-  if (hint && REFRIGERANTS[state.refrigerant]) {
-    hint.textContent = REFRIGERANTS[state.refrigerant].meta;
-  }
 
   document.querySelectorAll("#pressure-ref-tabs [data-pref]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.pref === state.pressureRef));
+    btn.setAttribute("aria-pressed", String(btn.dataset.pref === state.pressureRef));
   });
   document.querySelectorAll("#shsc-type-tabs [data-shsc]").forEach((btn) => {
-    btn.setAttribute("aria-selected", String(btn.dataset.shsc === state.shscType));
+    btn.setAttribute("aria-pressed", String(btn.dataset.shsc === state.shscType));
   });
   const tLabel = document.getElementById("shsc-t-label");
   if (tLabel) tLabel.textContent = state.shscType === "sh" ? "Sauggas-Temp" : "Flüssig-Temp";
@@ -357,12 +366,17 @@ function syncStateToUI() {
   setVal("shsc-t-input", state.shscTemp);
 
   syncPressureUnitLabels();
-  updateAllPills();
 }
 
 function init() {
   document.getElementById("settings-toggle-btn")?.addEventListener("click", openSettings);
-  document.getElementById("nav-back-btn")?.addEventListener("click", openCalc);
+  document.getElementById("settings-close-btn")?.addEventListener("click", closeSettings);
+  document.getElementById("settings-modal")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeSettings();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSettings();
+  });
 
   document.getElementById("reset-calc-btn")?.addEventListener("click", () => {
     Object.assign(state, DEFAULT_STATE, { view: "calc" });
@@ -370,14 +384,6 @@ function init() {
     syncStateToUI();
     calculateAndRender(true);
     showToast("Standardwerte wiederhergestellt");
-  });
-
-  wireCopyResultButton("copy-result-btn", () => {
-    const label = document.getElementById("result-label")?.textContent?.trim() || "";
-    const num = document.getElementById("result-number")?.textContent?.trim() || "";
-    const unit = document.getElementById("result-unit")?.textContent?.trim() || "";
-    const sub = document.getElementById("result-sub")?.textContent?.trim() || "";
-    return `${label}: ${num} ${unit} (${sub})`;
   });
 
   document.querySelectorAll("#theme-mode-group [data-theme-mode]").forEach((btn) => {
@@ -397,10 +403,8 @@ function init() {
       if (!REFRIGERANTS[ref]) return;
       state.refrigerant = ref;
       document.querySelectorAll("#refrigerant-group [data-ref]").forEach((b) => {
-        b.setAttribute("aria-pressed", String(b.dataset.ref === ref));
+        b.setAttribute("aria-selected", String(b.dataset.ref === ref));
       });
-      const hint = document.getElementById("ref-meta-hint");
-      if (hint) hint.textContent = REFRIGERANTS[ref].meta;
       calculateAndRender(true);
     });
   });
@@ -411,10 +415,9 @@ function init() {
       if (pref !== "gauge" && pref !== "abs") return;
       state.pressureRef = pref;
       document.querySelectorAll("#pressure-ref-tabs [data-pref]").forEach((b) => {
-        b.setAttribute("aria-selected", String(b.dataset.pref === pref));
+        b.setAttribute("aria-pressed", String(b.dataset.pref === pref));
       });
       syncPressureUnitLabels();
-      updateAllPills();
       calculateAndRender(true);
     });
   });
@@ -425,11 +428,10 @@ function init() {
       if (t !== "sh" && t !== "sc") return;
       state.shscType = t;
       document.querySelectorAll("#shsc-type-tabs [data-shsc]").forEach((b) => {
-        b.setAttribute("aria-selected", String(b.dataset.shsc === t));
+        b.setAttribute("aria-pressed", String(b.dataset.shsc === t));
       });
       const tLabel = document.getElementById("shsc-t-label");
       if (tLabel) tLabel.textContent = t === "sh" ? "Sauggas-Temp" : "Flüssig-Temp";
-      updateAllPills();
       calculateAndRender(true);
     });
   });
@@ -467,7 +469,6 @@ function init() {
     calculateAndRender(true);
   });
 
-  window.addEventListener("resize", updateAllPills);
   syncStateToUI();
   calculateAndRender(false);
 }

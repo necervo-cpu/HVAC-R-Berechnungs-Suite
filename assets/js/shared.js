@@ -9,7 +9,7 @@
  *   try/catch-Kapselung von localStorage für den iOS Safari Privatmodus.
  */
 
-export const APP_VERSION = "1.3.4";
+export const APP_VERSION = "1.4.6";
 export const BUILD_DATE = "2026-11-15";
 
 export const THEME_STORAGE_KEY = "ag-theme";
@@ -21,7 +21,6 @@ const VERSION_URL = new URL("version.json", ROOT_URL).href;
 
 let toastTimer = null;
 let swRegistration = null;
-let updateDismissed = false;
 let isReloading = false;
 let lastCheckTimestamp = 0;
 let memoryThemeOverride = null;
@@ -78,7 +77,7 @@ function syncThemeUI(safeMode, effective) {
   const modeGroup = document.getElementById("theme-mode-group");
   if (modeGroup) {
     modeGroup.querySelectorAll("[data-theme-mode]").forEach((btn) => {
-      btn.setAttribute("aria-checked", String(btn.dataset.themeMode === safeMode));
+      btn.setAttribute("aria-pressed", String(btn.dataset.themeMode === safeMode));
     });
   }
 }
@@ -127,12 +126,44 @@ export function prefersReducedMotion() {
 export function showToast(message) {
   const toast = document.getElementById("toast-pill");
   if (!toast) return;
-  toast.textContent = message;
-  toast.setAttribute("data-visible", "true");
+  const text = toast.querySelector("#toast-text");
+  if (text) text.textContent = message;
+  else toast.textContent = message;
+  toast.classList.add("is-visible");
   window.clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => {
-    toast.setAttribute("data-visible", "false");
-  }, 2200);
+    toast.classList.remove("is-visible");
+  }, 2400);
+}
+
+/**
+ * Überblenden innerhalb einer Seite: alte Fläche kurz aus-, neue weich einblenden.
+ */
+export function fadeThrough(from, to, between) {
+  const reduced = prefersReducedMotion();
+  if (!from || !to || from === to) {
+    if (to) to.hidden = false;
+    if (between) between();
+    return;
+  }
+  const out = from.animate([{ opacity: 1 }, { opacity: 0 }], {
+    duration: reduced ? 1 : 90,
+    easing: "linear",
+    fill: "forwards",
+  });
+  out.onfinish = () => {
+    from.hidden = true;
+    out.cancel();
+    to.hidden = false;
+    if (between) between();
+    to.animate(
+      [
+        { opacity: 0, transform: "scale(0.98)" },
+        { opacity: 1, transform: "scale(1)" },
+      ],
+      { duration: reduced ? 1 : 210, easing: "cubic-bezier(0.32, 0.72, 0, 1)" },
+    );
+  };
 }
 
 export function updateSegmentedPill(container) {
@@ -224,7 +255,7 @@ export async function copyTextToClipboard(text) {
   try {
     if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
       await navigator.clipboard.writeText(value);
-      showToast("Rapport in Zwischenablage kopiert");
+      showToast("Kopiert");
       return true;
     }
   } catch {
@@ -242,10 +273,10 @@ export async function copyTextToClipboard(text) {
     area.select();
     const ok = document.execCommand("copy");
     document.body.removeChild(area);
-    showToast(ok ? "Rapport in Zwischenablage kopiert" : "Kopieren fehlgeschlagen");
+    showToast(ok ? "Kopiert" : "Kopieren nicht möglich. Text markieren und von Hand kopieren.");
     return ok;
   } catch {
-    showToast("Kopieren fehlgeschlagen");
+    showToast("Kopieren nicht möglich. Text markieren und von Hand kopieren.");
     return false;
   }
 }
@@ -353,40 +384,6 @@ export function createNumberAnimator({ duration = 220, epsilon = 0.001, render }
   };
 }
 
-function syncNumInputWidth(input) {
-  const len = String(input.value ?? "").length || 1;
-  input.style.width = `${Math.max(2, len + 0.4)}ch`;
-}
-
-// Fallback für Browser ohne CSS field-sizing: content (z. B. iOS Safari)
-function initNumInputSizingFallback() {
-  if (typeof CSS !== "undefined" && CSS.supports && CSS.supports("field-sizing", "content")) {
-    return;
-  }
-
-  const syncAll = () => {
-    document.querySelectorAll(".num-value-wrap .num-input").forEach(syncNumInputWidth);
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", syncAll);
-  } else {
-    syncAll();
-  }
-
-  document.addEventListener("input", (e) => {
-    const target = e.target;
-    if (target instanceof HTMLInputElement && target.closest(".num-value-wrap")) {
-      syncNumInputWidth(target);
-    }
-  });
-
-  // Synchronisiert Breite auch nach JS-Wertänderungen durch Stepper-Buttons oder Chips
-  document.addEventListener("click", () => {
-    window.requestAnimationFrame(syncAll);
-  });
-}
-
 /**
  * Baustellen-Ergonomie für Zahleneingaben:
  * 1. Automatisches .select() bei focus/click, damit Werte sofort überschrieben werden können.
@@ -398,7 +395,7 @@ function initInputErgonomics() {
     (el.type === "number" ||
       el.inputMode === "decimal" ||
       el.inputMode === "numeric" ||
-      el.classList.contains("num-input") ||
+      el.classList.contains("value-input") ||
       el.classList.contains("glass-input"));
 
   // Auto-Select bei Fokus / Klick (für sofortiges Überschreiben ohne Backspace)
@@ -441,7 +438,7 @@ function initInputErgonomics() {
 export async function applyAppUpdate(targetVersion = "") {
   if (isReloading) return;
   isReloading = true;
-  showToast(targetVersion ? `Update auf v${targetVersion} wird geladen...` : "Update wird geladen...");
+  showToast(targetVersion ? `Update auf v${targetVersion} wird geladen` : "Update wird geladen");
 
   try {
     if (swRegistration?.waiting) {
@@ -462,96 +459,17 @@ export async function applyAppUpdate(targetVersion = "") {
   window.location.reload();
 }
 
-function showUpdateBanner(remoteVersion) {
-  if (updateDismissed || !document.body) return;
-  let banner = document.getElementById("app-update-banner");
-
-  if (!banner) {
-    banner = document.createElement("aside");
-    banner.id = "app-update-banner";
-    banner.className = "liquid-glass update-banner";
-    banner.setAttribute("role", "region");
-    banner.setAttribute("aria-label", "App-Aktualisierung");
-
-    const icon = document.createElement("span");
-    icon.className = "material-symbols-rounded update-banner-icon";
-    icon.setAttribute("aria-hidden", "true");
-    icon.textContent = "system_update";
-
-    const textWrap = document.createElement("div");
-    textWrap.className = "update-banner-text";
-
-    const title = document.createElement("strong");
-    title.className = "update-banner-title";
-    title.textContent = "Neue Version verfügbar";
-
-    const sub = document.createElement("span");
-    sub.className = "update-banner-sub";
-
-    textWrap.append(title, sub);
-
-    const actions = document.createElement("div");
-    actions.className = "update-banner-actions";
-
-    const reloadBtn = document.createElement("button");
-    reloadBtn.type = "button";
-    reloadBtn.className = "update-banner-btn press-btn";
-    reloadBtn.textContent = "Aktualisieren";
-    reloadBtn.addEventListener("click", () => {
-      reloadBtn.disabled = true;
-      reloadBtn.textContent = "Lädt …";
-      void applyAppUpdate();
-    });
-
-    const closeBtn = document.createElement("button");
-    closeBtn.type = "button";
-    closeBtn.className = "update-banner-close press-icon";
-    closeBtn.setAttribute("aria-label", "Hinweis schließen");
-    const closeIcon = document.createElement("span");
-    closeIcon.className = "material-symbols-rounded";
-    closeIcon.setAttribute("aria-hidden", "true");
-    closeIcon.textContent = "close";
-    closeBtn.appendChild(closeIcon);
-    closeBtn.addEventListener("click", () => {
-      updateDismissed = true;
-      banner.setAttribute("data-visible", "false");
-    });
-
-    actions.append(reloadBtn, closeBtn);
-    banner.append(icon, textWrap, actions);
-    document.body.appendChild(banner);
-  }
-
-  const subEl = banner.querySelector(".update-banner-sub");
-  if (subEl) {
-    subEl.textContent = remoteVersion
-      ? `Version ${remoteVersion} steht bereit`
-      : "Änderungen sind bereit zum Laden";
-  }
-
-  window.requestAnimationFrame(() => {
-    banner.setAttribute("data-visible", "true");
-  });
-}
-
 export function setSettingsUpdateIndicator(visible) {
-  const settingsBtn = document.getElementById("settings-toggle-btn") || document.querySelector(".settings-btn");
+  const settingsBtn = document.getElementById("settings-toggle-btn");
   if (!settingsBtn) return;
   let dot = settingsBtn.querySelector(".settings-update-dot");
   if (visible) {
     if (!dot) {
       dot = document.createElement("span");
       dot.className = "status-dot settings-update-dot";
-      dot.style.position = "absolute";
-      dot.style.top = "7px";
-      dot.style.right = "7px";
-      dot.style.width = "8px";
-      dot.style.height = "8px";
-      dot.style.borderRadius = "50%";
-      dot.style.background = "var(--system-cyan)";
-      dot.style.boxShadow = "0 0 8px var(--system-cyan)";
+      dot.style.color = "var(--system-cyan)";
+      dot.setAttribute("role", "img");
       dot.setAttribute("aria-label", "Update verfügbar");
-      settingsBtn.style.position = "relative";
       settingsBtn.appendChild(dot);
     }
   } else if (dot) {
@@ -569,8 +487,7 @@ export async function checkForAppUpdate({ manual = false } = {}) {
       await swRegistration.update();
       if (swRegistration.waiting) {
         setSettingsUpdateIndicator(true);
-        if (manual) updateDismissed = false;
-        showUpdateBanner("");
+        setSettingsUpdateIndicator(true);
         if (manual) {
           await applyAppUpdate();
         }
@@ -580,7 +497,7 @@ export async function checkForAppUpdate({ manual = false } = {}) {
 
     const res = await fetch(`${VERSION_URL}?t=${now}`, { cache: "no-store" });
     if (!res.ok) {
-      if (manual) showToast("Update-Prüfung fehlgeschlagen");
+      if (manual) showToast("Update-Prüfung nicht möglich oder offline");
       return false;
     }
 
@@ -590,10 +507,9 @@ export async function checkForAppUpdate({ manual = false } = {}) {
     if (remoteVersion && remoteVersion !== APP_VERSION) {
       setSettingsUpdateIndicator(true);
       if (manual) {
-        updateDismissed = false;
         await applyAppUpdate(remoteVersion);
       } else {
-        showUpdateBanner(remoteVersion);
+        setSettingsUpdateIndicator(true);
       }
       return true;
     }
@@ -605,7 +521,7 @@ export async function checkForAppUpdate({ manual = false } = {}) {
     return false;
   } catch {
     if (manual) {
-      showToast("Offline – Update-Prüfung nicht möglich");
+      showToast("Update-Prüfung nicht möglich oder offline");
     }
     return false;
   }
@@ -619,14 +535,14 @@ function initServiceWorkerAndUpdates() {
         .then((reg) => {
           swRegistration = reg;
           if (reg.waiting) {
-            showUpdateBanner("");
+            setSettingsUpdateIndicator(true);
           }
           reg.addEventListener("updatefound", () => {
             const installing = reg.installing;
             if (!installing) return;
             installing.addEventListener("statechange", () => {
               if (installing.state === "installed" && navigator.serviceWorker.controller) {
-                showUpdateBanner("");
+                setSettingsUpdateIndicator(true);
               }
             });
           });
@@ -670,6 +586,157 @@ function initServiceWorkerAndUpdates() {
 }
 
 /**
+ * Auswahl als Dropdown: Mehr als 3 Optionen oder Optionen, die breiter sind als der Bildschirm,
+ * erscheinen als Auswahlfeld. Die Original-Schaltflächen bleiben (versteckt) bestehen und werden
+ * bei Änderung angeklickt, die App-Logik bleibt dadurch unverändert.
+ */
+const CHOICE_SELECTOR = ".tab-strip:not([data-choice-keep]), .segmented-control:not([data-choice-keep])";
+const choiceFields = new WeakMap();
+
+function choiceLabel(btn) {
+  const clone = btn.cloneNode(true);
+  clone.querySelectorAll(".material-symbols-rounded").forEach((n) => n.remove());
+  return clone.textContent.replace(/\s+/g, " ").trim();
+}
+
+function choiceActiveIndex(buttons) {
+  return buttons.findIndex(
+    (b) => b.getAttribute("aria-selected") === "true" || b.getAttribute("aria-pressed") === "true",
+  );
+}
+
+function syncChoice(container) {
+  const buttons = Array.from(container.querySelectorAll("button"));
+  let field = choiceFields.get(container);
+  if (buttons.length < 2) {
+    if (field) field.wrap.hidden = true;
+    return;
+  }
+
+  let needDropdown = buttons.length > 3;
+  if (!needDropdown && container.offsetParent !== null) {
+    const wasHidden = container.hidden;
+    container.hidden = false;
+    needDropdown = container.scrollWidth > container.clientWidth + 1;
+    container.hidden = wasHidden;
+  } else if (!needDropdown && field && !field.wrap.hidden) {
+    needDropdown = true;
+  }
+
+  if (!needDropdown) {
+    container.hidden = false;
+    if (field) field.wrap.hidden = true;
+    return;
+  }
+
+  if (!field) {
+    const wrap = document.createElement("div");
+    wrap.className = container.dataset.choiceAction ? "choice-select choice-select--action" : "choice-select";
+    const select = document.createElement("select");
+    select.className = "choice-select-input";
+    const label = container.getAttribute("aria-label");
+    if (label) select.setAttribute("aria-label", label);
+    const icon = document.createElement("span");
+    icon.className = "material-symbols-rounded";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = "expand_more";
+    wrap.append(select, icon);
+    container.after(wrap);
+    select.addEventListener("change", () => {
+      if (select.value === "") return;
+      const current = Array.from(container.querySelectorAll("button"));
+      const target = current[Number(select.value)];
+      if (container.dataset.choiceAction) select.value = "";
+      if (target) target.click();
+    });
+    field = { wrap, select, signature: "" };
+    choiceFields.set(container, field);
+  }
+
+  const action = container.dataset.choiceAction || "";
+  const labels = buttons.map(choiceLabel);
+  const signature = `${action}\u0002${labels.join("\u0001")}`;
+  if (field.signature !== signature) {
+    field.signature = signature;
+    const options = labels.map((text, i) => {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = text;
+      return opt;
+    });
+    if (action) {
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = action;
+      options.unshift(placeholder);
+    }
+    field.select.replaceChildren(...options);
+  }
+  if (action) {
+    if (field.select.value !== "") field.select.value = "";
+  } else {
+    const active = choiceActiveIndex(buttons);
+    if (active >= 0 && field.select.value !== String(active)) field.select.value = String(active);
+  }
+  field.wrap.hidden = false;
+  container.hidden = true;
+}
+
+function syncAllChoices() {
+  document.querySelectorAll(CHOICE_SELECTOR).forEach(syncChoice);
+}
+
+/**
+ * Zahlenfelder mit Einheit: gleicher Innenabstand links und rechts, damit der Wert mittig steht.
+ */
+function syncUnitPadding(wrapper) {
+  const unit = wrapper.querySelector(".input-unit-addon");
+  const input = wrapper.querySelector(".glass-input");
+  if (!unit || !input) return;
+  const pad = `${Math.ceil(unit.getBoundingClientRect().width) + 20}px`;
+  input.style.paddingInline = pad;
+}
+
+function initUnitPadding() {
+  if (typeof ResizeObserver !== "function") return;
+  const observer = new ResizeObserver((entries) => {
+    entries.forEach((e) => {
+      const wrapper = e.target.closest(".input-wrapper");
+      if (wrapper) syncUnitPadding(wrapper);
+    });
+  });
+  const attach = () => {
+    document.querySelectorAll(".input-wrapper .input-unit-addon").forEach((u) => {
+      if (u.dataset.padBound) return;
+      u.dataset.padBound = "true";
+      observer.observe(u);
+    });
+  };
+  attach();
+  new MutationObserver(attach).observe(document.body, { childList: true, subtree: true });
+}
+
+function initChoiceDropdowns() {
+  let queued = false;
+  const schedule = () => {
+    if (queued) return;
+    queued = true;
+    window.requestAnimationFrame(() => {
+      queued = false;
+      syncAllChoices();
+    });
+  };
+  new MutationObserver(schedule).observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["aria-selected", "aria-pressed", "class"],
+  });
+  window.addEventListener("resize", schedule);
+  syncAllChoices();
+}
+
+/**
  * Initialisiert Header-Theme-Button (#themeToggleBtn) und System-Preference-Listener.
  */
 export function initThemeControls() {
@@ -705,11 +772,12 @@ export function initThemeControls() {
 
 if (typeof document !== "undefined") {
   applyThemeMode(getStoredThemeMode());
-  initNumInputSizingFallback();
   initServiceWorkerAndUpdates();
   const initDomFeatures = () => {
     initThemeControls();
     initInputErgonomics();
+    initChoiceDropdowns();
+    initUnitPadding();
   };
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initDomFeatures, { once: true });
