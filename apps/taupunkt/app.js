@@ -214,6 +214,21 @@ function wireInput(inputId, min, max, onUpdate) {
   });
 }
 
+function wireStepper(minusId, plusId, inputId, step, min, max) {
+  const minus = document.getElementById(minusId);
+  const plus = document.getElementById(plusId);
+  const input = document.getElementById(inputId);
+  if (!minus || !plus || !input) return;
+  const nudge = (dir) => {
+    const cur = sanitizeNumber(input.value, min, min, max);
+    const next = Math.min(max, Math.max(min, Number((cur + dir * step).toFixed(1))));
+    input.value = String(next).replace(".", ",");
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+  minus.addEventListener("click", () => nudge(-1));
+  plus.addEventListener("click", () => nudge(1));
+}
+
 function syncStateToUI() {
   document.querySelectorAll("#mode-tabs [data-mode]").forEach((btn) => {
     btn.setAttribute("aria-pressed", String(btn.dataset.mode === state.mode));
@@ -229,6 +244,10 @@ function syncStateToUI() {
   setVal("tp-temp-input", state.tempC);
   setVal("tp-rh-input", state.rhPct);
   setVal("tp-surface-input", state.surfaceC);
+
+  wireStepper("tp-temp-minus", "tp-temp-plus", "tp-temp-input", 0.5, -30, 60);
+  wireStepper("tp-rh-minus", "tp-rh-plus", "tp-rh-input", 2, 1, 100);
+  wireStepper("tp-surface-minus", "tp-surface-plus", "tp-surface-input", 0.5, -30, 60);
 
   document.querySelectorAll("#climate-preset-group [data-t]").forEach((btn) => {
     const t = parseLocaleNumber(btn.dataset.t, 22, -30, 60);
@@ -303,6 +322,9 @@ function init() {
     saveAppParams(TAUPUNKT_PARAMS_KEY, taupunktParams);
     calculateAndRender(true);
   });
+
+  wireStepper("param-patm-hpa-minus", "param-patm-hpa-plus", "param-patm-hpa-input", 5, 700, 1100);
+  wireStepper("param-margin-minus", "param-margin-plus", "param-margin-input", 0.5, 0.5, 6);
 
   syncStateToUI();
   calculateAndRender(false);

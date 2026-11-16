@@ -1,0 +1,36 @@
+/* App-spezifisch: Heizkurve. Nur Tokens aus global.css, keine Flächen oder Schatten. */
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.control .control-label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+}
+
+.control .control-slide {
+  margin-top: 0.25rem;
+}
+
+.control .control-slide .value-input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  text-align: center;
+}
+
+.control .control-slide .input-unit-addon {
+  min-width: 2.5em;
+  padding-left: 0;
+}
+
+.preset-seg {
+  margin-bottom: 1.625rem;
+}
+
+.action-row {
+  margin-bottom: 1.5rem;
+}

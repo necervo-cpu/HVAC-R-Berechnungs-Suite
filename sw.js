@@ -8,7 +8,7 @@
  *   bei Offline-Betrieb dient der Cache als sicherer Fallback.
  */
 
-const CACHE_NAME = "hvacr-cache-v1.4.6";
+const CACHE_NAME = "hvacr-cache-v1.5.2";
 
 const CORE_ASSETS = [
   "./",
@@ -21,6 +21,9 @@ const CORE_ASSETS = [
 ];
 
 const SUB_APP_ASSETS = [
+  "./apps/heizkurve/index.html",
+  "./apps/heizkurve/style.css",
+  "./apps/heizkurve/app.js",
   "./apps/sensor/index.html",
   "./apps/sensor/style.css",
   "./apps/sensor/app.js",

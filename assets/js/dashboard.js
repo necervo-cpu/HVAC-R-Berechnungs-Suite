@@ -16,6 +16,7 @@ import {
 } from "./shared.js";
 
 const MODULES = [
+  { id: "heizkurve", title: "Heizkurve", sub: "Simulator mit drei Einstellpunkten nach Lambda", keywords: "heizkurve vorlauf außentemperatur lambda wärmepumpe fußbodenheizung heizkörper offset steilheit kurve" },
   { id: "sensor", title: "PTC / NTC Sensoren", sub: "Ohm ↔ °C für NTC, PT100, PT1000 und KTY81", keywords: "ntc ptc pt100 pt1000 kty81 2k 5k 10k 12k 20k ohm fühler sensor temperatur" },
   { id: "waermeleistung", title: "Wärmeleistung (Q̇)", sub: "Volumenstrom, Spreizung und Heizlast", keywords: "wärmeleistung heizleistung leistung q volumenstrom spreizung heizlast wasser glykol kw" },
   { id: "rohrnetz", title: "Rohrnetz & Druckverlust", sub: "Fließgeschwindigkeit v (m/s) und R (mbar/m)", keywords: "rohrnetz rohr dimension dn kupfer verbund pex c-stahl gewinderohr druckverlust geschwindigkeit reibung" },

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2F2F7" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+    <meta name="apple-mobile-web-app-title" content="Heizkurve" />
+    <title>Heizkurve · HVAC·R Rechner</title>
+    <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
+    <link rel="apple-touch-icon" href="../../icon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      id="agFonts"
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0..200&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0..200&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+    <script>
+      (function () {
+        var root = document.documentElement;
+        var savedTheme = null;
+        try {
+          savedTheme = localStorage.getItem("ag-theme");
+        } catch (e) {}
+        var systemPrefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+        var activeTheme =
+          savedTheme === "light" || savedTheme === "dark" ? savedTheme : systemPrefersLight ? "light" : "dark";
+        root.setAttribute("data-theme", activeTheme);
+      })();
+    </script>
+    <script>
+      (function () {
+        var root = document.documentElement,
+          link = document.getElementById("agFonts");
+        if (!link || !document.fonts || !document.fonts.load) return;
+        var done = function () {
+          root.classList.remove("icons-pending");
+        };
+        root.classList.add("icons-pending");
+        setTimeout(done, 4000);
+        link.addEventListener("load", function () {
+          setTimeout(function () {
+            document.fonts.load('24px "Material Symbols Rounded"').then(done, done);
+          }, 0);
+        });
+        link.addEventListener("error", done);
+      })();
+    </script>
+    <link rel="stylesheet" href="../../assets/css/global.css" />
+    <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="../../assets/js/shared.js"></script>
+  </head>
+  <body>
+    <div class="ambient-canvas" aria-hidden="true"></div>
+
+    <main class="app-shell app-shell--narrow">
+      <div class="app-topbar">
+        <a href="../../index.html" class="back-btn">
+          <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>Übersicht
+        </a>
+        <div class="top-actions">
+          <button type="button" id="themeToggleBtn" class="icon-btn" aria-label="Designmodus wechseln (Hell / Dunkel)" title="Hell / Dunkel wechseln">
+            <span class="material-symbols-rounded" id="themeToggleIcon" aria-hidden="true">light_mode</span>
+          </button>
+        </div>
+      </div>
+
+      <header class="app-header">
+        <div class="app-header-text">
+          <h1 class="brand-title">Heizkurve</h1>
+          <p class="brand-subtitle">Lambda-Heizkurve mit drei Einstellpunkten</p>
+        </div>
+      </header>
+
+      <section class="hero" aria-live="polite" aria-label="Ergebnis">
+        <div class="hero-caption">Vorlauf-Soll bei <span class="numeric" id="hero-ta">0</span> °C Außentemperatur</div>
+        <div class="hero-value numeric"><span id="hero-vl">–</span> <span class="metric-unit">°C</span></div>
+        <span class="status-pill status-pill--green" id="hero-pill"><span class="material-symbols-rounded" id="hero-pill-icon" aria-hidden="true">check_circle</span><span id="hero-pill-text">Wärmepumpen-gerecht</span></span>
+      </section>
+
+      <div class="group" id="info-rows">
+        <div class="info-row"><span class="info-row-label">Anstieg +22 bis 0 °C</span><span class="info-row-value numeric" id="slope-upper">–</span></div>
+        <div class="info-row"><span class="info-row-label">Anstieg 0 bis −22 °C</span><span class="info-row-value numeric" id="slope-lower">–</span></div>
+        <div class="info-row" id="diff-row" hidden><span class="info-row-label">Änderung zur gemerkten Kurve</span><span class="info-row-value numeric" id="diff-value">–</span></div>
+      </div>
+
+      <section class="glass-card">
+        <div class="segmented-control" id="view-segment" role="group" aria-label="Darstellung">
+          <button type="button" class="segmented-option" data-show="curve" aria-pressed="true">Kurve</button>
+          <button type="button" class="segmented-option" data-show="table" aria-pressed="false">Tabelle</button>
+        </div>
+        <div id="pane-curve">
+          <div class="chart-container chart-container--auto">
+            <svg class="chart-svg chart-svg--fit chart-svg--drag" id="chart" viewBox="0 0 340 214" role="img" aria-label="Heizkurve">
+              <defs>
+                <linearGradient id="chart-fill-grad" gradientUnits="userSpaceOnUse" x1="0" y1="12" x2="0" y2="176">
+                  <stop offset="0%" style="stop-color: var(--system-red); stop-opacity: 0.24"/>
+                  <stop offset="100%" style="stop-color: var(--system-red); stop-opacity: 0"/>
+                </linearGradient>
+              </defs>
+              <g id="chart-grid"></g>
+              <path id="chart-fill" fill="url(#chart-fill-grad)" stroke="none"/>
+              <path id="chart-ref" class="chart-ref" visibility="hidden"/>
+              <path id="chart-line" class="chart-line chart-line--red"/>
+              <g id="chart-pts"></g>
+              <line id="guide-x" class="chart-guide"/>
+              <line id="guide-y" class="chart-guide"/>
+              <circle id="chart-dot" r="7" fill="var(--bg-elevated)" stroke="var(--system-red)" stroke-width="3"/>
+            </svg>
+          </div>
+          <div class="chart-foot"><span>Punkt ziehen ändert die Außentemperatur</span></div>
+        </div>
+        <div id="pane-table" hidden>
+          <div class="info-list" id="table-body"></div>
+        </div>
+      </section>
+
+      <h2 class="section-title">Voreinstellung</h2>
+      <div class="segmented-control preset-seg" id="preset-segment" role="group" aria-label="Voreinstellung">
+        <button type="button" class="segmented-option" data-preset="fbh" aria-pressed="false">Fußbodenheizung</button>
+        <button type="button" class="segmented-option" data-preset="hk" aria-pressed="false">Heizkörper</button>
+      </div>
+
+      <h2 class="section-title">Einstellungen</h2>
+      <section class="group" id="controls">
+        <div class="control">
+          <label class="control-label" for="f-ta">Außentemperatur</label>
+          <div class="control-slide">
+            <button type="button" class="stepper" data-key="ta" data-dir="-1" aria-label="Außentemperatur verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+            <input id="f-ta" class="value-input numeric" type="text" inputmode="text" autocomplete="off" aria-label="Außentemperatur" />
+            <span class="input-unit-addon">°C</span>
+            <button type="button" class="stepper" data-key="ta" data-dir="1" aria-label="Außentemperatur erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+          </div>
+          <div class="control-slide"><input type="range" id="r-ta" aria-label="Außentemperatur Schieberegler" /></div>
+        </div>
+        <div class="control">
+          <label class="control-label" for="f-tw">Vorlauf bei +22 °C</label>
+          <div class="control-slide">
+            <button type="button" class="stepper" data-key="tw" data-dir="-1" aria-label="Vorlauf bei +22 °C verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+            <input id="f-tw" class="value-input numeric" type="text" inputmode="decimal" autocomplete="off" aria-label="Vorlauf bei +22 °C" />
+            <span class="input-unit-addon">°C</span>
+            <button type="button" class="stepper" data-key="tw" data-dir="1" aria-label="Vorlauf bei +22 °C erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+          </div>
+          <div class="control-slide"><input type="range" id="r-tw" aria-label="Vorlauf bei +22 °C Schieberegler" /></div>
+        </div>
+        <div class="control">
+          <label class="control-label" for="f-tm">Vorlauf bei 0 °C</label>
+          <div class="control-slide">
+            <button type="button" class="stepper" data-key="tm" data-dir="-1" aria-label="Vorlauf bei 0 °C verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+            <input id="f-tm" class="value-input numeric" type="text" inputmode="decimal" autocomplete="off" aria-label="Vorlauf bei 0 °C" />
+            <span class="input-unit-addon">°C</span>
+            <button type="button" class="stepper" data-key="tm" data-dir="1" aria-label="Vorlauf bei 0 °C erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+          </div>
+          <div class="control-slide"><input type="range" id="r-tm" aria-label="Vorlauf bei 0 °C Schieberegler" /></div>
+        </div>
+        <div class="control">
+          <label class="control-label" for="f-tk">Vorlauf bei −22 °C</label>
+          <div class="control-slide">
+            <button type="button" class="stepper" data-key="tk" data-dir="-1" aria-label="Vorlauf bei −22 °C verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+            <input id="f-tk" class="value-input numeric" type="text" inputmode="decimal" autocomplete="off" aria-label="Vorlauf bei −22 °C" />
+            <span class="input-unit-addon">°C</span>
+            <button type="button" class="stepper" data-key="tk" data-dir="1" aria-label="Vorlauf bei −22 °C erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+          </div>
+          <div class="control-slide"><input type="range" id="r-tk" aria-label="Vorlauf bei −22 °C Schieberegler" /></div>
+        </div>
+        <div class="control">
+          <label class="control-label" for="f-o">Solltemperatur-Offset</label>
+          <div class="control-slide">
+            <button type="button" class="stepper" data-key="o" data-dir="-1" aria-label="Solltemperatur-Offset verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+            <input id="f-o" class="value-input numeric" type="text" inputmode="text" autocomplete="off" aria-label="Solltemperatur-Offset" />
+            <span class="input-unit-addon">K</span>
+            <button type="button" class="stepper" data-key="o" data-dir="1" aria-label="Solltemperatur-Offset erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+          </div>
+          <div class="control-slide"><input type="range" id="r-o" aria-label="Solltemperatur-Offset Schieberegler" /></div>
+        </div>
+      </section>
+
+      <div class="btn-row action-row">
+        <button type="button" class="btn-secondary" id="ref-btn"><span class="material-symbols-rounded" id="ref-icon" aria-hidden="true">push_pin</span><span id="ref-label">Kurve merken</span></button>
+        <button type="button" class="btn-secondary" id="reset-btn"><span class="material-symbols-rounded" aria-hidden="true">restart_alt</span>Zurücksetzen</button>
+      </div>
+
+      <p class="hint numeric">Drei Punkte und Offset nach Lambda Reglerbeschreibung Endkunden V 2.1 (Abschnitt 12.2.2), Standardwerte nach Quick Start Guide 1.1 (Abschnitt 3.3). Zwischenwerte linear angenommen, außerhalb ±22 °C bleibt der Randwert (beides in der Lambda-Dokumentation nicht beschrieben). Die Einstellbereiche dieser App (Punkte 20 bis 75 °C, Offset ±10 K) sind App-Grenzen.</p>
+    </main>
+
+    <div id="toast-pill" class="toast-pill" role="status" aria-live="polite">
+      <span class="material-symbols-rounded" aria-hidden="true">check_circle</span>
+      <span id="toast-text"></span>
+    </div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

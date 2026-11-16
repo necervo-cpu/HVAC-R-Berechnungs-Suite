@@ -258,10 +258,6 @@ button, a, label, .segmented-option, .row {
   transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.liquid-surface-inner:hover {
-  background: var(--surface-inner-hover);
-}
-
 .liquid-surface-inner:focus-within {
   border-color: var(--accent-border);
 }
@@ -338,10 +334,6 @@ button, a, label, .segmented-option, .row {
   background: transparent;
   border: 1px solid transparent;
   transition: transform 0.2s var(--ease-spring), background 0.2s ease;
-}
-
-.icon-btn:hover {
-  background: var(--surface-inner-hover);
 }
 
 .icon-btn:active {
@@ -513,7 +505,6 @@ button, a, label, .segmented-option, .row {
   transition: background 0.2s ease, transform 0.2s var(--ease-spring);
 }
 
-.row:hover,
 .row:active {
   background: var(--surface-inner-bg);
 }
@@ -529,9 +520,7 @@ button, a, label, .segmented-option, .row {
 }
 
 /* Beim Antippen oder Überfahren: Haarlinien oben und unten ausblenden, damit die Rundung sauber steht */
-.row:hover::before,
 .row:active::before,
-.row:hover + .row::before,
 .row:active + .row::before {
   opacity: 0;
 }
@@ -797,10 +786,6 @@ button, a, label, .segmented-option, .row {
   border: 1px solid var(--surface-inner-border);
   background: var(--surface-inner-bg);
   color: var(--text-primary);
-}
-
-.btn-secondary:hover {
-  background: var(--surface-inner-hover);
 }
 
 .btn-primary:active,
@@ -1950,4 +1935,28 @@ input[type="range"]::-moz-range-thumb {
 /* Schnellwahl unter einem Zahlenfeld: Abstand zur Zeile darüber */
 .choice-select--action {
   margin-top: 0.875rem;
+}
+
+/* Hover nur mit Maus. Auf Touch-Geräten bleibt :hover nach dem Tippen hängen, dort zählt nur :active. */
+@media (hover: hover) and (pointer: fine) {
+  .liquid-surface-inner:hover,
+  .icon-btn:hover,
+  .btn-secondary:hover {
+    background: var(--surface-inner-hover);
+  }
+
+  .row:hover {
+    background: var(--surface-inner-bg);
+  }
+
+  .row:hover::before,
+  .row:hover + .row::before {
+    opacity: 0;
+  }
+}
+
+/* Zahlenzeile mit Einzelschritt-Knöpfen: Feld füllt den Raum zwischen den Knöpfen */
+.num-row .input-wrapper {
+  flex: 1;
+  min-width: 0;
 }

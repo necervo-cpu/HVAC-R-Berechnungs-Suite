@@ -97,23 +97,35 @@
         <section class="glass-card" aria-label="Eingaben">
           <div class="form-group">
             <label class="form-label" for="tp-temp-input"><span>Lufttemperatur</span></label>
-            <div class="liquid-surface-inner input-wrapper">
-              <input id="tp-temp-input" class="glass-input numeric" type="text" inputmode="text" value="22" autocomplete="off" />
-              <span class="input-unit-addon">°C</span>
+            <div class="control-slide num-row">
+              <button type="button" class="stepper" id="tp-temp-minus" aria-label="Lufttemperatur verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+              <div class="liquid-surface-inner input-wrapper">
+                <input id="tp-temp-input" class="glass-input numeric" type="text" inputmode="text" value="22" autocomplete="off" />
+                <span class="input-unit-addon">°C</span>
+              </div>
+              <button type="button" class="stepper" id="tp-temp-plus" aria-label="Lufttemperatur erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
             </div>
           </div>
           <div class="form-group">
             <label class="form-label" for="tp-rh-input"><span>Relative Luftfeuchte</span></label>
-            <div class="liquid-surface-inner input-wrapper">
-              <input id="tp-rh-input" class="glass-input numeric" type="text" inputmode="decimal" value="50" autocomplete="off" />
-              <span class="input-unit-addon">%</span>
+            <div class="control-slide num-row">
+              <button type="button" class="stepper" id="tp-rh-minus" aria-label="Luftfeuchte verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+              <div class="liquid-surface-inner input-wrapper">
+                <input id="tp-rh-input" class="glass-input numeric" type="text" inputmode="decimal" value="50" autocomplete="off" />
+                <span class="input-unit-addon">%</span>
+              </div>
+              <button type="button" class="stepper" id="tp-rh-plus" aria-label="Luftfeuchte erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
             </div>
           </div>
           <div id="surface-temp-well" hidden><div class="form-group">
             <label class="form-label" for="tp-surface-input"><span>Oberflächen- oder Vorlauftemperatur</span></label>
-            <div class="liquid-surface-inner input-wrapper">
-              <input id="tp-surface-input" class="glass-input numeric" type="text" inputmode="text" value="16" autocomplete="off" />
-              <span class="input-unit-addon">°C</span>
+            <div class="control-slide num-row">
+              <button type="button" class="stepper" id="tp-surface-minus" aria-label="Oberflächentemperatur verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+              <div class="liquid-surface-inner input-wrapper">
+                <input id="tp-surface-input" class="glass-input numeric" type="text" inputmode="text" value="16" autocomplete="off" />
+                <span class="input-unit-addon">°C</span>
+              </div>
+              <button type="button" class="stepper" id="tp-surface-plus" aria-label="Oberflächentemperatur erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
             </div>
           </div></div>
           <p class="hint" id="input-hint" role="alert" hidden>Lufttemperatur zwischen −30 und 60 °C und Luftfeuchte zwischen 1 und 100 % als Zahl eingeben.</p>
@@ -137,16 +149,24 @@
               <div>
                 <div class="form-group">
                   <label class="form-label" for="param-patm-hpa-input"><span>Luftdruck</span></label>
-                  <div class="liquid-surface-inner input-wrapper">
-                    <input id="param-patm-hpa-input" class="glass-input numeric" type="text" inputmode="decimal" value="1013" autocomplete="off" />
-                    <span class="input-unit-addon">hPa</span>
+                  <div class="control-slide num-row">
+                    <button type="button" class="stepper" id="param-patm-hpa-minus" aria-label="Luftdruck verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+                    <div class="liquid-surface-inner input-wrapper">
+                      <input id="param-patm-hpa-input" class="glass-input numeric" type="text" inputmode="decimal" value="1013" autocomplete="off" />
+                      <span class="input-unit-addon">hPa</span>
+                    </div>
+                    <button type="button" class="stepper" id="param-patm-hpa-plus" aria-label="Luftdruck erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
                   </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="param-margin-input"><span>Mindestabstand zum Taupunkt</span></label>
-                  <div class="liquid-surface-inner input-wrapper">
-                    <input id="param-margin-input" class="glass-input numeric" type="text" inputmode="decimal" value="2" autocomplete="off" />
-                    <span class="input-unit-addon">K</span>
+                  <div class="control-slide num-row">
+                    <button type="button" class="stepper" id="param-margin-minus" aria-label="Mindestabstand verringern"><span class="material-symbols-rounded" aria-hidden="true">remove</span></button>
+                    <div class="liquid-surface-inner input-wrapper">
+                      <input id="param-margin-input" class="glass-input numeric" type="text" inputmode="decimal" value="2" autocomplete="off" />
+                      <span class="input-unit-addon">K</span>
+                    </div>
+                    <button type="button" class="stepper" id="param-margin-plus" aria-label="Mindestabstand erhöhen"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
                   </div>
                 </div>
               </div>
