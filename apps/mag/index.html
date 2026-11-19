@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="MAG & Vordruck" />
     <title>MAG &amp; Vordruck – HVAC·R Rechner</title>
     <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
-    <link rel="apple-touch-icon" href="../../icon.svg" />
+    <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -59,7 +59,7 @@
   <body>
     <div class="ambient-canvas" aria-hidden="true"></div>
 
-    <div class="app-shell app-shell--narrow">
+    <div class="app-shell app-shell--narrow app-shell--split">
       <div class="app-topbar">
         <a href="../../index.html" class="back-btn"><span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>Übersicht</a>
         <div style="display: flex; align-items: center; gap: 0.25rem;">
@@ -79,12 +79,13 @@
         </div>
       </header>
 
-      <main>
+      <main class="split">
         <div class="segmented-control" id="mode-tabs" role="group" aria-label="Berechnungsmodus">
           <button type="button" class="segmented-option" data-mode="pressure" aria-pressed="true">Vordruck p₀</button>
           <button type="button" class="segmented-option" data-mode="volume" aria-pressed="false">MAG-Größe</button>
         </div>
 
+        <div class="split-aside">
         <section class="hero" aria-live="polite" style="margin-top: 1.25rem;">
           <div id="result-label" class="hero-caption">Stickstoff-Vordruck p₀</div>
           <div class="hero-value numeric"><span id="result-number">–</span><span id="result-unit" class="metric-unit">bar</span></div>
@@ -95,6 +96,7 @@
         <section class="glass-card" aria-label="Zwischenwerte">
           <div id="result-rows" class="info-list numeric"></div>
         </section>
+        </div>
 
         <section class="glass-card" aria-label="Eingaben">
           <div class="form-group">

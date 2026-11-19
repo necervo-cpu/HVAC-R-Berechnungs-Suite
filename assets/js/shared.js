@@ -9,7 +9,7 @@
  *   try/catch-Kapselung von localStorage für den iOS Safari Privatmodus.
  */
 
-export const APP_VERSION = "1.5.4";
+export const APP_VERSION = "1.6.0";
 export const BUILD_DATE = "2026-11-15";
 
 export const THEME_STORAGE_KEY = "ag-theme";

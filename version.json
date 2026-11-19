@@ -1,5 +1,5 @@
 {
-  "version": "1.5.4",
+  "version": "1.6.0",
   "buildDate": "2026-11-19",
-  "changelog": "Zoom gesperrt (Pinch und Doppeltipp)"
+  "changelog": "Zweispaltiges Desktop-Layout, PNG-App-Symbole, Manifest für alle Geräte, Kopf-Icons in Fach-Apps"
 }

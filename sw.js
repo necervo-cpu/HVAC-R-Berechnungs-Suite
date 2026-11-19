@@ -8,13 +8,17 @@
  *   bei Offline-Betrieb dient der Cache als sicherer Fallback.
  */
 
-const CACHE_NAME = "hvacr-cache-v1.5.4";
+const CACHE_NAME = "hvacr-cache-v1.6.0";
 
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icon.svg",
+  "./assets/icons/icon-192.png",
+  "./assets/icons/icon-512.png",
+  "./assets/icons/icon-maskable-512.png",
+  "./assets/icons/apple-touch-icon.png",
   "./assets/css/global.css",
   "./assets/js/shared.js",
   "./assets/js/dashboard.js",

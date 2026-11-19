@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="Taupunkt" />
     <title>Taupunkt &amp; Feuchte · HVAC·R Rechner</title>
     <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
-    <link rel="apple-touch-icon" href="../../icon.svg" />
+    <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -59,7 +59,7 @@
   <body>
     <div class="ambient-canvas" aria-hidden="true"></div>
 
-    <div class="app-shell app-shell--narrow">
+    <div class="app-shell app-shell--narrow app-shell--split">
       <div class="app-topbar">
         <a class="back-btn" href="../../index.html"><span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>Übersicht</a>
         <button class="icon-btn" id="themeToggleBtn" type="button" title="Erscheinungsbild wechseln" aria-label="Erscheinungsbild wechseln">
@@ -74,7 +74,7 @@
         </div>
       </header>
 
-      <main>
+      <main class="split">
         <section class="glass-card" aria-label="Berechnungsmodus">
           <div class="segmented-control" id="mode-tabs" role="group" aria-label="Berechnungsmodus">
             <button type="button" class="segmented-option" data-mode="dewpoint" aria-pressed="true">Taupunkt</button>
@@ -82,6 +82,7 @@
           </div>
         </section>
 
+        <div class="split-aside">
         <section class="hero" aria-live="polite" aria-label="Ergebnis">
           <div class="hero-caption" id="result-label">Taupunkttemperatur</div>
           <div class="hero-value numeric"><span id="result-number">–</span> <span id="result-unit" class="metric-unit">°C</span></div>
@@ -93,6 +94,7 @@
           <div class="info-row"><span class="info-row-label" id="row2-label">Feuchtegrad</span><span class="info-row-value numeric" id="row2-value">–</span></div>
           <div class="info-row"><span class="info-row-label" id="row3-label">Enthalpie</span><span class="info-row-value numeric" id="row3-value">–</span></div>
         </section>
+        </div>
 
         <section class="glass-card" aria-label="Eingaben">
           <div class="form-group">

@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="Wärmeleistung" />
     <title>Wärmeleistung · HVAC·R Rechner</title>
     <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
-    <link rel="apple-touch-icon" href="../../icon.svg" />
+    <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -65,7 +65,7 @@
   <body>
     <div class="ambient-canvas" aria-hidden="true"></div>
 
-    <main class="app-shell app-shell--narrow">
+    <main class="app-shell app-shell--narrow app-shell--split">
       <div class="app-topbar">
         <a href="../../index.html" id="nav-home-link" class="back-btn">
           <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>Übersicht
@@ -89,13 +89,14 @@
         </div>
       </header>
 
-      <div id="view-calc">
+      <div id="view-calc" class="split">
         <div class="segmented-control calc-modes" id="mode-tabs" role="group" aria-label="Berechnungsmodus">
           <button type="button" class="segmented-option" data-mode="hydraulik" aria-pressed="true">Hydraulik</button>
           <button type="button" class="segmented-option" data-mode="volumenstrom" aria-pressed="false">Volumenstrom</button>
           <button type="button" class="segmented-option" data-mode="heizlast" aria-pressed="false">Heizlast</button>
         </div>
 
+        <div class="split-aside">
         <section class="hero" aria-live="polite" aria-label="Ergebnis">
           <div class="hero-caption" id="result-label">Wärmeleistung Q̇</div>
           <div class="hero-value numeric" id="result-main"><span id="result-number">–</span> <span id="result-unit" class="metric-unit">kW</span></div>
@@ -104,6 +105,7 @@
         </section>
 
         <div class="group" id="result-rows"></div>
+        </div>
 
 
         <!-- Hydraulik: Q = V * rho * cp * dT -->

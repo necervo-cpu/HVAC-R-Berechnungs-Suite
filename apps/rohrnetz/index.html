@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="Rohrnetz" />
     <title>Rohrnetz und Druckverlust</title>
     <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
-    <link rel="apple-touch-icon" href="../../icon.svg" />
+    <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -64,7 +64,7 @@
   <body>
     <div class="ambient-canvas" aria-hidden="true"></div>
 
-    <main class="app-shell app-shell--narrow">
+    <main class="app-shell app-shell--narrow app-shell--split">
       <div class="app-topbar">
         <a href="../../index.html" id="nav-home-link" class="back-btn">
           <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>Übersicht
@@ -86,6 +86,8 @@
         </div>
       </header>
 
+      <div class="split">
+      <div class="split-aside">
       <section class="glass-card" aria-label="Ergebnis">
         <div class="hero" aria-live="polite">
           <div id="result-label" class="hero-caption">Fließgeschwindigkeit v</div>
@@ -98,6 +100,7 @@
           <div class="info-row"><span class="info-row-label">Volumenstrom</span><span class="info-row-value numeric"><span id="result-flow-lh">–</span> <span class="metric-unit">l/h</span></span></div>
         </div>
       </section>
+      </div>
 
       <section class="glass-card" aria-label="Rohr">
         <div class="form-group">
@@ -236,6 +239,7 @@
 
       <p class="hint">Die Berechnung nutzt Innendurchmesser dᵢ und Wandrauigkeiten des Herstellers Viega (Profipress, Prestabo, Sanpress Inox, Temponox, Raxofix, Megapress).</p>
       <p class="hint numeric">R = λ / dᵢ · ρ / 2 · v², λ nach Colebrook-White</p>
+      </div>
     </main>
 
     <div id="toast-pill" class="toast-pill" role="status" aria-live="polite"><span class="material-symbols-rounded" aria-hidden="true">check_circle</span><span id="toast-text"></span></div>

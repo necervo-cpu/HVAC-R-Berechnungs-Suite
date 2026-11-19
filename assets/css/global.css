@@ -1988,3 +1988,52 @@ html,
 body {
   touch-action: manipulation;
 }
+
+/* Kopf-Icons in der Fach-App-Kopfzeile (Design-Stand 2026-11-21, Abschnitt 21 gilt dort nicht für .app-topbar) */
+.app-topbar .icon-btn {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.app-topbar .icon-btn .material-symbols-rounded {
+  font-size: 28px;
+}
+
+/* Zweispaltig ab Tablet-Querformat und Desktop: Ergebnis links (bleibt stehen), Eingaben rechts.
+   Die DOM-Reihenfolge bleibt unverändert, auf dem Smartphone steht weiter alles untereinander. */
+@media (min-width: 900px) {
+  .app-shell--narrow.app-shell--split {
+    max-width: 1080px;
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: minmax(300px, 5fr) minmax(0, 6fr);
+    column-gap: 2.5rem;
+    align-items: start;
+  }
+
+  .split > * {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .split > .split-aside {
+    grid-column: 1;
+    grid-row: 1 / span 99;
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100dvh - 3rem);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  /* Abstände, die für die Smartphone-Reihenfolge gesetzt sind, entfallen in der linken Spalte */
+  .split-aside > .hero {
+    margin-top: 0 !important;
+  }
+
+  .split-aside > :last-child {
+    margin-bottom: 0 !important;
+  }
+}

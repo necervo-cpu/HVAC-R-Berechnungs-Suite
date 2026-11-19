@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="Kältemittel" />
     <title>Kältemittel und SH / SC | HVAC·R Rechner</title>
     <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
-    <link rel="apple-touch-icon" href="../../icon.svg" />
+    <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -60,7 +60,7 @@
   <body>
     <div class="ambient-canvas" aria-hidden="true"></div>
 
-    <div class="app-shell app-shell--narrow">
+    <div class="app-shell app-shell--narrow app-shell--split">
       <div class="app-topbar">
         <a class="back-btn" href="../../index.html"><span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>Übersicht</a>
         <div class="top-actions">
@@ -83,7 +83,7 @@
         </div>
       </header>
 
-      <main>
+      <main class="split">
         <div class="segmented-control" id="mode-tabs" role="group" aria-label="Berechnungsmodus">
           <button type="button" class="segmented-option" aria-pressed="true" data-mode="p2t">Druck in °C</button>
           <button type="button" class="segmented-option" aria-pressed="false" data-mode="t2p">°C in Druck</button>
@@ -171,6 +171,7 @@
           </div>
         </section>
 
+        <div class="split-aside">
         <section class="hero" aria-label="Ergebnis" aria-live="polite">
           <div class="hero-caption" id="result-label">Sättigungstemperatur</div>
           <div class="hero-value numeric"><span id="result-number">–</span><span id="result-unit" class="metric-unit">°C</span></div>
@@ -178,6 +179,7 @@
         </section>
 
         <div class="group info-list" id="result-rows"></div>
+        </div>
 
 
         <p class="hint numeric">Dampfdruck nach Antoine: log10(p) = A − B / (T + C) mit p als Absolutdruck. Absolutdruck = Überdruck + Luftdruck.</p>

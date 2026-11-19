@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="Luftkanal" />
     <title>Luftkanal &amp; RLT · HVAC·R Rechner</title>
     <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
-    <link rel="apple-touch-icon" href="../../icon.svg" />
+    <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -59,7 +59,7 @@
   <body>
     <div class="ambient-canvas" aria-hidden="true"></div>
 
-    <main class="app-shell app-shell--narrow">
+    <main class="app-shell app-shell--narrow app-shell--split">
       <div class="app-topbar">
         <a href="../../index.html" id="nav-home-link" class="back-btn">
           <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>Übersicht
@@ -84,12 +84,13 @@
         </div>
       </header>
 
-      <div id="view-calc">
+      <div id="view-calc" class="split">
         <div class="segmented-control" id="mode-tabs" role="group" aria-label="Berechnungsmodus">
           <button type="button" class="segmented-option" data-mode="duct" aria-pressed="true">Kanal und v</button>
           <button type="button" class="segmented-option" data-mode="room" aria-pressed="false">Luftwechsel und Q̇</button>
         </div>
 
+        <div class="split-aside">
         <section class="hero" aria-live="polite" aria-label="Ergebnis">
           <div class="hero-caption" id="result-label">Luftgeschwindigkeit v</div>
           <div class="hero-value numeric" id="result-main"><span id="result-number">–</span> <span id="result-unit" class="metric-unit">m/s</span></div>
@@ -97,6 +98,7 @@
         </section>
 
         <div class="info-list" id="result-rows" style="margin-bottom: 1.5rem"></div>
+        </div>
 
         <section class="glass-card" aria-label="Luftkanal-Berechnung">
         <div class="control">

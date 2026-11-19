@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="Heizkurve" />
     <title>Heizkurve · HVAC·R Rechner</title>
     <link rel="icon" type="image/svg+xml" href="../../icon.svg" />
-    <link rel="apple-touch-icon" href="../../icon.svg" />
+    <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -65,7 +65,7 @@
   <body>
     <div class="ambient-canvas" aria-hidden="true"></div>
 
-    <main class="app-shell app-shell--narrow">
+    <main class="app-shell app-shell--narrow app-shell--split">
       <div class="app-topbar">
         <a href="../../index.html" class="back-btn">
           <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>Übersicht
@@ -84,6 +84,8 @@
         </div>
       </header>
 
+      <div class="split">
+      <div class="split-aside">
       <section class="hero" aria-live="polite" aria-label="Ergebnis">
         <div class="hero-caption">Vorlauf-Soll bei <span class="numeric" id="hero-ta">0</span> °C Außentemperatur</div>
         <div class="hero-value numeric"><span id="hero-vl">–</span> <span class="metric-unit">°C</span></div>
@@ -126,6 +128,7 @@
           <div class="info-list" id="table-body"></div>
         </div>
       </section>
+      </div>
 
       <h2 class="section-title">Voreinstellung</h2>
       <div class="segmented-control preset-seg" id="preset-segment" role="group" aria-label="Voreinstellung">
@@ -193,6 +196,7 @@
       </div>
 
       <p class="hint numeric">Drei Punkte und Offset nach Lambda Reglerbeschreibung Endkunden V 2.1 (Abschnitt 12.2.2), Standardwerte nach Quick Start Guide 1.1 (Abschnitt 3.3). Zwischenwerte linear angenommen, außerhalb ±22 °C bleibt der Randwert (beides in der Lambda-Dokumentation nicht beschrieben). Die Einstellbereiche dieser App (Punkte 20 bis 75 °C, Offset ±10 K) sind App-Grenzen.</p>
+      </div>
     </main>
 
     <div id="toast-pill" class="toast-pill" role="status" aria-live="polite">
