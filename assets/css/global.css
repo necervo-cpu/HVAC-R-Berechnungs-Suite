@@ -1,5 +1,5 @@
 /**
- * Modul: Dual-Theme Stylesheet (liquid-glass-tokens.css), Design-Stand 2026-11-17
+ * Modul: Dual-Theme Stylesheet (liquid-glass-tokens.css), Design-Stand 2026-11-20
  * Zweck: Verbindliches CSS für alle Projekte. Wird als global.css ins Projekt kopiert.
  * Stil: Minimal. Aufbau nach Apple HIG (Grosstitel, Listen, Segmented Control), Farbgebung nach Material
  *   (Akzent --accent, aktive Segmente --tonal). Inhalt steht direkt auf dem Canvas und wird nur durch
@@ -1866,22 +1866,21 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ==========================================================================
-   App-Ergänzungen (HVAC·R Rechner)
+   19. AUSWAHL ALS DROPDOWN, ZAHLENFELDER MITTIG (Design-Stand 2026-11-20)
+   Mehr als 3 Optionen oder breiter als der Bildschirm: Dropdown (choice-dropdown.js).
+   Zahlenfelder: Wert mittig, Einheit rechts außen, Innenabstand links gleicht sie aus.
    ========================================================================== */
 [hidden] {
   display: none !important;
 }
 
-.top-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-/* Auswahl als Dropdown (mehr als 3 Optionen oder breiter als der Bildschirm) */
 .choice-select {
   position: relative;
   margin-bottom: 1.375rem;
+}
+
+.choice-select--action {
+  margin-top: 0.875rem;
 }
 
 .choice-select-input {
@@ -1913,7 +1912,6 @@ input[type="range"]::-moz-range-thumb {
   pointer-events: none;
 }
 
-/* Zahlenfelder: Wert mittig im Feld, Einheit am rechten Rand (Abstand links gleicht sie aus, gesetzt in shared.js) */
 .input-wrapper {
   position: relative;
 }
@@ -1932,11 +1930,6 @@ input[type="range"]::-moz-range-thumb {
   pointer-events: none;
 }
 
-/* Schnellwahl unter einem Zahlenfeld: Abstand zur Zeile darüber */
-.choice-select--action {
-  margin-top: 0.875rem;
-}
-
 /* Hover nur mit Maus. Auf Touch-Geräten bleibt :hover nach dem Tippen hängen, dort zählt nur :active. */
 @media (hover: hover) and (pointer: fine) {
   .liquid-surface-inner:hover,
@@ -1953,6 +1946,35 @@ input[type="range"]::-moz-range-thumb {
   .row:hover + .row::before {
     opacity: 0;
   }
+}
+
+/* ==========================================================================
+   21. KOPF-ICONS GRÖSSER
+   Knöpfe im Seitenkopf (Hell/Dunkel, Einstellungen) tragen 28px große Icons in einem 48px-Knopf,
+   damit sie am Handy und mit Handschuhen sicher zu treffen sind. In Modal-Karten und Zeilen bleibt es bei der Standardgröße.
+   ========================================================================== */
+header .icon-btn,
+.app-header .icon-btn {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+header .icon-btn .material-symbols-rounded,
+.app-header .icon-btn .material-symbols-rounded {
+  font-size: 28px;
+}
+
+/* ==========================================================================
+   App-Ergänzungen (HVAC·R Rechner)
+   ========================================================================== */
+[hidden] {
+  display: none !important;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 /* Zahlenzeile mit Einzelschritt-Knöpfen: Feld füllt den Raum zwischen den Knöpfen */
