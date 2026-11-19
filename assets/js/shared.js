@@ -9,7 +9,7 @@
  *   try/catch-Kapselung von localStorage für den iOS Safari Privatmodus.
  */
 
-export const APP_VERSION = "1.5.3";
+export const APP_VERSION = "1.5.4";
 export const BUILD_DATE = "2026-11-15";
 
 export const THEME_STORAGE_KEY = "ag-theme";
@@ -771,6 +771,10 @@ export function initThemeControls() {
 }
 
 if (typeof document !== "undefined") {
+  // Zoom gesperrt: iOS ignoriert user-scalable=no, daher Pinch-Gesten abfangen
+  ["gesturestart", "gesturechange", "gestureend"].forEach((name) =>
+    document.addEventListener(name, (e) => e.preventDefault(), { passive: false }),
+  );
   applyThemeMode(getStoredThemeMode());
   initServiceWorkerAndUpdates();
   const initDomFeatures = () => {

@@ -1982,3 +1982,9 @@ header .icon-btn .material-symbols-rounded,
   flex: 1;
   min-width: 0;
 }
+
+/* Zoom gesperrt (Baustellen-PWA): kein Doppeltipp-Zoom */
+html,
+body {
+  touch-action: manipulation;
+}
